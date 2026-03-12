@@ -5,57 +5,57 @@ trustPolicy: no-downgrade
 patchedDependencies:
   '@eslint/config-array': patches/@eslint__config-array.patch
 catalog:
-  '@antfu/eslint-config': ^7.6.1
-  '@eslint/config-array': ^0.23.2
+  '@antfu/eslint-config': ^7.7.2
+  '@eslint/config-array': ^0.23.3
   '@iconify-json/carbon': ^1.2.19
   '@iconify-json/file-icons': ^1.2.2
   '@iconify-json/logos': ^1.2.10
   '@iconify-json/ph': ^1.2.2
-  '@iconify-json/simple-icons': ^1.2.72
+  '@iconify-json/simple-icons': ^1.2.73
   '@iconify-json/svg-spinners': ^1.2.4
   '@iconify-json/twemoji': ^1.2.5
-  '@iconify-json/vscode-icons': ^1.2.44
+  '@iconify-json/vscode-icons': ^1.2.45
   '@nodelib/fs.walk': ^3.0.1
   '@nuxt/eslint': ^1.15.2
-  '@shikijs/langs-precompiled': ^4.0.1
-  '@shikijs/transformers': ^4.0.1
+  '@shikijs/langs-precompiled': ^4.0.2
+  '@shikijs/transformers': ^4.0.2
   '@types/connect': ^3.4.38
   '@types/ws': ^8.18.1
-  '@typescript-eslint/utils': ^8.56.1
-  '@unocss/eslint-config': ^66.6.4
-  '@unocss/nuxt': ^66.6.4
+  '@typescript-eslint/utils': ^8.57.0
+  '@unocss/eslint-config': ^66.6.6
+  '@unocss/nuxt': ^66.6.6
   '@voxpelli/config-array-find-files': ^1.2.2
   '@vueuse/nuxt': ^14.2.1
   ansis: ^4.2.0
   bundle-require: ^5.1.0
   cac: ^7.0.0
   chokidar: ^5.0.0
-  esbuild: ^0.27.3
-  eslint: ^10.0.2
+  esbuild: ^0.27.4
+  eslint: ^10.0.3
   find-up: ^8.0.0
   floating-vue: ^5.2.2
   fuse.js: ^7.1.0
   get-port-please: ^3.2.0
-  h3: ^1.15.5
-  lint-staged: ^16.3.2
+  h3: ^2.0.1-rc.16
+  lint-staged: ^16.3.3
   minimatch: ^10.2.4
-  mlly: ^1.8.0
+  mlly: ^1.8.1
   mrmime: ^2.0.1
   nitropack: ^2.13.1
-  nuxt: ^4.3.1
+  nuxt: ^4.4.2
   nuxt-eslint-auto-explicit-import: ^0.1.1
   open: ^11.0.0
   pathe: ^2.0.3
-  rolldown: ^1.0.0-rc.6
+  rolldown: ^1.0.0-rc.9
   rollup: ^4.59.0
-  shiki: ^4.0.1
+  shiki: ^4.0.2
   simple-git-hooks: ^2.13.1
   textmate-grammar-glob: ^0.0.1
   tinyglobby: ^0.2.15
-  tsdown: ^0.16.8
+  tsdown: ^0.21.2
   typescript: ^5.9.3
-  vite: ^8.0.0-beta.16
-  vitest: ^4.0.18
+  vite: ^8.0.0
+  vitest: ^4.1.0
   vue-tsc: ^3.2.5
   ws: ^8.19.0
 
