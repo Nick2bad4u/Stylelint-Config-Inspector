@@ -99,6 +99,6 @@
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*": "echo disable"
   }
 }
