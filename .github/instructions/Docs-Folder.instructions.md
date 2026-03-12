@@ -99,7 +99,7 @@ function processItems(items: readonly string[]) {
 }
 
 interface User {
-  tags: ReadonlyArray<string>;
+  tags: ReadonlyArray<string>
 }
 ```
 
@@ -108,9 +108,9 @@ interface User {
 This rule accepts a single option object:
 
 ```ts
-type Options = {
+interface Options {
   // If true, ignores local variables.
-  ignoreLocals?: boolean;
+  ignoreLocals?: boolean
 }
 ```
 
@@ -120,8 +120,8 @@ Examples of **correct** code with `{ "ignoreLocals": true }`:
 
 ```ts
 function task() {
-  const localList: string[] = []; // Allowed because it's local
-  localList.push("temp");
+  const localList: string[] = [] // Allowed because it's local
+  localList.push('temp')
 }
 ```
 ```

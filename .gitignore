@@ -14,3 +14,4 @@ public/fonts
 /.shared-workflows
 .github/hooks/logs/
 .github/hooks/audit.jsonl
+temp/

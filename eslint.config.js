@@ -22,3 +22,32 @@ export default await nuxt()
       'no-console': 'off',
     },
   })
+  .append({
+    files: [
+      '.github/**/**/*.{md,yml,yaml}',
+      '.github/instructions/**/*.{md,yml,yaml}',
+      'stylelint.config.mjs',
+      '.github/hooks/*.{json,jsonl,yml,yaml}',
+      '.pre-commit-config.yaml',
+      '.github/instructions/Typescript_5.instructions.md',
+      '.github/instructions/Tests-Folder.instructions.md',
+      '**/.github/instructions/Docs-Folder.instructions.md',
+    ],
+    rules: {
+      'yaml/quotes': 'off',
+      'yaml/plain-scalar': 'off',
+      'yaml/indent': 'off',
+      'style/member-delimiter-style': 'off',
+      'ts/consistent-type-definitions': 'off',
+      'style/member-delimiter-style': 'off',
+      'style/semi': 'off',
+      'style/indent': 'off',
+      'style/quotes': 'off',
+      'antfu/if-newline': 'off',
+      'style/operator-linebreak': 'off',
+      'yaml/quotes': 'off',
+      'yaml/indent': 'off',
+      'yaml/plain-scalar': 'off',
+      'jsonc/indent': 'off',
+    },
+  })

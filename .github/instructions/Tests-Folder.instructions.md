@@ -45,16 +45,16 @@ applyTo: "test/**"
 ### 1. Structure
 - Every rule test file must follow this pattern:
   ```ts
-  import { getPluginRule } from './_internal/ruleTester';
+  import { getPluginRule } from './_internal/ruleTester'
   import {
     createTypedRuleTester,
     readTypedFixture,
     typedFixturePath,
-  } from './_internal/typed-rule-tester';
+  } from './_internal/typed-rule-tester'
 
-  const ruleTester = createTypedRuleTester();
-  const validFixtureName = 'my-rule.valid.ts';
-  const invalidFixtureName = 'my-rule.invalid.ts';
+  const ruleTester = createTypedRuleTester()
+  const validFixtureName = 'my-rule.valid.ts'
+  const invalidFixtureName = 'my-rule.invalid.ts'
 
   ruleTester.run('my-rule', getPluginRule('my-rule'), {
     valid: [
@@ -70,7 +70,7 @@ applyTo: "test/**"
         errors: [{ messageId: 'someMessageId' }],
       },
     ],
-  });
+  })
   ```
 
 ### 2. Valid Cases (`valid`)
@@ -118,16 +118,16 @@ applyTo: "test/**"
 ## Example: Typed Rule Test
 
 ```ts
-import { getPluginRule } from './_internal/ruleTester';
+import { getPluginRule } from './_internal/ruleTester'
 import {
   createTypedRuleTester,
   readTypedFixture,
   typedFixturePath,
-} from './_internal/typed-rule-tester';
+} from './_internal/typed-rule-tester'
 
-const ruleTester = createTypedRuleTester();
-const validFixtureName = 'no-unsafe-push.valid.ts';
-const invalidFixtureName = 'no-unsafe-push.invalid.ts';
+const ruleTester = createTypedRuleTester()
+const validFixtureName = 'no-unsafe-push.valid.ts'
+const invalidFixtureName = 'no-unsafe-push.invalid.ts'
 
 ruleTester.run('no-unsafe-push', getPluginRule('no-unsafe-push'), {
   valid: [
@@ -143,24 +143,24 @@ ruleTester.run('no-unsafe-push', getPluginRule('no-unsafe-push'), {
       errors: [{ messageId: 'unsafePush' }],
     }
   ],
-});
+})
 ```
 
 ## Example: Property-Based Test (Fast-Check)
 
 ```ts
-import * as fc from 'fast-check';
-import { checkSpecificLogic } from '../rules/utils/my-helper';
+import * as fc from 'fast-check'
+import { checkSpecificLogic } from '../rules/utils/my-helper'
 
 test('utility function handles all string inputs', () => {
   fc.assert(
     fc.property(fc.string(), (text) => {
       // Ensure the helper never throws on arbitrary input
-      const result = checkSpecificLogic(text);
-      return typeof result === 'boolean';
+      const result = checkSpecificLogic(text)
+      return typeof result === 'boolean'
     })
-  );
-});
+  )
+})
 ```
 
   </examples>

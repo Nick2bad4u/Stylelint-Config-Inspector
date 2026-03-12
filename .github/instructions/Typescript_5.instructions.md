@@ -23,16 +23,16 @@ applyTo: "**/*.ts, **/*.tsx"
 
   ```ts
   const routes = {
-    home: "/",
-    profile: "/profile",
-  } as const satisfies Record<string, `/${string}`>;
+    home: '/',
+    profile: '/profile',
+  } as const satisfies Record<string, `/${string}`>
   ```
 
 - Use `noUncheckedIndexedAccess`-friendly patterns:
   - When indexing arrays/records, handle `undefined` explicitly:
 
     ```ts
-    const value = arr[index];
+    const value = arr[index]
     if (value === undefined) {
       // handle out-of-bounds
     }
@@ -63,8 +63,9 @@ applyTo: "**/*.ts, **/*.tsx"
 
   ```ts
   function parsePayload(payload: unknown): Payload {
-    if (!isPayload(payload)) throw new Error("Invalid payload");
-    return payload;
+    if (!isPayload(payload))
+      throw new Error('Invalid payload')
+    return payload
   }
   ```
 
@@ -81,11 +82,11 @@ applyTo: "**/*.ts, **/*.tsx"
 - Model variants with discriminated unions:
 
   ```ts
-  type ConnectionState =
-    | { status: "idle" }
-    | { status: "connecting" }
-    | { status: "connected"; userId: string }
-    | { status: "error"; error: Error };
+  type ConnectionState
+    = | { status: 'idle' }
+      | { status: 'connecting' }
+      | { status: 'connected', userId: string }
+      | { status: 'error', error: Error }
   ```
 
 - Always exhaustively narrow unions using `switch` + `never`:
@@ -93,17 +94,17 @@ applyTo: "**/*.ts, **/*.tsx"
   ```ts
   function handleConnection(state: ConnectionState) {
     switch (state.status) {
-      case "idle":
-        return;
-      case "connecting":
-        return;
-      case "connected":
-        return;
-      case "error":
-        return;
+      case 'idle':
+        return
+      case 'connecting':
+        return
+      case 'connected':
+        return
+      case 'error':
+        return
       default: {
-        const _exhaustive: never = state;
-        return _exhaustive;
+        const _exhaustive: never = state
+        return _exhaustive
       }
     }
   }
@@ -128,25 +129,25 @@ applyTo: "**/*.ts, **/*.tsx"
 - Import Type-Fest helpers from `"type-fest"` and keep imports **narrow and explicit**:
 
   ```ts
-  import type { JsonValue, SetRequired, Simplify } from "type-fest";
+  import type { JsonValue, SetRequired, Simplify } from 'type-fest'
   ```
 
 - Use Type-Fest for:
   - **JSON-safe types**: `JsonObject`, `JsonValue`, `Jsonify<T>` when modeling data that must be serializable.
 
     ```ts
-    import type { JsonValue } from "type-fest";
+    import type { JsonValue } from 'type-fest'
 
-    type ApiPayload = JsonValue;
+    type ApiPayload = JsonValue
     ```
 
   - **Branded and opaque types**: `Opaque<Type, Token>` to distinguish IDs and other primitives that share a representation but differ semantically.
 
     ```ts
-    import type { Opaque } from "type-fest";
+    import type { Opaque } from 'type-fest'
 
-    type UserId = Opaque<string, "UserId">;
-    type OrderId = Opaque<string, "OrderId">;
+    type UserId = Opaque<string, 'UserId'>
+    type OrderId = Opaque<string, 'OrderId'>
     ```
 
   - **Object refinement**:
@@ -155,15 +156,15 @@ applyTo: "**/*.ts, **/*.tsx"
     - `Simplify<T>` to clean up deeply composed types for better tooling display.
 
     ```ts
-    import type { SetRequired, Simplify } from "type-fest";
+    import type { SetRequired, Simplify } from 'type-fest'
 
-    type User = {
-      id?: string;
-      name: string;
-      email?: string;
-    };
+    interface User {
+      id?: string
+      name: string
+      email?: string
+    }
 
-    type PersistedUser = Simplify<SetRequired<User, "id" | "email">>;
+    type PersistedUser = Simplify<SetRequired<User, 'id' | 'email'>>
     ```
 
   - **String manipulation**:
@@ -181,9 +182,9 @@ applyTo: "**/*.ts, **/*.tsx"
 - Model error-returning functions as discriminated unions rather than throwing where appropriate:
 
   ```ts
-  type Result<T> =
-    | { ok: true; value: T }
-    | { ok: false; error: Error };
+  type Result<T>
+    = | { ok: true, value: T }
+      | { ok: false, error: Error }
   ```
 
 - When throwing is needed, throw `Error` instances with useful messages and context.

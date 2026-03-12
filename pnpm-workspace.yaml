@@ -1,6 +1,6 @@
 shellEmulator: true
 
-trustPolicy: "off"
+trustPolicy: no-downgrade
 
 patchedDependencies:
   '@eslint/config-array': patches/@eslint__config-array.patch

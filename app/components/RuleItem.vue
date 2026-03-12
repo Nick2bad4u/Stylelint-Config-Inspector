@@ -55,7 +55,7 @@ function capitalize(str?: string) {
   </div>
 
   <div
-    v-if="value != null"
+    v-if="value !== undefined"
     :class="[props.class, gridView ? 'absolute top-2 right-2 flex-col' : '']"
   >
     <RuleLevelIcon
