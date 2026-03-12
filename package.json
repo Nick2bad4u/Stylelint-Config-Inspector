@@ -26,6 +26,7 @@
     "build": "nuxt build && tsdown",
     "dev": "nuxt dev",
     "prepare": "nuxt prepare && npx simple-git-hooks",
+    "prestart": "pnpm build",
     "start": "node bin.mjs",
     "prepack": "pnpm build",
     "lint": "nuxt prepare && eslint .",

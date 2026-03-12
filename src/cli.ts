@@ -80,6 +80,8 @@ cli
     // Rewrite HTML files with base URL
     if (baseURL !== '/') {
       for (const file of htmlFiles) {
+        if (!file)
+          continue
         const content = await fs.readFile(resolve(distDir, file), 'utf-8')
         const newContent = content
           .replaceAll(RE_ABSOLUTE_ASSET_ATTR, ` $1="${baseURL}`)
