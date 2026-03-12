@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { getPluginColor } from '~/composables/color'
 
 const props = defineProps<{
   name: string
@@ -14,12 +15,14 @@ const props = defineProps<{
   break?: boolean
 }>()
 
+const LEADING_SLASHES_RE = /^\/+/
+
 const parsed = computed(() => {
   if (props.prefix) {
     if (props.name.startsWith(props.prefix)) {
       return {
         scope: props.prefix,
-        name: props.name.slice(props.prefix.length).replace(/^\/+/, ''),
+        name: props.name.slice(props.prefix.length).replace(LEADING_SLASHES_RE, ''),
       }
     }
     else {

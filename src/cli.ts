@@ -14,24 +14,35 @@ import { distDir } from './dirs'
 import { ConfigInspectorError } from './errors'
 import { createHostServer } from './server'
 
+const RE_CONSECUTIVE_SLASHES = /\/+/g
+const RE_ABSOLUTE_ASSET_ATTR = /\s(href|src)="\//g
+
 const cli = cac(
-  'eslint-config-inspector',
+  'stylelint-config-inspector',
 )
 
 cli
   .command('build', 'Build inspector with current config file for static hosting')
   .option('--config <configFile>', 'Config file path')
-  .option('--files', 'Include matched file paths in payload', { default: true })
+  .option('--files', 'Include matched file paths in payload', { default: false })
+  .option('--file <filePath>', 'Alias of --target')
+  .option('--target <filePath>', 'Target file path used to resolve effective config', { default: 'stylelint-inspector-target.css' })
   .option('--basePath <basePath>', 'Base directory for globs to resolve. Default to directory of config file if not provided')
   // Build specific options
   .option('--base <baseURL>', 'Base URL for deployment', { default: '/' })
-  .option('--outDir <dir>', 'Output directory', { default: '.eslint-config-inspector' })
+  .option('--outDir <dir>', 'Output directory', { default: '.stylelint-config-inspector' })
   // Action
   .action(async (options) => {
-    console.log(MARK_INFO, 'Building static ESLint config inspector...')
+    console.log(MARK_INFO, 'Building static Stylelint config inspector...')
 
-    if (process.env.ESLINT_CONFIG)
-      options.config ||= process.env.ESLINT_CONFIG
+    if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG)
+      options.config ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+    if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH)
+      options.basePath ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+    if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET)
+      options.target ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
+
+    options.target ||= options.file
 
     const cwd = process.cwd()
     const outDir = resolve(cwd, options.outDir)
@@ -43,6 +54,7 @@ cli
         userConfigPath: options.config,
         userBasePath: options.basePath,
         globMatchedFiles: options.files,
+        targetFilePath: options.target,
       })
     }
     catch (error) {
@@ -58,7 +70,7 @@ cli
       baseURL += '/'
     if (!baseURL.startsWith('/'))
       baseURL = `/${baseURL}`
-    baseURL = baseURL.replace(/\/+/g, '/')
+    baseURL = baseURL.replace(RE_CONSECUTIVE_SLASHES, '/')
 
     if (existsSync(outDir))
       await fs.rm(outDir, { recursive: true })
@@ -70,7 +82,7 @@ cli
       for (const file of htmlFiles) {
         const content = await fs.readFile(resolve(distDir, file), 'utf-8')
         const newContent = content
-          .replaceAll(/\s(href|src)="\//g, ` $1="${baseURL}`)
+          .replaceAll(RE_ABSOLUTE_ASSET_ATTR, ` $1="${baseURL}`)
           .replaceAll('baseURL:"/"', `baseURL:"${baseURL}"`)
         await fs.writeFile(resolve(outDir, file), newContent, 'utf-8')
       }
@@ -88,7 +100,9 @@ cli
 cli
   .command('', 'Start dev inspector')
   .option('--config <configFile>', 'Config file path')
-  .option('--files', 'Include matched file paths in payload', { default: true })
+  .option('--files', 'Include matched file paths in payload', { default: false })
+  .option('--file <filePath>', 'Alias of --target')
+  .option('--target <filePath>', 'Target file path used to resolve effective config', { default: 'stylelint-inspector-target.css' })
   .option('--basePath <basePath>', 'Base directory for globs to resolve. Default to directory of config file if not provided')
   // Dev specific options
   .option('--host <host>', 'Host', { default: process.env.HOST || '127.0.0.1' })
@@ -99,10 +113,16 @@ cli
     const host = options.host
     const port = await getPort({ port: options.port, portRange: [7777, 9000], host })
 
-    if (process.env.ESLINT_CONFIG)
-      options.config ||= process.env.ESLINT_CONFIG
+    if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG)
+      options.config ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+    if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH)
+      options.basePath ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+    if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET)
+      options.target ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
 
-    console.log(MARK_INFO, `Starting ESLint config inspector at`, c.green`http://${host === '127.0.0.1' ? 'localhost' : host}:${port}`, '\n')
+    options.target ||= options.file
+
+    console.log(MARK_INFO, `Starting Stylelint config inspector at`, c.green`http://${host === '127.0.0.1' ? 'localhost' : host}:${port}`, '\n')
 
     const cwd = process.cwd()
     const server = await createHostServer({
@@ -110,6 +130,7 @@ cli
       userConfigPath: options.config,
       userBasePath: options.basePath,
       globMatchedFiles: options.files,
+      targetFilePath: options.target,
     })
 
     server.listen(port, host, async () => {

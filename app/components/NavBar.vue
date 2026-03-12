@@ -7,6 +7,7 @@ import { isFetching, payload } from '~/composables/payload'
 import { filtersRules as filters } from '~/composables/state'
 
 const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate)
+const diagnostics = computed(() => payload.value.diagnostics ?? [])
 
 const rules = computed(() => Object.values(payload.value.rules))
 const deprecatedUsing = computed(() => rules.value
@@ -29,6 +30,10 @@ function showDeprecated() {
   <div v-if="payload.meta.configPath" flex="~ gap-1 items-center" my1 text-sm>
     <span font-mono op35>{{ payload.meta.configPath }}</span>
   </div>
+  <div v-if="payload.meta.targetFilePath" flex="~ gap-1 items-center" my1 text-sm>
+    <span op50>Resolved for</span>
+    <code font-mono op75>{{ payload.meta.targetFilePath }}</code>
+  </div>
   <div flex="~ gap-1 items-center wrap" text-sm>
     <span op50>Composed with</span>
     <span font-bold>{{ payload.configs.length }}</span>
@@ -42,6 +47,17 @@ function showDeprecated() {
       <div i-svg-spinners-90-ring-with-bg flex-none text-sm />
       Fetching updates...
     </div>
+  </div>
+  <div v-if="diagnostics.length" flex="~ col gap-1" my2 text-sm>
+    <div flex="~ gap-2 items-center" text-amber6 dark:text-amber4>
+      <div i-ph-warning-circle-duotone flex-none />
+      <span>Inspector diagnostics ({{ diagnostics.length }})</span>
+    </div>
+    <ul ml6 list-disc text-amber7 op85 dark:text-amber3>
+      <li v-for="(note, idx) of diagnostics" :key="idx">
+        {{ note }}
+      </li>
+    </ul>
   </div>
   <div flex="~ gap-3 items-center wrap" py4>
     <NuxtLink
@@ -75,7 +91,7 @@ function showDeprecated() {
       @click="toggleDark()"
     />
     <NuxtLink
-      href="https://github.com/eslint/config-inspector" target="_blank"
+      href="https://github.com/stylelint/config-inspector" target="_blank"
       i-carbon-logo-github text-lg op50 hover:op75
     />
     <template v-if="deprecatedUsing.length">

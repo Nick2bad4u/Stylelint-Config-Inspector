@@ -4,14 +4,15 @@ import type { ReadConfigOptions } from './configs'
 import process from 'node:process'
 import chokidar from 'chokidar'
 import { getPort } from 'get-port-please'
+import { normalize, relative } from 'pathe'
 import { WebSocketServer } from 'ws'
 import { readConfig, resolveConfigPath } from './configs'
 import { MARK_CHECK } from './constants'
 import { ConfigInspectorError } from './errors'
 
-const readErrorWarning = `Failed to load \`eslint.config.js\`.
-Note that \`@eslint/config-inspector\` only works with the flat config format:
-https://eslint.org/docs/latest/use/configure/configuration-files-new`
+const readErrorWarning = `Failed to load Stylelint configuration.
+Please ensure a valid Stylelint config can be resolved:
+https://stylelint.io/user-guide/configure`
 
 export interface CreateWsServerOptions extends ReadConfigOptions {}
 
@@ -44,6 +45,33 @@ export async function createWsServer(options: CreateWsServerOptions) {
   }
 
   const { basePath } = resolvedConfigPath
+
+  function toRelativePath(path: string): string {
+    const result = relative(options.cwd, path).replaceAll('\\', '/')
+    return result.length ? result : normalize(path).replaceAll('\\', '/')
+  }
+
+  function createErrorPayload(error: unknown): Payload {
+    const diagnostic = error instanceof Error
+      ? error.message
+      : String(error)
+
+    return {
+      configs: [],
+      rules: {},
+      diagnostics: [readErrorWarning, diagnostic],
+      meta: {
+        wsPort: port,
+        engine: 'stylelint',
+        targetFilePath: options.targetFilePath,
+        lastUpdate: Date.now(),
+        basePath,
+        configPath: resolvedConfigPath.configPath
+          ? toRelativePath(resolvedConfigPath.configPath)
+          : '',
+      },
+    }
+  }
 
   const watcher = chokidar.watch([], {
     ignoreInitial: true,
@@ -83,10 +111,7 @@ export async function createWsServer(options: CreateWsServerOptions) {
       else {
         console.error(e)
       }
-      return {
-        message: readErrorWarning,
-        error: String(e),
-      }
+      return createErrorPayload(e)
     }
   }
 

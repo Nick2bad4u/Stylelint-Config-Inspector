@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { Linter } from 'eslint'
-import type { RuleInfo } from '~~/shared/types'
+import type { RuleInfo, RulesRecord } from '~~/shared/types'
 import { computed, defineComponent, Fragment, h } from 'vue'
 import { getRuleFromName, payload } from '~/composables/payload'
 import { isGridView } from '../composables/state'
 
 const props = defineProps<{
-  rules: Partial<Linter.RulesRecord> | RuleInfo[]
+  rules: Partial<RulesRecord> | RuleInfo[]
   getBind?: (ruleName: string) => Record<string, any>
   filter?: (ruleName: string) => boolean
 }>()

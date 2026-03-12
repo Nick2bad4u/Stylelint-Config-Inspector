@@ -16,7 +16,7 @@ export const filtersRules = reactive({
 })
 
 export const stateStorage = useLocalStorage(
-  'eslint-config-viewer',
+  'stylelint-config-viewer',
   {
     viewType: 'list' as 'list' | 'grid',
     viewFileMatchType: 'configs' as 'configs' | 'merged',

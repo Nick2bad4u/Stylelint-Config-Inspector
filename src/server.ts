@@ -1,7 +1,8 @@
 import type { CreateWsServerOptions } from './ws'
 import { readFile, stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
-import { createApp, eventHandler, serveStatic, toNodeListener } from 'h3'
+import { createApp, eventHandler, serveStatic } from 'h3'
+import { toNodeListener } from 'h3/node'
 import { lookup } from 'mrmime'
 import { join } from 'pathe'
 import { distDir } from './dirs'
@@ -19,10 +20,7 @@ export async function createHostServer(options: CreateWsServerOptions) {
     return fileMap.get(id)
   }
 
-  app.use('/api/payload.json', eventHandler(async (event) => {
-    event.node.res.setHeader('Content-Type', 'application/json')
-    return event.node.res.end(JSON.stringify(await ws.getData()))
-  }))
+  app.use('/api/payload.json', eventHandler(() => ws.getData()))
 
   app.use('/', eventHandler(async (event) => {
     const result = await serveStatic(event, {
@@ -40,7 +38,7 @@ export async function createHostServer(options: CreateWsServerOptions) {
       },
     })
 
-    if (result === false)
+    if (!result)
       return readCachedFile(join(distDir, 'index.html'))
   }))
 

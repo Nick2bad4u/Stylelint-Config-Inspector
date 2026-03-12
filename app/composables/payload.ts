@@ -6,7 +6,7 @@ import { isGeneralConfig, isIgnoreOnlyConfig } from '~~/shared/configs'
 import { getRuleLevel, getRuleOptions } from '~~/shared/rules'
 import { configsOpenState, fileGroupsOpenState } from './state'
 
-const LOG_NAME = '[ESLint Config Inspector]'
+const LOG_NAME = '[Config Inspector]'
 
 const data = ref<Payload>({
   rules: {},
@@ -202,14 +202,14 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     file.globs.forEach(i => group.globs.add(i))
   }
 
-  const groups = Array.from(filesGroupMap.values())
+  const groups = [...filesGroupMap.values()]
   fileGroupsOpenState.value = groups.map(() => true)
 
   return {
     list: files,
     globToFiles,
     fileToGlobs,
-    fileToConfigs: new Map(Array.from(fileToConfigs.entries()).map(([file, configs]) => [file, Array.from(configs).sort((a, b) => a - b).map(i => payload.configs[i]!)])),
+    fileToConfigs: new Map(Array.from(fileToConfigs.entries(), ([file, configs]) => [file, [...configs].toSorted((a, b) => a - b).map(i => payload.configs[i]!)])),
     configToFiles,
     groups,
   }

@@ -1,4 +1,3 @@
-import type { Linter } from 'eslint'
 import type { MinimatchOptions } from 'minimatch'
 import type { FlatConfigItem, MatchedFile } from './types'
 import { ConfigArray } from '@eslint/config-array'
@@ -16,9 +15,8 @@ function minimatch(file: string, pattern: string) {
   return m.match(file)
 }
 
-export function getMatchedGlobs(file: string, glob: (string | string[])[]) {
-  const globs = (Array.isArray(glob) ? glob : [glob]).flat()
-  return globs.filter(glob => minimatch(file, glob)).flat()
+export function getMatchedGlobs(file: string, globs: string[]) {
+  return globs.filter(glob => minimatch(file, glob))
 }
 
 const META_KEYS = new Set(['name', 'index'])
@@ -83,19 +81,35 @@ const FLAT_CONFIG_NOOP_SCHEMA = {
   languageOptions: NOOP_SCHEMA,
   processor: NOOP_SCHEMA,
   plugins: NOOP_SCHEMA,
+  extends: NOOP_SCHEMA,
+  customSyntax: NOOP_SCHEMA,
+  overrides: NOOP_SCHEMA,
+  ignoreFiles: NOOP_SCHEMA,
+  defaultSeverity: NOOP_SCHEMA,
+  processors: NOOP_SCHEMA,
+  reportDescriptionlessDisables: NOOP_SCHEMA,
+  reportInvalidScopeDisables: NOOP_SCHEMA,
+  reportNeedlessDisables: NOOP_SCHEMA,
+  reportUnscopedDisables: NOOP_SCHEMA,
+  configurationComment: NOOP_SCHEMA,
+  ignoreDisables: NOOP_SCHEMA,
+  allowEmptyInput: NOOP_SCHEMA,
+  cache: NOOP_SCHEMA,
+  fix: NOOP_SCHEMA,
+  formatter: NOOP_SCHEMA,
   index: {
     ...NOOP_SCHEMA,
     // accumulate the matched config index to an array
-    merge(v1: number, v2: number) {
-      return [v1].concat(v2).flat()
+    merge(v1: number | number[], v2: number | number[]) {
+      return [...[v1].flat(), ...[v2].flat()]
     },
   },
   rules: NOOP_SCHEMA,
 }
 
-export function buildConfigArray(configs: Linter.Config[], basePath: string) {
+export function buildConfigArray(configs: Array<Record<string, unknown>>, basePath: string) {
   return new ConfigArray(configs, {
     basePath,
-    schema: FLAT_CONFIG_NOOP_SCHEMA,
+    schema: FLAT_CONFIG_NOOP_SCHEMA as unknown as never,
   }).normalizeSync()
 }

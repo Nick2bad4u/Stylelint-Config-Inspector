@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import type { Linter } from 'eslint'
 import type { FuseResultMatch } from 'fuse.js'
 import type { ComponentPublicInstance, PropType, VNode } from 'vue'
-import type { FlatConfigItem, MatchedFile } from '~~/shared/types'
+import type { FlatConfigItem, MatchedFile, RulesRecord } from '~~/shared/types'
 import { useRoute } from '#app/composables/router'
 import { debouncedWatch } from '@vueuse/core'
 import Fuse from 'fuse.js'
@@ -43,11 +42,13 @@ watchEffect(() => {
       payload.value.meta.basePath,
     )
     if (fileMatchResult.value.configs.length) {
-      configs = Array.from(new Set([
+      const deduplicatedConfigIndexes = new Set([
         ...fileMatchResult.value.configs,
         ...payload.value.configsGeneral.filter(i => !isIgnoreOnlyConfig(i)).map(i => i.index),
-      ]))
-        .sort((a, b) => a - b)
+      ])
+
+      configs = [...deduplicatedConfigIndexes]
+        .toSorted((a, b) => a - b)
         .map(idx => payload.value.configs[idx]!)
     }
     else {
@@ -111,9 +112,9 @@ const mergedRules = computed(() => {
       specificEnabled: {},
     }
   }
-  const all: Record<string, Linter.RuleEntry> = {}
-  const common: Record<string, Linter.RuleEntry> = {}
-  const specific: Record<string, Linter.RuleEntry> = {}
+  const all: RulesRecord = {}
+  const common: RulesRecord = {}
+  const specific: RulesRecord = {}
 
   filteredConfigs.value.forEach((config) => {
     if (!config.rules)
@@ -399,7 +400,7 @@ onMounted(async () => {
           </details>
         </template>
 
-        <!-- Flat Configs -->
+        <!-- Config Items -->
         <template v-else>
           <template
             v-for="config, idx in payload.configs"

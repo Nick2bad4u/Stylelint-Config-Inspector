@@ -5,8 +5,8 @@ export const filepathIconsMap = [
     icon: 'i-file-icons-npm text-red scale-110',
   },
   {
-    match: /eslint\.config\.\w+$/,
-    icon: 'i-file-icons-eslint text-primary',
+    match: /stylelint\.config\.\w+$|\.stylelintrc(\..+)?$/,
+    icon: 'i-simple-icons-stylelint text-primary',
   },
   {
     match: /\.[mc]?jsx?$/,

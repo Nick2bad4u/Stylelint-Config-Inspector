@@ -15,7 +15,7 @@ init(config.app.baseURL)
     <ConfigInspectorBadge mb6 text-xl font-200 />
 
     <div text-2xl text-red5 font-bold>
-      Failed to load <span rounded bg-red:5 px2>eslint.config.js</span><br>
+      Failed to resolve Stylelint config<br>
     </div>
 
     <div text-lg text-red font-mono>
@@ -24,8 +24,8 @@ init(config.app.baseURL)
 
     <div mt6 op50>
       Note that
-      <a href="https://github.com/eslint/config-inspector" target="_blank" hover:underline>config inspector</a>
-      only works with the <a href="https://eslint.org/docs/latest/use/configure/configuration-files-new" target="_blank" font-bold hover:underline>flat config format</a>.
+      <a href="https://stylelint.io/user-guide/configure" target="_blank" hover:underline>Stylelint configuration</a>
+      must be discoverable for the selected target file.
     </div>
   </div>
   <div v-else-if="isLoading" flex="~ col" h-full w-full items-center justify-center p4>

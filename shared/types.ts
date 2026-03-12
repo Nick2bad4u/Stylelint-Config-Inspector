@@ -1,8 +1,17 @@
-import type { RuleMetaData } from '@typescript-eslint/utils/ts-eslint'
-import type { Linter } from 'eslint'
+export type GlobPattern = string
 
-export interface FlatConfigItem extends Linter.Config {
+export type RuleEntry = unknown
+export type RulesRecord = Record<string, RuleEntry>
+
+export interface FlatConfigItem extends Record<string, unknown> {
   index: number
+  name?: string
+  files?: GlobPattern[]
+  ignores?: GlobPattern[]
+  rules?: RulesRecord
+  plugins?: Record<string, unknown>
+  extends?: string[]
+  customSyntax?: string
 }
 
 export type RuleLevel = 'off' | 'warn' | 'error'
@@ -11,6 +20,7 @@ export interface Payload {
   configs: FlatConfigItem[]
   rules: Record<string, RuleInfo>
   meta: PayloadMeta
+  diagnostics?: string[]
   files?: MatchedFile[]
 }
 
@@ -64,14 +74,42 @@ export interface FilesGroup {
 
 export interface PayloadMeta {
   wsPort?: number
+  engine?: 'stylelint'
+  targetFilePath?: string
+  configNotFound?: boolean
   lastUpdate: number
   basePath: string
   configPath: string
 }
 
-export interface RuleInfo extends RuleMetaData<any, any> {
+export interface RuleInfo {
   name: string
   plugin: string
+  docs?: {
+    description?: string
+    recommended?: boolean
+    url?: string
+  }
+  schema?: unknown
+  messages?: Record<string, string>
+  defaultOptions?: unknown[]
+  fixable?: boolean | string
+  deprecated?: boolean | {
+    message?: string
+    deprecatedSince?: string
+    availableUntil?: string
+    url?: string
+    replacedBy?: Array<{
+      rule?: {
+        name?: string
+        url?: string
+      }
+      plugin?: {
+        name?: string
+        url?: string
+      }
+    }>
+  }
   /**
    * The rule may be removed
    */
@@ -87,7 +125,7 @@ export interface RuleConfigState {
   name: string
   configIndex: number
   level: RuleLevel
-  options?: any[]
+  options?: unknown[]
 }
 
 export type RuleConfigStates = RuleConfigState[]

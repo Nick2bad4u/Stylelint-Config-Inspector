@@ -3,6 +3,7 @@ import type { FiltersConfigsPage, FlatConfigItem } from '~~/shared/types'
 import { useRouter } from '#app/composables/router'
 import { computed, ref, watchEffect } from 'vue'
 import { getRuleLevel, getRuleOptions } from '~~/shared/rules'
+import { getPluginColor } from '~/composables/color'
 import { filtersRules, isGridView } from '~/composables/state'
 import { stringifyUnquoted } from '~/composables/strings'
 
@@ -19,9 +20,8 @@ const emit = defineEmits<{
 }>()
 
 /**
- * Fields that are considered metadata and not part of the config object.
+ * Fields that are considered metadata and not part of the configuration body.
  * @type {Set<string>}
- * @see {@link https://github.com/eslint/rewrite/blob/e2a7ec809db20e638abbad250d105ddbde88a8d5/packages/config-array/src/config-array.js#L72-L76}
  */
 const META_FIELDS = new Set(['name'])
 
@@ -30,6 +30,7 @@ const META_FIELDS = new Set(['name'])
  * @type {Set<string>}
  */
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
+const STYLELINT_OVERRIDE_NAME_RE = /^stylelint\/resolved\/override-(\d+)$/
 
 const open = defineModel('open', {
   default: true,
@@ -52,11 +53,34 @@ function gotoPlugin(name: string) {
 }
 
 const extraConfigs = computed(() => {
-  const ignoredKeys = ['files', 'plugins', 'ignores', 'rules', 'name', 'index']
+  const ignoredKeys = ['files', 'plugins', 'ignores', 'rules', 'extends', 'customSyntax', 'name', 'index']
   return Object.fromEntries(
     Object.entries(props.config)
       .filter(([key]) => !ignoredKeys.includes(key)),
   )
+})
+
+const sourceBadge = computed(() => {
+  const name = props.config.name ?? ''
+
+  if (name === 'stylelint/resolved/root') {
+    return {
+      text: 'Root',
+      colorClass: 'text-sky6 dark:text-sky3',
+      bgClass: 'bg-sky:8',
+    }
+  }
+
+  const override = STYLELINT_OVERRIDE_NAME_RE.exec(name)
+  if (override?.[1]) {
+    return {
+      text: `Override #${override[1]}`,
+      colorClass: 'text-amber6 dark:text-amber3',
+      bgClass: 'bg-amber:10',
+    }
+  }
+
+  return undefined
 })
 </script>
 
@@ -75,9 +99,17 @@ const extraConfigs = computed(() => {
       <div flex="~ gap-2 items-center" cursor-pointer select-none bg-hover px2 py2 text-sm font-mono>
         <div class="[details[open]_&]:rotate-90" i-ph-caret-right flex-none op50 transition />
         <div flex flex-auto flex-col flex-wrap gap-3 md:flex-row md:justify-end>
-          <span :class="config.name ? '' : 'op50 italic'" flex-1>
+          <span :class="config.name ? '' : 'op50 italic'" flex="~ gap-2 items-center" flex-1>
             <ColorizedConfigName v-if="config.name" :name="config.name" />
             <span v-else>anonymous #{{ index + 1 }}</span>
+            <code
+              v-if="sourceBadge"
+              border="~ base rounded-full"
+              px2 py0.2 text-xs
+              :class="[sourceBadge.colorClass, sourceBadge.bgClass]"
+            >
+              {{ sourceBadge.text }}
+            </code>
           </span>
 
           <div flex="~ gap-2 items-start">
@@ -104,6 +136,12 @@ const extraConfigs = computed(() => {
               :number="Object.keys(config.plugins || {}).length"
               color="text-teal5"
               title="Plugins"
+            />
+            <SummarizeItem
+              icon="i-ph-stack-plus-duotone"
+              :number="config.extends?.length || 0"
+              color="text-violet5"
+              title="Extends"
             />
             <SummarizeItem
               icon="i-ph-list-dashes-duotone"
@@ -154,6 +192,31 @@ const extraConfigs = computed(() => {
               {{ name }}
             </button>
           </div>
+        </div>
+      </div>
+      <div v-if="config.extends?.length" flex="~ gap-2 items-start">
+        <div i-ph-stack-plus-duotone my1 flex-none />
+        <div flex="~ col gap-2">
+          <div>Extends ({{ config.extends.length }})</div>
+          <div flex="~ gap-2 items-center wrap">
+            <code
+              v-for="entry, idx of config.extends"
+              :key="idx"
+              border="~ base rounded-full"
+              bg-violet:8 px3 py0.5 text-violet7 font-mono dark:text-violet3
+            >
+              {{ entry }}
+            </code>
+          </div>
+        </div>
+      </div>
+      <div v-if="config.customSyntax" flex="~ gap-2 items-start">
+        <div i-ph-file-code-duotone my1 flex-none />
+        <div flex="~ col gap-2">
+          <div>Custom syntax</div>
+          <code border="~ base rounded-full" bg-emerald:8 px3 py0.5 text-emerald7 font-mono dark:text-emerald3>
+            {{ config.customSyntax }}
+          </code>
         </div>
       </div>
       <div v-if="config.ignores" flex="~ gap-2 items-start">

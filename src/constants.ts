@@ -1,21 +1,26 @@
 import c from 'ansis'
 
-export const configFilenames = [
-  'eslint.config.js',
-  'eslint.config.mjs',
-  'eslint.config.cjs',
-  'eslint.config.ts',
-  'eslint.config.mts',
-  'eslint.config.cts',
+export const stylelintConfigFilenames = [
+  'stylelint.config.js',
+  'stylelint.config.mjs',
+  'stylelint.config.cjs',
+  'stylelint.config.ts',
+  'stylelint.config.mts',
+  'stylelint.config.cts',
 ]
 
-export const legacyConfigFilenames = [
-  '.eslintrc.js',
-  '.eslintrc.cjs',
-  '.eslintrc.yaml',
-  '.eslintrc.yml',
-  '.eslintrc.json',
+export const stylelintLegacyConfigFilenames = [
+  '.stylelintrc',
+  '.stylelintrc.js',
+  '.stylelintrc.mjs',
+  '.stylelintrc.cjs',
+  '.stylelintrc.yaml',
+  '.stylelintrc.yml',
+  '.stylelintrc.json',
 ]
+
+export const configFilenames = stylelintConfigFilenames
+export const legacyConfigFilenames = stylelintLegacyConfigFilenames
 
 export const MARK_CHECK = c.green('✔')
 export const MARK_INFO = c.blue('ℹ')

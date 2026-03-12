@@ -17,6 +17,7 @@ export default defineNuxtConfig({
   experimental: {
     typedPages: true,
     clientNodeCompat: true,
+    payloadExtraction: true,
   },
 
   features: {
@@ -56,7 +57,7 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: `/favicon.svg` },
       ],
-      title: 'ESLint Config Inspector',
+      title: 'Stylelint Config Inspector',
     },
   },
 
