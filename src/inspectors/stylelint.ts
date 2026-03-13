@@ -1116,7 +1116,7 @@ function extractConfigs(
   const { overrides: _resolvedOverrides, ...rootConfig } = resolvedConfig
 
   const configs: FlatConfigItem[] = [
-    normalizeConfigItem(rootConfig, 0, 'stylelint/resolved/root'),
+    normalizeConfigItem(rootConfig, 0, 'stylelint/root'),
   ]
 
   const overrideSource = Array.isArray(sourceConfig?.overrides)
@@ -1137,8 +1137,8 @@ function extractConfigs(
         : undefined
 
       const fallbackName = filesSummary
-        ? `stylelint/resolved/override-${index + 1} (${filesSummary})`
-        : `stylelint/resolved/override-${index + 1}`
+        ? `stylelint/override-${index + 1} (${filesSummary})`
+        : `stylelint/override-${index + 1}`
 
       configs.push(normalizeConfigItem(override, index + 1, fallbackName))
     })

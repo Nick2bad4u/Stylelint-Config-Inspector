@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FilesGroup } from '~~/shared/types'
+import type { FilesGroup, SharedConfigEntry } from '~~/shared/types'
 import { useRouter } from '#app/composables/router'
 import { computed, ref, watchEffect } from 'vue'
 
@@ -41,6 +41,13 @@ const groupName = computed(() => {
 const router = useRouter()
 function goToConfig(idx: number) {
   router.push(`/configs?index=${idx + 1}`)
+}
+
+function getConfigFilePatterns(config: SharedConfigEntry): string[] {
+  return (config.files ?? [])
+    .flat()
+    .map(pattern => pattern.trim())
+    .filter(Boolean)
 }
 </script>
 
@@ -140,14 +147,14 @@ function goToConfig(idx: number) {
 
       <div flex="~ col gap-1" ml6 mt--2>
         <div
-          v-for="(config, idx) of group.configs"
-          :key="idx"
+          v-for="config of group.configs"
+          :key="`${config.name}:${config.index}`"
           font-mono
-          flex="~ gap-2"
+          flex="~ col gap-1"
         >
           <VDropdown>
             <button badge text-start>
-              <ColorizedConfigName :name="config.name" :index="idx" />
+              <ColorizedConfigName :name="config.name" :index="config.index" />
             </button>
             <template #popper="{ shown }">
               <div v-if="shown" max-h="50vh" min-w-100>
@@ -182,12 +189,60 @@ function goToConfig(idx: number) {
                           :active="group.globs.has(glob)"
                         />
                       </div>
+
+                      <div
+                        v-if="config.customSyntax"
+                        rounded-md
+                        border="~ base"
+                        bg="zinc-950/35"
+                        px2
+                        py1
+                        text-2.5
+                      >
+                        customSyntax: {{ config.customSyntax }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </template>
           </VDropdown>
+
+          <div
+            v-if="config.customSyntax || getConfigFilePatterns(config).length > 0"
+            ml7
+            flex="~ gap-1 wrap items-center"
+            text="2.5 zinc-300/75"
+          >
+            <span
+              v-if="config.customSyntax"
+              rounded-md
+              border="~ base"
+              bg="zinc-950/35"
+              px1.5
+              py0.5
+            >
+              syntax: {{ config.customSyntax }}
+            </span>
+
+            <GlobItem
+              v-for="glob in getConfigFilePatterns(config).slice(0, 3)"
+              :key="`${config.name}:${glob}`"
+              :glob="glob"
+            />
+
+            <span
+              v-if="getConfigFilePatterns(config).length > 3"
+              rounded-md
+              border="~ base"
+              bg="zinc-950/25"
+              px1.5
+              py0.5
+              text="zinc-300/70"
+            >
+              +{{ getConfigFilePatterns(config).length - 3 }} more
+            </span>
+          </div>
         </div>
       </div>
 

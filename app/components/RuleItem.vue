@@ -210,7 +210,7 @@ const docsTooltip = computed(() => {
     />
   </div>
 
-  <div :class="props.class" min-w-0>
+  <div :class="props.class" min-w-0 of-hidden pr2>
     <VDropdown inline-block>
       <ColorizedRuleName
         v-tooltip="{ content: rule.name }"
@@ -255,9 +255,8 @@ const docsTooltip = computed(() => {
   <div v-if="!gridView" :class="props.class" mx2 min-w-0 flex justify-center>
     <div
       grid="~ cols-[repeat(4,1.1rem)]"
-      min-h-5
-      items-center
-      justify-items-center
+
+      min-h-5 items-center justify-items-center gap-x-1
     >
       <div
         v-if="rule.invalid"

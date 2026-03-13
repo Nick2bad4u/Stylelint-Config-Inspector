@@ -36,7 +36,7 @@ const META_FIELDS = new Set(['name'])
  */
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
 const STYLELINT_OVERRIDE_NAME_RE
-  = /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
+  = /^stylelint\/override-(\d+)(?:\s+\(.+\))?$/
 const OVERRIDE_GLOB_PREVIEW_MAX_LENGTH = 24
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
@@ -227,7 +227,7 @@ function isPrimitiveExtraConfigValue(value: unknown): boolean {
 const sourceBadge = computed(() => {
   const name = props.config.name ?? ''
 
-  if (name === 'stylelint/resolved/root') {
+  if (name === 'stylelint/root' || name === 'stylelint/resolved/root') {
     return {
       text: 'Root',
       colorClass: 'text-sky6 dark:text-sky3',
@@ -401,6 +401,7 @@ const sourceBadge = computed(() => {
               leading-4
               :style="{
                 color: getPluginColor(name),
+                borderColor: getPluginColor(name, 0.55),
                 backgroundColor: getPluginColor(name, 0.1),
               }"
               font-mono
@@ -532,39 +533,29 @@ const sourceBadge = computed(() => {
 
       <div v-if="Object.keys(extraConfigs).length" flex="~ gap-2">
         <div i-ph-sliders-duotone my1 flex-none />
+
         <div flex="~ col gap-2" w-full>
           <div>Additional configurations</div>
-          <template v-for="(v, k) in extraConfigs" :key="k">
-            <div border="~ base rounded-xl" bg="white/2 dark:black/8">
-              <div border="b base" p2 px3 text-sm op65>
-                {{ k }}
-              </div>
-              <code
-                v-if="isPrimitiveExtraConfigValue(v)"
-                block
-                px3
-                py2
-                text-sm
-                font-mono
-                op85
-              >
-                {{ stringifyUnquoted(v) }}
+
+          <div
+            v-for="(value, key) in extraConfigs"
+            :key="key"
+            class="flex items-center gap-1"
+          >
+            <span class="text-zinc-300 font-600">{{ key }}:</span>
+
+            <template v-if="isPrimitiveExtraConfigValue(value)">
+              <code class="break-all rounded bg-zinc-900/50 px1.5 py0.5 text-zinc-200">
+                {{ stringifyUnquoted(value) }}
               </code>
-              <Shiki
-                v-else
-                lang="ts"
-                :code="stringifyUnquoted(v)"
-                max-h-75
-                max-w-full
-                w-full
-                of-auto
-                rounded-b-xl
-                bg-code
-                p2
-                text-sm
-              />
-            </div>
-          </template>
+            </template>
+
+            <template v-else>
+              <code class="break-all rounded bg-zinc-900/35 px1.5 py0.5 text-zinc-300">
+                {{ JSON.stringify(value) }}
+              </code>
+            </template>
+          </div>
         </div>
       </div>
     </div>
