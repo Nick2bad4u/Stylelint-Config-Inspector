@@ -35,8 +35,8 @@ const META_FIELDS = new Set(['name'])
  * @type {Set<string>}
  */
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
-const STYLELINT_OVERRIDE_NAME_RE =
-  /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
+const STYLELINT_OVERRIDE_NAME_RE
+  = /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
 const OVERRIDE_GLOB_PREVIEW_MAX_LENGTH = 24
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
@@ -64,7 +64,8 @@ const knownRulePlugins = computed(
 )
 const configRulePlugins = computed(() => {
   const rules = props.config.rules
-  if (!rules) return new Set<string>()
+  if (!rules)
+    return new Set<string>()
 
   return new Set(
     Object.keys(rules)
@@ -76,7 +77,8 @@ const configRulePlugins = computed(() => {
 
 function toPluginFilterCandidates(name: string): string[] {
   const trimmed = name.trim()
-  if (!trimmed) return []
+  if (!trimmed)
+    return []
 
   const candidates = new Set<string>([trimmed])
   const scopedMatch = SCOPED_STYLELINT_PLUGIN_RE.exec(trimmed)
@@ -84,18 +86,24 @@ function toPluginFilterCandidates(name: string): string[] {
     const scope = scopedMatch[1]
     const suffix = scopedMatch[2]
 
-    if (scope) candidates.add(scope)
-    if (scope && suffix) candidates.add(`${scope}/${suffix}`)
-    if (suffix) candidates.add(suffix)
+    if (scope)
+      candidates.add(scope)
+    if (scope && suffix)
+      candidates.add(`${scope}/${suffix}`)
+    if (suffix)
+      candidates.add(suffix)
   }
 
   const scopedPackageMatch = SCOPED_STYLELINT_PACKAGE_RE.exec(trimmed)
   if (scopedPackageMatch) {
     const scope = scopedPackageMatch[1]
     const suffix = scopedPackageMatch[2]
-    if (scope) candidates.add(scope)
-    if (scope && suffix) candidates.add(`${scope}/${suffix}`)
-    if (suffix) candidates.add(suffix)
+    if (scope)
+      candidates.add(scope)
+    if (scope && suffix)
+      candidates.add(`${scope}/${suffix}`)
+    if (suffix)
+      candidates.add(suffix)
   }
 
   if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
@@ -108,7 +116,8 @@ function toPluginFilterCandidates(name: string): string[] {
   if (tail) {
     candidates.add(tail)
     const tailWithoutExt = tail.replace(FILE_EXTENSION_SUFFIX_RE, '')
-    if (tailWithoutExt) candidates.add(tailWithoutExt)
+    if (tailWithoutExt)
+      candidates.add(tailWithoutExt)
     if (STYLELINT_PLUGIN_PREFIX_RE.test(tail))
       candidates.add(tail.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
     if (STYLELINT_PLUGIN_PREFIX_RE.test(tailWithoutExt)) {
@@ -132,7 +141,8 @@ function resolvePluginFilter(name: string): string {
   const candidates = toPluginFilterCandidates(name)
 
   for (const candidate of candidates) {
-    if (availablePlugins.has(candidate)) return candidate
+    if (availablePlugins.has(candidate))
+      return candidate
   }
 
   for (const candidate of candidates) {
@@ -142,7 +152,8 @@ function resolvePluginFilter(name: string): string {
         || candidate.endsWith(`/${configPlugin}`)
         || candidate.endsWith(`-${configPlugin}`)
       ) {
-        if (availablePlugins.has(configPlugin)) return configPlugin
+        if (availablePlugins.has(configPlugin))
+          return configPlugin
       }
     }
   }
@@ -162,7 +173,8 @@ function gotoPlugin(name: string) {
 
 const affectedFilesCount = computed(() => {
   const configToFiles = payload.value.filesResolved?.configToFiles
-  if (!configToFiles) return props.config.files?.length || 0
+  if (!configToFiles)
+    return props.config.files?.length || 0
 
   return configToFiles.get(props.config.index)?.size ?? 0
 })
@@ -170,13 +182,15 @@ const affectedFilesCount = computed(() => {
 function summarizeOverrideFiles(
   files: string[] | undefined,
 ): string | undefined {
-  if (!files?.length) return undefined
+  if (!files?.length)
+    return undefined
 
   const [first] = files
-  if (!first) return undefined
+  if (!first)
+    return undefined
 
-  const head =
-    first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
+  const head
+    = first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
       ? `${first.slice(0, OVERRIDE_GLOB_PREVIEW_MAX_LENGTH)}…`
       : first
 
@@ -450,7 +464,9 @@ const sourceBadge = computed(() => {
           >
             Ignore files globally
           </div>
-          <div v-else>Ignore</div>
+          <div v-else>
+            Ignore
+          </div>
           <div flex="~ gap-2 items-center wrap">
             <GlobItem
               v-for="(glob, idx) of config.ignores"

@@ -17,24 +17,24 @@ import { isDark } from './dark'
  * - 270: purple
  */
 const predefinedColorMap = {
-  ts: 200,
-  typescript: 200,
+  'ts': 200,
+  'typescript': 200,
   '@typescript-eslint': 200,
-  ignore: '#888888',
-  ignores: '#888888',
-  disable: '#888888',
-  disables: '#888888',
-  vue: '#41b883',
-  nuxt: '#41b883',
-  svelte: '#ff3e00',
-  react: '#61dafb',
-  node: 110,
-  n: 110,
-  js: 50,
-  javascript: 50,
-  antfu: 170,
-  markdown: 270,
-  stylelint: 270,
+  'ignore': '#888888',
+  'ignores': '#888888',
+  'disable': '#888888',
+  'disables': '#888888',
+  'vue': '#41b883',
+  'nuxt': '#41b883',
+  'svelte': '#ff3e00',
+  'react': '#61dafb',
+  'node': 110,
+  'n': 110,
+  'js': 50,
+  'javascript': 50,
+  'antfu': 170,
+  'markdown': 270,
+  'stylelint': 270,
   '@stylistic': 285,
   'stylelint-order': 245,
   'stylelint-scss': 300,
@@ -65,8 +65,10 @@ export function getPluginColor(name: string, opacity = 1): string {
     const color = predefinedColorMap[name]
     if (typeof color === 'number') {
       return getHsla(color, opacity)
-    } else {
-      if (opacity === 1) return color
+    }
+    else {
+      if (opacity === 1)
+        return color
       const opacityHex = Math.floor(opacity * 255)
         .toString(16)
         .padStart(2, '0')

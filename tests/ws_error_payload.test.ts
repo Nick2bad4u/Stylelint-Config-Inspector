@@ -56,11 +56,13 @@ describe('ws error payload contract', () => {
           note.includes('broken config'),
         ),
       ).toBe(true)
-    } finally {
+    }
+    finally {
       await server.watcher.close()
       await new Promise<void>((resolve, reject) => {
-        server.wss.close(error => {
-          if (error) reject(error)
+        server.wss.close((error) => {
+          if (error)
+            reject(error)
           else resolve()
         })
       })

@@ -9,13 +9,15 @@ const { deprecated, invalid } = defineProps<{
 }>()
 
 const deprecatedInfo = computed(() => {
-  if (!deprecated || typeof deprecated === 'boolean') return
+  if (!deprecated || typeof deprecated === 'boolean')
+    return
 
   return deprecated
 })
 
 const versionInfo = computed(() => {
-  if (!deprecatedInfo.value) return
+  if (!deprecatedInfo.value)
+    return
 
   let res = ''
 
@@ -23,7 +25,8 @@ const versionInfo = computed(() => {
     res += `was deprecated in v${deprecatedInfo.value.deprecatedSince}`
 
   if (deprecatedInfo.value.availableUntil) {
-    if (res) res += ', and '
+    if (res)
+      res += ', and '
 
     res += `will be removed in v${deprecatedInfo.value.availableUntil}`
   }
@@ -72,8 +75,8 @@ function getLinkClass(url: string | undefined) {
                 target="_blank"
               >
                 {{ plugin.name ?? plugin.url }}
-              </NuxtLink> </template
-            >{{
+              </NuxtLink>
+            </template>{{
               i === deprecatedInfo.replacedBy.length - 1
                 ? '.'
                 : i === 0

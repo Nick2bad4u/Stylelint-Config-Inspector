@@ -20,13 +20,14 @@ createHighlighterCore({
     import('textmate-grammar-glob/grammars/glob.json') as any,
   ],
   engine: createJavaScriptRegexEngine(),
-}).then(highlighter => {
+}).then((highlighter) => {
   shiki.value = highlighter
 })
 
 export function useHighlightedGlob(code: () => string) {
   return computed(() => {
-    if (!shiki.value) return sanitizeHtml(code())
+    if (!shiki.value)
+      return sanitizeHtml(code())
     return shiki.value.codeToHtml(code(), {
       lang: 'glob',
       theme: isDark.value ? 'vitesse-dark' : 'vitesse-light',

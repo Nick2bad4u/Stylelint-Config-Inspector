@@ -8,7 +8,7 @@ const tempDirs: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempDirs.map(async dir => {
+    tempDirs.map(async (dir) => {
       await rm(dir, { recursive: true, force: true })
     }),
   )
@@ -780,8 +780,8 @@ describe('stylelint adapter', () => {
   })
 
   it('populates recommended metadata for core rules when recommended config package is available', async () => {
-    const recommendedConfig =
-      await import('stylelint-config-recommended').catch(() => undefined)
+    const recommendedConfig
+      = await import('stylelint-config-recommended').catch(() => undefined)
 
     const cwd = await createTempProject(`
       export default {
@@ -804,7 +804,8 @@ describe('stylelint adapter', () => {
 
     if (recommendedConfig) {
       expect(recommendedCount).toBeGreaterThan(0)
-    } else {
+    }
+    else {
       expect(recommendedCount).toBe(0)
     }
   })

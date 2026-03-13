@@ -25,7 +25,7 @@ withDefaults(
         <img
           src="/stylelint/stylelint-icon-black.svg"
           class="inline-block h-1.15em w-1.15em dark:brightness-185 dark:invert"
-        />
+        >
       </span>
 
       <span class="flex flex-col gap-0.5">
@@ -33,7 +33,7 @@ withDefaults(
           <img
             src="/stylelint/stylelint-text-black.svg"
             class="h-0.95em dark:brightness-185 dark:invert"
-          />
+          >
           <span class="text-xs font-medium op70">Config Inspector</span>
         </span>
         <span class="text-xs font-medium op70"> Rule + config explorer </span>

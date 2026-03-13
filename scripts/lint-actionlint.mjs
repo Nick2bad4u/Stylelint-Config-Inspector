@@ -91,7 +91,7 @@ const workflowFiles = useDefaultFiles
   ? readdirSync(workflowsDir, { withFileTypes: true })
       .filter(entry => entry.isFile())
       .map(entry => path.join(workflowsDir, entry.name))
-      .filter(filePath => {
+      .filter((filePath) => {
         const ext = path.extname(filePath).toLowerCase()
         if (ext !== '.yml' && ext !== '.yaml') {
           return false

@@ -43,8 +43,8 @@ function goToConfig(idx: number) {
 const Noop = defineComponent({
   setup:
     (_, { slots }) =>
-    () =>
-      slots.default?.(),
+      () =>
+        slots.default?.(),
 })
 </script>
 
@@ -76,7 +76,9 @@ const Noop = defineComponent({
             @click="hide()"
           />
         </div>
-        <div v-else text-center italic op50>No files matched this glob.</div>
+        <div v-else text-center italic op50>
+          No files matched this glob.
+        </div>
       </div>
 
       <div v-if="shown && popup === 'configs'" max-h="30vh" min-w-80 of-auto p3>
@@ -88,7 +90,9 @@ const Noop = defineComponent({
             </button>
           </div>
         </div>
-        <div v-else text-center italic op50>No configs matched this glob.</div>
+        <div v-else text-center italic op50>
+          No configs matched this glob.
+        </div>
       </div>
     </template>
   </component>

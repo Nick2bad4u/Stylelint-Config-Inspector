@@ -9,7 +9,8 @@ async function main() {
   try {
     await access(cliEntrypoint)
     await import(cliEntrypoint.href)
-  } catch (error) {
+  }
+  catch (error) {
     if (
       error
       && typeof error === 'object'
@@ -28,7 +29,7 @@ async function main() {
   }
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error(error)
   process.exit(1)
 })

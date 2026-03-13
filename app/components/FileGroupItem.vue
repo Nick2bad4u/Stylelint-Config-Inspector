@@ -171,7 +171,9 @@ function goToConfig(idx: number) {
                       op75
                     />
                     <div flex="~ col gap-2">
-                      <div op50>Applies to files matching</div>
+                      <div op50>
+                        Applies to files matching
+                      </div>
                       <div flex="~ gap-2 items-center wrap">
                         <GlobItem
                           v-for="(glob, idx2) of config.files?.flat()"

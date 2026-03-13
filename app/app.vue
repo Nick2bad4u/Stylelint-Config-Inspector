@@ -23,7 +23,7 @@ init(config.app.baseURL)
     <ConfigInspectorBadge mb6 text-xl font-200 />
 
     <div text-2xl text-red5 font-bold>
-      Failed to resolve Stylelint config<br />
+      Failed to resolve Stylelint config<br>
     </div>
 
     <div text-lg text-red font-mono>
@@ -36,8 +36,7 @@ init(config.app.baseURL)
         href="https://stylelint.io/user-guide/configure"
         target="_blank"
         hover:underline
-        >Stylelint configuration</a
-      >
+      >Stylelint configuration</a>
       must be discoverable for the selected target file.
     </div>
   </div>

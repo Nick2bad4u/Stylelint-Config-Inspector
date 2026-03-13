@@ -92,9 +92,7 @@ const metadataHealth = computed(() => {
     <section border="~ amber/25 rounded-xl" bg-amber:6 p4>
       <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
         <div i-ph-warning-circle-duotone flex-none />
-        <span font-medium
-          >Inspector diagnostics ({{ diagnostics.length }})</span
-        >
+        <span font-medium>Inspector diagnostics ({{ diagnostics.length }})</span>
       </div>
       <div v-if="diagnostics.length" mt2>
         <ul ml5 list-disc text-amber7 op90 dark:text-amber3>
@@ -103,7 +101,9 @@ const metadataHealth = computed(() => {
           </li>
         </ul>
       </div>
-      <div v-else mt2 text-sm op70>No diagnostics emitted.</div>
+      <div v-else mt2 text-sm op70>
+        No diagnostics emitted.
+      </div>
     </section>
   </div>
 </template>

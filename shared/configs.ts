@@ -23,7 +23,8 @@ export function getMatchedGlobs(file: string, globs: string[]) {
 
 function getParentDirectories(filepath: string): string[] {
   const parts = filepath.split('/').filter(Boolean)
-  if (parts.length <= 1) return []
+  if (parts.length <= 1)
+    return []
 
   const directories: string[] = []
   for (let i = 1; i < parts.length; i += 1)
@@ -46,9 +47,10 @@ function isIgnoredByGlobalIgnoreGlobs(
     const isUnignore = glob.startsWith('!')
     const nextIgnored = !isUnignore
 
-    if (minimatch(filepath, glob)) isFileIgnored = nextIgnored
+    if (minimatch(filepath, glob))
+      isFileIgnored = nextIgnored
 
-    parentDirectories.forEach(directory => {
+    parentDirectories.forEach((directory) => {
       if (minimatch(directory, glob))
         ignoredDirectories.set(directory, nextIgnored)
     })
@@ -101,7 +103,7 @@ export function matchFile(
     globalIgnoreGlobs,
   )
 
-  configs.forEach(config => {
+  configs.forEach((config) => {
     if (isIgnoreOnlyConfig(config)) {
       result.globs.push(...getMatchedGlobs(filepath, config.ignores ?? []))
       return

@@ -44,20 +44,20 @@ cli
     default: '.stylelint-config-inspector',
   })
   // Action
-  .action(async options => {
+  .action(async (options) => {
     console.log(MARK_INFO, 'Building static Stylelint config inspector...')
 
     if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config ||=
-        process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+      options.config
+        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
     }
     if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath ||=
-        process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+      options.basePath
+        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
     }
     if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target ||=
-        process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
+      options.target
+        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
     }
 
     options.target ||= options.file
@@ -74,7 +74,8 @@ cli
         globMatchedFiles: options.files,
         targetFilePath: options.target,
       })
-    } catch (error) {
+    }
+    catch (error) {
       if (error instanceof ConfigInspectorError) {
         error.prettyPrint()
         process.exit(1)
@@ -83,11 +84,14 @@ cli
     }
 
     let baseURL = options.base
-    if (!baseURL.endsWith('/')) baseURL += '/'
-    if (!baseURL.startsWith('/')) baseURL = `/${baseURL}`
+    if (!baseURL.endsWith('/'))
+      baseURL += '/'
+    if (!baseURL.startsWith('/'))
+      baseURL = `/${baseURL}`
     baseURL = baseURL.replace(RE_CONSECUTIVE_SLASHES, '/')
 
-    if (existsSync(outDir)) await fs.rm(outDir, { recursive: true })
+    if (existsSync(outDir))
+      await fs.rm(outDir, { recursive: true })
     await fs.mkdir(outDir, { recursive: true })
     await fs.cp(distDir, outDir, { recursive: true })
     const htmlFiles = await glob('**/*.html', {
@@ -98,7 +102,8 @@ cli
     // Rewrite HTML files with base URL
     if (baseURL !== '/') {
       for (const file of htmlFiles) {
-        if (!file) continue
+        if (!file)
+          continue
         const content = await fs.readFile(resolve(distDir, file), 'utf-8')
         const newContent = content
           .replaceAll(RE_ABSOLUTE_ASSET_ATTR, ` $1="${baseURL}`)
@@ -146,7 +151,7 @@ cli
   .option('--port <port>', 'Port', { default: process.env.PORT || 7777 })
   .option('--open', 'Open browser', { default: true })
   // Action
-  .action(async options => {
+  .action(async (options) => {
     const host = options.host
     const port = await getPort({
       port: options.port,
@@ -155,16 +160,16 @@ cli
     })
 
     if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config ||=
-        process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+      options.config
+        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
     }
     if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath ||=
-        process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+      options.basePath
+        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
     }
     if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target ||=
-        process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
+      options.target
+        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
     }
 
     options.target ||= options.file

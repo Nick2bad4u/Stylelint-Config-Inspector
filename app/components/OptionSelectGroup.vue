@@ -47,7 +47,7 @@ const value = defineModel<string | number>('modelValue', {
         absolute
         inset-0
         op-0.1
-      />
+      >
     </label>
   </fieldset>
 </template>

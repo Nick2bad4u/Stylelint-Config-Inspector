@@ -50,8 +50,12 @@ function collapseAll() {
         </div>
         <div flex-auto />
         <template v-if="stateStorage.viewFilesTab === 'group'">
-          <button btn-action px3 @click="expandAll">Expand All</button>
-          <button btn-action px3 @click="collapseAll">Collapse All</button>
+          <button btn-action px3 @click="expandAll">
+            Expand All
+          </button>
+          <button btn-action px3 @click="collapseAll">
+            Collapse All
+          </button>
         </template>
       </div>
 

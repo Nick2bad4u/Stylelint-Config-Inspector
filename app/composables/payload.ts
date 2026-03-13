@@ -65,19 +65,22 @@ async function get(baseURL: string) {
 let _promise: Promise<Payload | undefined> | undefined
 
 export function init(baseURL: string) {
-  if (_promise) return
-  _promise = get(baseURL).then(payload => {
-    if (!payload) return
+  if (_promise)
+    return
+  _promise = get(baseURL).then((payload) => {
+    if (!payload)
+      return
 
     if (typeof payload.meta.wsPort === 'number') {
       // Connect to WebSocket, listen for config changes
       const ws = new WebSocket(
         `ws://${location.hostname}:${payload.meta.wsPort}`,
       )
-      ws.addEventListener('message', async event => {
+      ws.addEventListener('message', async (event) => {
         console.log(LOG_NAME, 'WebSocket message', event.data)
         const payload = JSON.parse(event.data)
-        if (payload.type === 'config-change') get(baseURL)
+        if (payload.type === 'config-change')
+          get(baseURL)
       })
       ws.addEventListener('open', () => {
         console.log(LOG_NAME, 'WebSocket connected')
@@ -85,7 +88,7 @@ export function init(baseURL: string) {
       ws.addEventListener('close', () => {
         console.log(LOG_NAME, 'WebSocket closed')
       })
-      ws.addEventListener('error', error => {
+      ws.addEventListener('error', (error) => {
         console.error(LOG_NAME, 'WebSocket error', error)
       })
     }
@@ -132,7 +135,8 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
         if (value) {
           const primaryOption = getRulePrimaryOption(raw)
           const options = getRuleOptions(raw)
-          if (!ruleToState.has(name)) ruleToState.set(name, [])
+          if (!ruleToState.has(name))
+            ruleToState.set(name, [])
           ruleToState.get(name)!.push({
             name,
             configIndex: index,
@@ -146,18 +150,20 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
 
     // Globs
     for (const glob of config.files?.flat() || []) {
-      if (!globToConfigs.has(glob)) globToConfigs.set(glob, [])
+      if (!globToConfigs.has(glob))
+        globToConfigs.set(glob, [])
       globToConfigs.get(glob)!.push(config)
     }
     for (const glob of config.ignores?.flat() || []) {
-      if (!globToConfigs.has(glob)) globToConfigs.set(glob, [])
+      if (!globToConfigs.has(glob))
+        globToConfigs.set(glob, [])
       globToConfigs.get(glob)!.push(config)
     }
   })
 
   // collapse all if there are too many items
-  configsOpenState.value =
-    payload.configs.length >= 10
+  configsOpenState.value
+    = payload.configs.length >= 10
       ? payload.configs.map(() => false)
       : payload.configs.map(() => true)
 
@@ -172,7 +178,8 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
 }
 
 function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
-  if (!payload.files) return undefined
+  if (!payload.files)
+    return undefined
 
   const files: string[] = []
   const globToFiles = new Map<string, Set<string>>()
@@ -184,7 +191,8 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
   for (const file of payload.files) {
     files.push(file.filepath)
     for (const glob of file.globs) {
-      if (!globToFiles.has(glob)) globToFiles.set(glob, new Set())
+      if (!globToFiles.has(glob))
+        globToFiles.set(glob, new Set())
       globToFiles.get(glob)!.add(file.filepath)
       if (!fileToGlobs.has(file.filepath))
         fileToGlobs.set(file.filepath, new Set())

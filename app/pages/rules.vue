@@ -23,8 +23,8 @@ const hasGeneratedDescriptions = computed(() =>
       || !!rule.docs?.descriptionMissing,
   ),
 )
-const descriptionsNoticeText =
-  'Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.'
+const descriptionsNoticeText
+  = 'Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.'
 
 function hasAnyRuleState(ruleName: string): boolean {
   return (payload.value.ruleToState.get(ruleName)?.length ?? 0) > 0
@@ -39,7 +39,8 @@ function hasEnabledRuleState(ruleName: string): boolean {
 }
 
 function getRuleRowClass(ruleName: string): string {
-  if (!hasAnyRuleState(ruleName) && filters.state !== 'unused') return 'op42'
+  if (!hasAnyRuleState(ruleName) && filters.state !== 'unused')
+    return 'op42'
 
   if (hasAnyRuleState(ruleName) && !hasEnabledRuleState(ruleName))
     return 'rule-muted-off'
@@ -98,9 +99,10 @@ const conditionalFiltered = computed(() => {
       )
       break
     case 'off-only':
-      conditional = conditional.filter(rule => {
+      conditional = conditional.filter((rule) => {
         const states = payload.value.ruleToState.get(rule.name)
-        if (!states?.length) return false
+        if (!states?.length)
+          return false
         return states.every(i => i.level === 'off')
       })
       break
@@ -145,7 +147,7 @@ if (
 
 watch(
   () => filters.status,
-  status => {
+  (status) => {
     if (status === 'recommended' && filters.state === 'using')
       filters.state = ''
   },
@@ -153,15 +155,17 @@ watch(
 
 watch(
   () => filters.state,
-  state => {
-    if (state === 'unused' && filters.status === 'active') filters.status = ''
+  (state) => {
+    if (state === 'unused' && filters.status === 'active')
+      filters.status = ''
   },
 )
 
 debouncedWatch(
   () => [filters.search, conditionalFiltered.value],
   () => {
-    if (!filters.search) return (filtered.value = conditionalFiltered.value)
+    if (!filters.search)
+      return (filtered.value = conditionalFiltered.value)
     filtered.value = fuse.value.search(filters.search).map(i => i.item)
   },
   { debounce: 200 },
@@ -199,7 +203,7 @@ function resetFilters() {
           py2
           pl10
           outline-none
-        />
+        >
         <div
           absolute
           bottom-0
@@ -213,7 +217,9 @@ function resetFilters() {
         </div>
       </div>
       <div grid="~ cols-[max-content_1fr] gap-2" my2 items-center>
-        <div text-right text-sm op50>Plugins</div>
+        <div text-right text-sm op50>
+          Plugins
+        </div>
         <OptionSelectGroup
           v-model="filters.plugin"
           :options="['', ...pluginNames]"
@@ -237,7 +243,9 @@ function resetFilters() {
             })),
           ]"
         />
-        <div text-right text-sm op50>Usage</div>
+        <div text-right text-sm op50>
+          Usage
+        </div>
         <OptionSelectGroup
           v-model="filters.state"
           :options="[
@@ -275,8 +283,8 @@ function resetFilters() {
                 <RuleLevelIcon
                   v-if="
                     value === 'off'
-                    || value === 'off-only'
-                    || value === 'overloads'
+                      || value === 'off-only'
+                      || value === 'overloads'
                   "
                   level="off"
                 />
@@ -285,7 +293,9 @@ function resetFilters() {
             </div>
           </template>
         </OptionSelectGroup>
-        <div text-right text-sm op50>State</div>
+        <div text-right text-sm op50>
+          State
+        </div>
         <OptionSelectGroup
           v-model="filters.status"
           :options="['', 'active', 'recommended', 'fixable', 'deprecated']"

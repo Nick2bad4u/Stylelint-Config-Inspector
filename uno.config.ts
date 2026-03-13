@@ -30,7 +30,7 @@ export default defineConfig({
     'btn-action-sm': 'btn-action text-sm',
     'btn-action-active': 'color-active border-active! bg-active op100!',
 
-    badge: 'border border-base rounded flex items-center px2',
+    'badge': 'border border-base rounded flex items-center px2',
     'badge-active': 'badge border-amber:50 text-amber bg-amber:5',
     'btn-badge': 'badge hover:bg-active',
   },

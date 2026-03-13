@@ -72,13 +72,17 @@ function goto() {
           <span op50> config item </span>
         </button>
       </template>
-      <div v-else op50>in this config</div>
+      <div v-else op50>
+        in this config
+      </div>
     </div>
     <div v-if="!isLocal" flex="~ gap-2">
       <template v-if="config.files">
         <div i-ph-file-magnifying-glass-duotone my1 flex-none op75 />
         <div flex="~ col gap-2">
-          <div op50>Applies to files matching</div>
+          <div op50>
+            Applies to files matching
+          </div>
           <div flex="~ gap-2 items-center wrap">
             <GlobItem
               v-for="(glob, idx) of config.files?.flat()"
@@ -90,7 +94,9 @@ function goto() {
       </template>
       <template v-else-if="config.rules">
         <div i-ph-files-duotone my1 flex-none op75 />
-        <div op50>Applied generally for all files</div>
+        <div op50>
+          Applied generally for all files
+        </div>
       </template>
     </div>
     <template v-if="hasStateOptions || defaultOptions?.length">

@@ -11,11 +11,13 @@ function runCommand(command) {
   try {
     // @ts-expect-error Node types for execSync shell might restrict to string, but boolean is accepted for 'true' to use default shell
     execSync(command, { stdio: 'inherit', shell: true })
-  } catch (error) {
+  }
+ catch (error) {
     console.error(`Error executing command: ${command}`)
     if (error instanceof Error) {
       console.error(error.message)
-    } else {
+    }
+ else {
       console.error(String(error))
     }
     process.exit(1)

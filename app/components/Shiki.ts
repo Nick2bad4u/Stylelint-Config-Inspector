@@ -18,7 +18,8 @@ export default defineComponent({
   },
   setup(props) {
     const highlighted = computed(() => {
-      if (!shiki.value) return sanitizeHtml(props.code)
+      if (!shiki.value)
+        return sanitizeHtml(props.code)
       return shiki.value.codeToHtml(props.code, {
         lang: props.lang,
         theme: isDark.value ? 'vitesse-dark' : 'vitesse-light',
