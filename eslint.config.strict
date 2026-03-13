@@ -32,7 +32,6 @@ import eslintPluginCommentLength from "eslint-plugin-comment-length";
 import * as pluginCssModules from "eslint-plugin-css-modules";
 import deMorgan from "eslint-plugin-de-morgan";
 import depend from "eslint-plugin-depend";
-import eslintPluginEslintPlugin from "eslint-plugin-eslint-plugin";
 import etcPlugin from "eslint-plugin-etc";
 import progress from "eslint-plugin-file-progress-2";
 import { importX } from "eslint-plugin-import-x";
@@ -82,8 +81,8 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import * as tomlEslintParser from "toml-eslint-parser";
 import * as yamlEslintParser from "yaml-eslint-parser";
-
-import typefest from "./plugin.mjs";
+import eslintPluginNuxt from "@nuxt/eslint-plugin";
+import eslintPluginVue from "eslint-plugin-vue";
 
 // NOTE: eslint-plugin-json-schema-validator may attempt to fetch remote schemas
 // at lint time. That makes linting flaky/offline-hostile.
@@ -657,16 +656,25 @@ export default defineConfig([
         },
     },
     // #endregion
-    // #region 🔌 ESLint Plugin config
+    // #region 🔌 Stylelint Inspector config
     // ═══════════════════════════════════════════════════════════════════════════════
-    // SECTION: ESLint Plugin config
+    // SECTION: Stylelint Inspector config
     // ═══════════════════════════════════════════════════════════════════════════════
+        {
+            files: [
+                "src/**/*.{js,mjs,cjs,ts,mts,cts,tsx,vue}",
+                "app/**/*.{js,mjs,cjs,ts,mts,cts,tsx,vue}",
+                "shared/**/*.{js,mjs,cjs,ts,mts,cts,tsx,vue}"
+            ],
+        },
     {
         files: [
             "*.{js,mjs,cjs,ts,mts,cts,tsx}",
             "src/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
+            "app/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
             "test/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
-            "benchmarks/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
+            "server/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
+            "shared/**/*.{js,mjs,cjs,ts,mts,cts,tsx}",
         ],
         ignores: [],
         languageOptions: {
@@ -690,14 +698,15 @@ export default defineConfig([
                 warnOnUnsupportedTypeScriptVersion: true,
             },
         },
-        name: "ESLint Plugin Source Files - project/**/*.*",
+        name: "Stylelint Inspector Source Files",
         plugins: {
+            vue: eslintPluginVue,
+            nuxt: eslintPluginNuxt,
             "@microsoft/sdl": pluginMicrosoftSdl,
             "@typescript-eslint": tseslint,
             canonical: canonicalPlugin,
             "comment-length": eslintPluginCommentLength,
             "eslint-comments": comments,
-            "eslint-plugin": eslintPluginEslintPlugin,
             etc: etc,
             "import-x": importX,
             js: js,
@@ -755,8 +764,11 @@ export default defineConfig([
             ...readPluginConfigRules(listeners, "strict"),
             ...moduleInterop.configs.recommended.rules,
             ...readPluginConfigRules(pluginTotalFunctions, "recommended"),
-            // @ts-expect-error -- Plugin needs update for Eslint v10
-            ...etc.configs.recommended.rules,
+
+            "nuxt/prefer-import-meta": "error",
+            "nuxt/nuxt-config-keys-order": "warn",
+            "nuxt/no-nuxt-config-test-key": "warn",
+            "nuxt/no-page-meta-runtime-values": "warn",
             "@eslint-community/eslint-comments/no-restricted-disable": "warn",
             // Deprecated rule - turned off
             "@eslint-community/eslint-comments/no-unused-disable": "off",
@@ -1213,56 +1225,6 @@ export default defineConfig([
                     tabSize: 4,
                 },
             ],
-            // Needs update for Eslint v10
-            // "deprecation/deprecation": "off",
-            "eslint-plugin/consistent-output": "error",
-            "eslint-plugin/fixer-return": "error",
-            "eslint-plugin/meta-property-ordering": [
-                "error",
-                [
-                    "defaultOptions",
-                    "deprecated",
-                    "docs",
-                    "fixable",
-                    "hasSuggestions",
-                    "messages",
-                    "replacedBy",
-                    "schema",
-                    "type",
-                ],
-            ],
-            "eslint-plugin/no-deprecated-context-methods": "error",
-            "eslint-plugin/no-deprecated-report-api": "error",
-            "eslint-plugin/no-identical-tests": "error",
-            "eslint-plugin/no-matching-violation-suggest-message-ids": "error",
-            "eslint-plugin/no-meta-replaced-by": "error",
-            "eslint-plugin/no-meta-schema-default": "error",
-            "eslint-plugin/no-missing-message-ids": "error",
-            "eslint-plugin/no-missing-placeholders": "error",
-            "eslint-plugin/no-only-tests": "error",
-            "eslint-plugin/no-property-in-node": "error",
-            "eslint-plugin/no-unused-message-ids": "error",
-            "eslint-plugin/no-unused-placeholders": "error",
-            "eslint-plugin/no-useless-token-range": "error",
-            "eslint-plugin/prefer-message-ids": "error",
-            "eslint-plugin/prefer-object-rule": "error",
-            "eslint-plugin/prefer-output-null": "error",
-            "eslint-plugin/prefer-placeholders": "warn",
-            "eslint-plugin/prefer-replace-text": "error",
-            "eslint-plugin/report-message-format": "warn",
-            "eslint-plugin/require-meta-default-options": "error",
-            "eslint-plugin/require-meta-docs-description": "warn",
-            "eslint-plugin/require-meta-docs-recommended": "warn",
-            "eslint-plugin/require-meta-docs-url": "error",
-            "eslint-plugin/require-meta-fixable": "error",
-            "eslint-plugin/require-meta-has-suggestions": "error",
-            "eslint-plugin/require-meta-schema": "error",
-            "eslint-plugin/require-meta-schema-description": "error",
-            "eslint-plugin/require-meta-type": "error",
-            "eslint-plugin/require-test-case-name": "warn",
-            "eslint-plugin/test-case-property-ordering": "warn",
-            "eslint-plugin/test-case-shorthand-strings": "error",
-            "eslint-plugin/unique-test-case-names": "error",
             "etc/no-commented-out-code": "off",
             "etc/no-const-enum": "warn",
             "etc/no-enum": "off",
@@ -1492,24 +1454,6 @@ export default defineConfig([
             "unicorn/no-null": "off",
             "unicorn/prefer-import-meta-properties": "off",
             "unicorn/prevent-abbreviations": "off",
-        },
-    },
-    // #endregion
-    // #region 🐶 Dogfooding
-    // ═══════════════════════════════════════════════════════════════════════════════
-    // SECTION: 🐶 Dogfooding
-    // ═══════════════════════════════════════════════════════════════════════════════
-    {
-        files: [
-            "src/**/*.{ts,tsx,mts,cts}",
-            //    "test/**/*.{ts,tsx,mts,cts}"
-        ],
-        name: "Local typefest plugin manual dogfooding rules",
-        plugins: {
-            typefest: typefest,
-        },
-        rules: {
-            ...readConfigRules(typefest.configs?.["all"]),
         },
     },
     // #endregion
