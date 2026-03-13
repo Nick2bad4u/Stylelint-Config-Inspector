@@ -372,18 +372,18 @@ console.log('Starting bootstrap process...');
 
 // Install dependencies
 console.log('\n--- Installing Dependencies ---');
-runCommand(`pnpm install --save --force ${dependencies.join(' ')}`);
+runCommand(`npm install --save --force ${dependencies.join(' ')}`);
 
 // Install dev dependencies
 console.log('\n--- Installing Dev Dependencies ---');
-runCommand(`pnpm install --save-dev --force ${devDependencies.join(' ')}`);
+runCommand(`npm install --save-dev --force ${devDependencies.join(' ')}`);
 
 // Set scripts in package.json
 console.log('\n--- Setting up package.json scripts ---');
 for (const [name, command] of Object.entries(scriptsToSet)) {
     // Escaping double quotes for the shell command
     const escapedCommand = command.replace(/"/g, '\\"');
-    runCommand(`pnpm pkg set scripts.${name}="${escapedCommand}"`);
+    runCommand(`npm pkg set scripts.${name}="${escapedCommand}"`);
 }
 
 console.log('\nBootstrap process completed successfully!');

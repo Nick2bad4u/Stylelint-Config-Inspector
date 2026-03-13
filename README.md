@@ -51,11 +51,11 @@ Run `npx @stylelint/config-inspector --help` for all options.
 
 ## Development
 
-- `pnpm install`
-- `pnpm dev` to run Nuxt dev server
-- `pnpm test` to run tests
-- `pnpm typecheck` for type checks
-- `pnpm build` for production build
+- `npm install`
+- `npm run dev` to run Nuxt dev server
+- `npm test` to run tests
+- `npm run typecheck` for type checks
+- `npm run build` for production build
 
 ## License
 

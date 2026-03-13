@@ -13,6 +13,9 @@
 # Docusaurus Build Directory
 /build/
 
+# Skip complex MDX architecture diagrams (handled manually)
+docs/docusaurus/**/*.mdx
+
 ### Docusaurus.Node Stack ###
 # Logs
 logs
@@ -759,123 +762,71 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode,typings,testinfra,testcomplete,tags,reactnative,react,python,powershell,node,nextjs,java,executable,docusaurus,chocolatey
 
-# Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
+# Remark ignore patterns
+# Configuration files
+*.config.*
+.remarkrc.*
+*.mjs
+*.js
 
-# AI tools
-.agentic-tools*
-.gemini/
-.jscpd/
-repomix-output.xml
-_ZENTASKS
-
-# Build output directories
+# Build and output directories
 dist/
-**/dist/
-dist/test/
-**/dist/test/
-dist-bench/
-dist-configs/
-dist-playwright/
-html/
-release/
-
-# Coverage directories
-coverage-results.json
-
-# Docusaurus
-!docs/docusaurus/static/manifest.json
-docs/docusaurus/.docusaurus
-docs/docusaurus/build
-docs/docusaurus/docs/.nojekyll
-docs/docusaurus/docs/assets
-docs/docusaurus/docs/coverage.svg
-docs/docusaurus/docs/documents
-docs/docusaurus/docs/electron
-docs/docusaurus/docs/index.md
-docs/docusaurus/docs/modules.md
-docs/docusaurus/docs/src
-docs/typedoc.json
-docs/docusaurus/docs/typedoc.json
-docs/docusaurus/docs/typedoc-sidebar.cjs
-docs/docusaurus/docs/_media
-docs/docusaurus/static/eslint-inspector/
-docs/docusaurus/static/storybook/
-docs/docusaurus/stylelintcache
-**/docs/docusaurus/.docusaurus
-**/docs/docusaurus/build
-**/docs/docusaurus/docs/_media
-**/docs/docusaurus/docs/assets
-**/docs/docusaurus/docs/documents
-**/docs/docusaurus/docs/electron
-**/docs/docusaurus/docs/shared
-**/docs/docusaurus/docs/src
-
-# Downloads
-!downloads/
-!src/utils/downloads/
-!src/utils/downloads/**
-
-# Linting & Code inspection
-.eslint-config-inspector/
-
-# Node modules
+dist-*/
 node_modules/
-node_modules_backup/
+coverage/
+.cache/
 
-# NPM
-.npmrc
+# Binary and media files
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.wasm
+*.pdf
 
-# OhMyPosh
-!.vscode/OhMyPosh-Atomic-Custom.json
+# Temporary files
+**/*~
+**/*.tmp
+**/*.swp
 
-# Playwright
-/blob-report/
-/playwright-report/
-/playwright/.cache/
-/playwright/reports/
-/playwright/test-results/
-playwright-report/
-test-results/
+# Generated content
+**/generated/**
+**/auto-generated/**
+**/build/**
+**/dist/**
 
-# Stryker
-.stryker-tmp/
-stryker-issues.json
-stryker_prompts_by_mutator/
+# Version-specific ignores
+**/node_modules/**
+**/coverage/**
+**/playwright-report/**
 
-# Storybook
-*storybook.log
-storybook-static
-storybook/stories/__screenshots__/
+# Complex diagrams requiring manual formatting
+**/*-diagram.md
+**/*-architecture.md
 
-# Temp & Reports
-assets/prettier-plugin-multiline-arrays/
-codeql-agent-results/
-gha-creds-*.json
-reports/
+# API reference files (if auto-generated)
+**/api-reference/**
+
+# Changelog and similar files with different formatting needs
+CHANGELOG.md
+HISTORY.md
+
+# Documentation that may have different formatting requirements
+LICENSE
+.github/
+docs/docusaurus/node_modules/
+docs/docusaurus/build/
+docs/docusaurus/docs/
+docs/Packages/
+docs/TSDoc/
+docs/Architecture/UsageGuides/Using-This-Documentation.md
+docs/Guides/STYLE_LAYOUT_GUIDE.md
+
+# Todo files
 TODO.md
-temp/
-
-# VS Code
-!.vscode/mcp.json
-eslint.config.bundled_**
+docs/Guides/TODO.md
+**/TODO/**
 
 # Docusaurus API reference files (if auto-generated)
 **/site-docs/developer/api/
-
-node_modules
-*.log
-dist
-.output
-.nuxt
-.env
-.idea/
-.DS_Store
-.eslint-config-inspector
-public/fonts
-*.code-workspace
-
-# Automatically generated files by GitHub Actions workflow
-/.shared-workflows
-.github/hooks/logs/
-.github/hooks/audit.jsonl
-temp/

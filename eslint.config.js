@@ -12,7 +12,6 @@ export default await nuxt()
             'vue/no-extra-parens': 'off',
           },
         },
-        pnpm: true,
       },
     ),
   )

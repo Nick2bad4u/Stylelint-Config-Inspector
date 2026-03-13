@@ -10,6 +10,9 @@
 # Docusaurus cache and generated files
 .docusaurus
 
+# Docusaurus generated/placeholder docs (non-style files; may be extensionless placeholders)
+docs/docusaurus/docs/documents/ADR-*
+
 # Docusaurus Build Directory
 /build/
 
@@ -63,6 +66,13 @@ web_modules/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# TypeScript declaration files are not style sources.
+# Stylelint can encounter these when linting folders (e.g. docs/), and parsing
+# them as CSS results in false-positive CssSyntaxError failures.
+**/*.d.ts
+**/*.d.mts
+**/*.d.cts
 
 # Optional npm cache directory
 .npm
@@ -493,7 +503,6 @@ __generated__
 # Icon must end with two \r
 Icon
 
-
 # Thumbnails
 ._*
 
@@ -689,7 +698,6 @@ cscope.out
 cscope.in.out
 cscope.po.out
 
-
 ### TestComplete ###
 # Test Complete ignore files: https://support.smartbear.com/viewarticle/68002/
 
@@ -759,123 +767,102 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,visualstudiocode,typings,testinfra,testcomplete,tags,reactnative,react,python,powershell,node,nextjs,java,executable,docusaurus,chocolatey
 
-# Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
+# Ignore Scripts and Benchmarks
+scripts/**/*.js
+scripts/**/*.jsx
+scripts/**/*.ts
+scripts/**/*.tsx
+benchmarks/**/*.js
+benchmarks/**/*.jsx
+benchmarks/**/*.ts
+benchmarks/**/*.tsx
+scripts/
+**/icons/**
 
-# AI tools
-.agentic-tools*
-.gemini/
-.jscpd/
-repomix-output.xml
-_ZENTASKS
+# Ignore non-CSS file types
+**/*.cjs
+**/*.mjs
+**/*.png
+**/*.ps1
+**/*.disabled
+**/*.md
+**/*.json
+**/*.yml
+**/*.wasm
+**/*.properties
+**/*.svg
+**/*.toml
+**/*.xml
+**/*.yaml
+**/*.desktop
+**/*.txt
+**/*.ico
+**/*.log
+**/*.pdf
+**/*.env
+**/*.mdx
+**/*.key
+**/*.pem
+**/*.pub
+**/*.crt
+**/*.zip
+**/*.tar.gz
+**/stylelintcache
+**/*.jpg
+**/*.jpeg
+**/*.gif
 
-# Build output directories
-dist/
-**/dist/
-dist/test/
-**/dist/test/
-dist-bench/
-dist-configs/
-dist-playwright/
-html/
-release/
-
-# Coverage directories
-coverage-results.json
-
-# Docusaurus
-!docs/docusaurus/static/manifest.json
-docs/docusaurus/.docusaurus
-docs/docusaurus/build
-docs/docusaurus/docs/.nojekyll
-docs/docusaurus/docs/assets
-docs/docusaurus/docs/coverage.svg
-docs/docusaurus/docs/documents
-docs/docusaurus/docs/electron
-docs/docusaurus/docs/index.md
-docs/docusaurus/docs/modules.md
-docs/docusaurus/docs/src
-docs/typedoc.json
-docs/docusaurus/docs/typedoc.json
-docs/docusaurus/docs/typedoc-sidebar.cjs
-docs/docusaurus/docs/_media
-docs/docusaurus/static/eslint-inspector/
-docs/docusaurus/static/storybook/
-docs/docusaurus/stylelintcache
-**/docs/docusaurus/.docusaurus
-**/docs/docusaurus/build
-**/docs/docusaurus/docs/_media
-**/docs/docusaurus/docs/assets
-**/docs/docusaurus/docs/documents
-**/docs/docusaurus/docs/electron
-**/docs/docusaurus/docs/shared
-**/docs/docusaurus/docs/src
-
-# Downloads
-!downloads/
-!src/utils/downloads/
-!src/utils/downloads/**
-
-# Linting & Code inspection
-.eslint-config-inspector/
-
-# Node modules
+# Ignore dependencies and node modules
 node_modules/
-node_modules_backup/
 
-# NPM
-.npmrc
+# Ignore build and distribution directories
+dist/
+dist-benchmark/
+dist**/
+**/dist/** */
+release/
+build/
 
-# OhMyPosh
-!.vscode/OhMyPosh-Atomic-Custom.json
+# Package files
+package.json
+package-lock.json
+# VS Code settings
+.vscode/
+.vscode/settings.json
 
-# Playwright
-/blob-report/
-/playwright-report/
-/playwright/.cache/
-/playwright/reports/
-/playwright/test-results/
-playwright-report/
-test-results/
+# Allow TSX/JSX files to be processed for CSS-in-JS and styled components
+# **/*.js
+# **/*.jsx
+# **/*.ts
+# **/*.tsx
 
-# Stryker
-.stryker-tmp/
-stryker-issues.json
-stryker_prompts_by_mutator/
+# Ignore specific directories and build files that don't contain CSS
+scripts/**/*.js
+scripts/**/*.jsx
+scripts/**/*.ts
+scripts/**/*.tsx
+benchmarks/**/*.js
+benchmarks/**/*.jsx
+benchmarks/**/*.ts
+benchmarks/**/*.tsx
+scripts/
+**/icons/**
 
-# Storybook
-*storybook.log
-storybook-static
-storybook/stories/__screenshots__/
+# License file
+license
 
-# Temp & Reports
-assets/prettier-plugin-multiline-arrays/
-codeql-agent-results/
-gha-creds-*.json
-reports/
-TODO.md
-temp/
+# Stylelint cache files
+**/stylelintcache
+**/.stylelintignore
+**/stylelint.config.mjs
 
-# VS Code
-!.vscode/mcp.json
-eslint.config.bundled_**
+# CNAME file for Github Pages
+CNAME
 
-# Docusaurus API reference files (if auto-generated)
-**/site-docs/developer/api/
-
-node_modules
-*.log
-dist
-.output
-.nuxt
-.env
-.idea/
-.DS_Store
-.eslint-config-inspector
-public/fonts
-*.code-workspace
-
-# Automatically generated files by GitHub Actions workflow
-/.shared-workflows
-.github/hooks/logs/
-.github/hooks/audit.jsonl
-temp/
+# Docusaurus static directory
+**/docs/docusaurus/static/eslint-inspector
+**/docs/docusaurus/docusaurus.config.ts
+**/docs/docusaurus/src/js/modernEnhancements.ts
+**/docs/docusaurus/src/pages/index.tsx
+**/docs/docusaurus/sidebars.ts
+**/docs/docusaurus/static/storybook/**
