@@ -71,5 +71,7 @@ export default await nuxt()
       'antfu/if-newline': 'off',
       'style/operator-linebreak': 'off',
       'jsonc/indent': 'off',
+      'jsdoc/require-returns-description': 'off',
+      'e18e/prefer-static-regex': 'off',
     },
   })
