@@ -3,10 +3,7 @@ import type { RuleInfo } from '~~/shared/types'
 import { Dropdown as VDropdown } from 'floating-vue'
 import { computed } from 'vue'
 
-const {
-  deprecated,
-  invalid,
-} = defineProps<{
+const { deprecated, invalid } = defineProps<{
   deprecated: RuleInfo['deprecated']
   invalid: RuleInfo['invalid'] | undefined
 }>()
@@ -45,30 +42,34 @@ function getLinkClass(url: string | undefined) {
 </script>
 
 <template>
-  <VDropdown
-    inline-block
-    :disabled="!deprecatedInfo"
-  >
+  <VDropdown inline-block :disabled="!deprecatedInfo">
     <div
       border="~ red/25 rounded"
-      select-none bg-red:5 px1 text-xs text-red
+      select-none
+      bg-red:5
+      px1
+      text-xs
+      text-red
     >
-      {{ invalid ? 'INVALID' : 'DEPRECATED' }}
+      {{ invalid ? "INVALID" : "DEPRECATED" }}
     </div>
     <template #popper="{ shown }">
-      <div
-        v-if="shown && deprecatedInfo"
-        p-2 text-sm op75
-      >
+      <div v-if="shown && deprecatedInfo" p-2 text-sm op75>
         <p v-if="deprecatedInfo.message" mb1 flex="~ gap-1" text-red>
-          <span i-ph-warning-duotone inline-block />{{ deprecatedInfo.message }}
+          <span i-ph-warning-duotone inline-block />{{
+            deprecatedInfo.message
+          }}
         </p>
         <p v-if="versionInfo">
           {{ versionInfo }}
         </p>
         <p v-if="deprecatedInfo.replacedBy?.length">
           Please use the
-          <template v-for="({ rule, plugin }, i) in deprecatedInfo.replacedBy">
+          <template
+            v-for="(
+              { rule, plugin }, i
+            ) in deprecatedInfo.replacedBy"
+          >
             <NuxtLink
               v-if="rule"
               :key="rule.name"
@@ -88,7 +89,13 @@ function getLinkClass(url: string | undefined) {
               >
                 {{ plugin.name ?? plugin.url }}
               </NuxtLink>
-            </template>{{ i === deprecatedInfo.replacedBy.length - 1 ? '.' : i === 0 ? '' : ', ' }}
+            </template>{{
+              i === deprecatedInfo.replacedBy.length - 1
+                ? "."
+                : i === 0
+                  ? ""
+                  : ", "
+            }}
           </template>
         </p>
         <p mt2>

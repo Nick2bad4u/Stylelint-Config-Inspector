@@ -8,13 +8,24 @@ const diagnostics = computed(() => payload.value.diagnostics ?? [])
 const metadataHealth = computed(() => {
   const allRules = rules.value
   const total = allRules.length
-  const generatedDescriptions = allRules.filter(rule => rule.docs?.descriptionSource === 'generated' || rule.docs?.descriptionMissing).length
-  const messageDescriptions = allRules.filter(rule => rule.docs?.descriptionSource === 'message').length
+  const generatedDescriptions = allRules.filter(
+    rule =>
+      rule.docs?.descriptionSource === 'generated'
+      || rule.docs?.descriptionMissing,
+  ).length
+  const messageDescriptions = allRules.filter(
+    rule => rule.docs?.descriptionSource === 'message',
+  ).length
   const missingDocsUrls = allRules.filter(rule => !rule.docs?.url).length
-  const inferredDocsUrls = allRules.filter(rule => rule.docs?.urlSource === 'inferred').length
-  const placeholderDescriptions = allRules.filter(rule => rule.docs?.description?.includes('<value>')).length
+  const inferredDocsUrls = allRules.filter(
+    rule => rule.docs?.urlSource === 'inferred',
+  ).length
+  const placeholderDescriptions = allRules.filter(rule =>
+    rule.docs?.description?.includes('<value>'),
+  ).length
 
-  const toPct = (count: number) => total ? Math.round((count / total) * 1000) / 10 : 0
+  const toPct = (count: number) =>
+    total ? Math.round((count / total) * 1000) / 10 : 0
 
   return {
     generatedDescriptions,
@@ -33,7 +44,11 @@ const metadataHealth = computed(() => {
 <template>
   <div py4 flex="~ col gap-4">
     <section border="~ purple/20 rounded-xl" bg-purple:6 p4>
-      <div flex="~ items-center gap-2 wrap" text-violet8 dark:text-violet3>
+      <div
+        flex="~ items-center gap-2 wrap"
+        text-violet8
+        dark:text-violet3
+      >
         <div i-ph-flask-duotone flex-none />
         <span font-medium>Metadata health</span>
       </div>
@@ -41,21 +56,41 @@ const metadataHealth = computed(() => {
         (quality depends heavily on upstream Stylelint/plugin metadata)
       </div>
 
-      <div border="~ purple/20" mt3 rounded-lg bg-black:10 p3 text-sm leading-7 font-mono>
+      <div
+        border="~ purple/20"
+        mt3
+        rounded-lg
+        bg-black:10
+        p3
+        text-sm
+        leading-7
+        font-mono
+      >
         <div>
-          Generated descriptions: {{ metadataHealth.generatedDescriptions }} ({{ metadataHealth.generatedDescriptionsPct }}%)
+          Generated descriptions:
+          {{ metadataHealth.generatedDescriptions }} ({{
+            metadataHealth.generatedDescriptionsPct
+          }}%)
         </div>
         <div>
-          Message-derived descriptions: {{ metadataHealth.messageDescriptions }} ({{ metadataHealth.messageDescriptionsPct }}%)
+          Message-derived descriptions:
+          {{ metadataHealth.messageDescriptions }} ({{
+            metadataHealth.messageDescriptionsPct
+          }}%)
         </div>
         <div>
-          Missing docs URLs: {{ metadataHealth.missingDocsUrls }} ({{ metadataHealth.missingDocsUrlsPct }}%)
+          Missing docs URLs: {{ metadataHealth.missingDocsUrls }} ({{
+            metadataHealth.missingDocsUrlsPct
+          }}%)
         </div>
         <div>
           Inferred docs URLs: {{ metadataHealth.inferredDocsUrls }}
         </div>
         <div>
-          Placeholder descriptions: {{ metadataHealth.placeholderDescriptions }} ({{ metadataHealth.placeholderDescriptionsPct }}%)
+          Placeholder descriptions:
+          {{ metadataHealth.placeholderDescriptions }} ({{
+            metadataHealth.placeholderDescriptionsPct
+          }}%)
         </div>
       </div>
     </section>

@@ -13,24 +13,35 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const parts = computed(() => props.name?.split(CONFIG_NAME_SPLIT_RE).filter(Boolean))
+    const parts = computed(() =>
+      props.name?.split(CONFIG_NAME_SPLIT_RE).filter(Boolean),
+    )
     return () => {
       if (parts.value) {
-        return h('span', parts.value.map((part, i) => h(
+        return h(
           'span',
-          [':', '/'].includes(part)
-            ? { style: { opacity: 0.35, margin: '0 1px' } }
-            : i !== parts.value!.length - 1
-              ? { style: { color: getPluginColor(part) } }
-              : null,
-          part,
-        )))
+          parts.value.map((part, i) =>
+            h(
+              'span',
+              [':', '/'].includes(part)
+                ? { style: { opacity: 0.35, margin: '0 1px' } }
+                : i !== parts.value!.length - 1
+                  ? { style: { color: getPluginColor(part) } }
+                  : null,
+              part,
+            ),
+          ),
+        )
       }
       else {
         return h('span', [
           h('span', { class: 'op50 italic' }, 'anonymous'),
           props.index != null
-            ? h('span', { class: 'op50 text-sm' }, ` #${props.index + 1}`)
+            ? h(
+                'span',
+                { class: 'op50 text-sm' },
+                ` #${props.index + 1}`,
+              )
             : null,
         ])
       }

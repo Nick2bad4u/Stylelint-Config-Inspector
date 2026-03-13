@@ -13,16 +13,18 @@ const props = defineProps<{
 
 const defaultListColumns = 'max-content_max-content_max-content_minmax(0,1fr)'
 
-const names = computed(() => Array.isArray(props.rules) ? props.rules.map(i => i.name) : Object.keys(props.rules))
+const names = computed(() =>
+  Array.isArray(props.rules)
+    ? props.rules.map(i => i.name)
+    : Object.keys(props.rules),
+)
 function getRule(name: string) {
   return Array.isArray(props.rules)
     ? props.rules.find(i => i.name === name)!
     : getRuleFromName(name)!
 }
 function getValue(name: string) {
-  return Array.isArray(props.rules)
-    ? undefined
-    : props.rules[name]
+  return Array.isArray(props.rules) ? undefined : props.rules[name]
 }
 
 const containerClass = computed(() => {
@@ -46,31 +48,45 @@ const containerStyle = computed(() => {
 
 const Wrapper = defineComponent({
   setup(_, { slots }) {
-    return () => isGridView.value
-      ? h('div', { class: 'relative border border-base max-w-full rounded-lg p4 py3 flex flex-col gap-2 of-hidden justify-start' }, slots.default?.())
-      : h(Fragment, slots.default?.())
+    return () =>
+      isGridView.value
+        ? h(
+            'div',
+            {
+              class: 'relative border border-base max-w-full rounded-lg p4 py3 flex flex-col gap-2 of-hidden justify-start',
+            },
+            slots.default?.(),
+          )
+        : h(Fragment, slots.default?.())
   },
 })
 </script>
 
 <template>
   <div :class="containerClass" :style="containerStyle">
-    <template
-      v-for="name in names"
-      :key="name"
-    >
+    <template v-for="name in names" :key="name">
       <Wrapper v-if="props.filter?.(name) !== false">
         <RuleItem
           :rule="getRule(name)"
-          :rule-states="Array.isArray(rules) ? payload.ruleToState.get(name) || [] : undefined"
+          :rule-states="
+            Array.isArray(rules)
+              ? payload.ruleToState.get(name) || []
+              : undefined
+          "
           :grid-view="isGridView"
           :value="getValue(name)"
           v-bind="getBind?.(name)"
         >
           <template #popup>
-            <slot name="popup" :rule-name="name" :value="getValue(name)">
+            <slot
+              name="popup"
+              :rule-name="name"
+              :value="getValue(name)"
+            >
               <RuleStateItem
-                v-for="state, idx of payload.ruleToState.get(name) || []"
+                v-for="(state, idx) of payload.ruleToState.get(
+                  name,
+                ) || []"
                 :key="idx"
                 border="t base"
                 :state="state"

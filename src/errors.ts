@@ -18,12 +18,15 @@ export class ConfigPathError extends ConfigInspectorError {
   }
 
   override prettyPrint() {
-    console.error(MARK_ERROR, this.message, c.dim(`
+    console.error(
+      MARK_ERROR,
+      this.message,
+      c.dim(`
 
 Looked in ${c.underline(this.basePath)} and parent folders for:
 
- * ${this.configFilenames.join('\n * ')}`,
-    ))
+ * ${this.configFilenames.join('\n * ')}`),
+    )
   }
 }
 
@@ -38,12 +41,15 @@ export class ConfigPathLegacyError extends ConfigInspectorError {
   }
 
   override prettyPrint() {
-    console.error(MARK_ERROR, this.message, c.dim(`
+    console.error(
+      MARK_ERROR,
+      this.message,
+      c.dim(`
 
 Encountered legacy Stylelint config ${c.underline(this.configFilename)} in ${c.underline(this.basePath)}
 
 Prefer modern Stylelint config filenames:
-https://stylelint.io/user-guide/configure`,
-    ))
+https://stylelint.io/user-guide/configure`),
+    )
   }
 }

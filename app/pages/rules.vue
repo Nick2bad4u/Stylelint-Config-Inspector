@@ -5,12 +5,26 @@ import { computed, ref, watch } from 'vue'
 import { isRuleConfigured, isRuleEnabled } from '~~/shared/rules'
 import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
-import { bpSm, filtersRules as filters, isGridView, stateStorage } from '~/composables/state'
+import {
+  bpSm,
+  filtersRules as filters,
+  stateStorage,
+} from '~/composables/state'
 
 const rules = computed(() => Object.values(payload.value.rules))
 const listColumns = '64px_minmax(220px,360px)_150px_minmax(0,1fr)'
-const pluginNames = computed(() => [...new Set(rules.value.map(i => i.plugin))].filter(Boolean))
-const hasGeneratedDescriptions = computed(() => rules.value.some(rule => rule.docs?.descriptionSource === 'generated' || !!rule.docs?.descriptionMissing))
+const pluginNames = computed(() =>
+  [...new Set(rules.value.map(i => i.plugin))].filter(Boolean),
+)
+const hasGeneratedDescriptions = computed(() =>
+  rules.value.some(
+    rule =>
+      rule.docs?.descriptionSource === 'generated'
+      || !!rule.docs?.descriptionMissing,
+  ),
+)
+const descriptionsNoticeText
+  = 'Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.'
 
 function hasAnyRuleState(ruleName: string): boolean {
   return (payload.value.ruleToState.get(ruleName)?.length ?? 0) > 0
@@ -24,41 +38,78 @@ function hasEnabledRuleState(ruleName: string): boolean {
   return isRuleEnabled(payload.value.ruleToState.get(ruleName))
 }
 
-const usingRulesCount = computed(() => rules.value.filter(rule => isConfiguredRule(rule.name)).length)
-const unusedRulesCount = computed(() => rules.value.filter(rule => !isConfiguredRule(rule.name)).length)
-const recommendedRulesCount = computed(() => rules.value.filter(rule => !!rule.docs?.recommended).length)
+function getRuleRowClass(ruleName: string): string {
+  if (!hasAnyRuleState(ruleName) && filters.state !== 'unused')
+    return 'op42'
+
+  if (hasAnyRuleState(ruleName) && !hasEnabledRuleState(ruleName))
+    return 'rule-muted-off'
+
+  return ''
+}
+
+const usingRulesCount = computed(
+  () => rules.value.filter(rule => isConfiguredRule(rule.name)).length,
+)
+const unusedRulesCount = computed(
+  () => rules.value.filter(rule => !isConfiguredRule(rule.name)).length,
+)
+const recommendedRulesCount = computed(
+  () => rules.value.filter(rule => !!rule.docs?.recommended).length,
+)
 
 const conditionalFiltered = computed(() => {
   let conditional = rules.value
 
   if (filters.plugin) {
-    conditional = conditional
-      .filter(rule => rule.plugin === filters.plugin)
+    conditional = conditional.filter(
+      rule => rule.plugin === filters.plugin,
+    )
   }
 
   if (filters.fixable != null) {
-    conditional = conditional
-      .filter(rule => !!rule.fixable === filters.fixable)
+    conditional = conditional.filter(
+      rule => !!rule.fixable === filters.fixable,
+    )
   }
 
   switch (filters.state) {
     case 'using':
-      conditional = conditional.filter(rule => isConfiguredRule(rule.name))
+      conditional = conditional.filter(rule =>
+        isConfiguredRule(rule.name),
+      )
       break
     case 'unused':
-      conditional = conditional.filter(rule => !isConfiguredRule(rule.name))
+      conditional = conditional.filter(
+        rule => !isConfiguredRule(rule.name),
+      )
       break
     case 'overloads':
-      conditional = conditional.filter(rule => (payload.value.ruleToState.get(rule.name)?.length || 0) > 1)
+      conditional = conditional.filter(
+        rule =>
+          (payload.value.ruleToState.get(rule.name)?.length || 0) > 1,
+      )
       break
     case 'error':
-      conditional = conditional.filter(rule => payload.value.ruleToState.get(rule.name)?.some(i => i.level === 'error'))
+      conditional = conditional.filter(rule =>
+        payload.value.ruleToState
+          .get(rule.name)
+          ?.some(i => i.level === 'error'),
+      )
       break
     case 'warn':
-      conditional = conditional.filter(rule => payload.value.ruleToState.get(rule.name)?.some(i => i.level === 'warn'))
+      conditional = conditional.filter(rule =>
+        payload.value.ruleToState
+          .get(rule.name)
+          ?.some(i => i.level === 'warn'),
+      )
       break
     case 'off':
-      conditional = conditional.filter(rule => payload.value.ruleToState.get(rule.name)?.some(i => i.level === 'off'))
+      conditional = conditional.filter(rule =>
+        payload.value.ruleToState
+          .get(rule.name)
+          ?.some(i => i.level === 'off'),
+      )
       break
     case 'off-only':
       conditional = conditional.filter((rule) => {
@@ -72,7 +123,9 @@ const conditionalFiltered = computed(() => {
 
   switch (filters.status) {
     case 'active':
-      conditional = conditional.filter(rule => hasEnabledRuleState(rule.name))
+      conditional = conditional.filter(rule =>
+        hasEnabledRuleState(rule.name),
+      )
       break
     case 'recommended':
       conditional = conditional.filter(rule => rule.docs?.recommended)
@@ -88,15 +141,24 @@ const conditionalFiltered = computed(() => {
   return conditional
 })
 
-const fuse = computed(() => new Fuse(conditionalFiltered.value, {
-  keys: ['name', 'docs.description'],
-  threshold: 0.5,
-}))
+const fuse = computed(
+  () =>
+    new Fuse(conditionalFiltered.value, {
+      keys: ['name', 'docs.description'],
+      threshold: 0.5,
+    }),
+)
 
 const filtered = ref(conditionalFiltered.value)
 
-if (!filters.search && !filters.plugin && filters.state === 'using' && filters.status === 'active')
+if (
+  !filters.search
+  && !filters.plugin
+  && filters.state === 'using'
+  && filters.status === 'active'
+) {
   filters.status = ''
+}
 
 watch(
   () => filters.status,
@@ -118,12 +180,20 @@ debouncedWatch(
   () => [filters.search, conditionalFiltered.value],
   () => {
     if (!filters.search)
-      return filtered.value = conditionalFiltered.value
+      return (filtered.value = conditionalFiltered.value)
     filtered.value = fuse.value.search(filters.search).map(i => i.item)
   },
   { debounce: 200 },
 )
-const isDefaultFilters = computed(() => !(filters.search || filters.plugin || filters.state !== 'using' || filters.status))
+const isDefaultFilters = computed(
+  () =>
+    !(
+      filters.search
+      || filters.plugin
+      || filters.state !== 'using'
+      || filters.status
+    ),
+)
 
 function resetFilters() {
   filters.search = ''
@@ -142,9 +212,22 @@ function resetFilters() {
           :class="filters.search ? 'font-mono' : ''"
           placeholder="Search rules..."
           border="~ base rounded-full"
-          w-full bg-transparent px3 py2 pl10 outline-none
+          w-full
+          bg-transparent
+          px3
+          py2
+          pl10
+          outline-none
         >
-        <div absolute bottom-0 left-0 top-0 flex="~ items-center justify-center" p4 op50>
+        <div
+          absolute
+          bottom-0
+          left-0
+          top-0
+          flex="~ items-center justify-center"
+          p4
+          op50
+        >
           <div i-ph-magnifying-glass-duotone />
         </div>
       </div>
@@ -156,28 +239,76 @@ function resetFilters() {
           v-model="filters.plugin"
           :options="['', ...pluginNames]"
           :titles="['All', ...pluginNames]"
-          :props="[{}, ...pluginNames.map(i => ({
-            class: 'font-mono',
-            style: filters.plugin === i ? {
-              color: getPluginColor(i),
-              backgroundColor: getPluginColor(i, 0.1),
-            } : {},
-          }))]"
+          :classes="['', ...pluginNames.map(() => 'op85!')]"
+          :props="[
+            {},
+            ...pluginNames.map((i) => ({
+              class: 'font-mono saturate-100! transition-colors',
+              style: {
+                color: getPluginColor(i),
+                backgroundColor: getPluginColor(
+                  i,
+                  filters.plugin === i ? 0.16 : 0.08,
+                ),
+                borderColor: getPluginColor(
+                  i,
+                  filters.plugin === i ? 0.34 : 0.2,
+                ),
+              },
+            })),
+          ]"
         />
         <div text-right text-sm op50>
           Usage
         </div>
         <OptionSelectGroup
           v-model="filters.state"
-          :options="['', 'using', 'unused', 'error', 'warn', 'off', 'overloads', 'off-only']"
-          :titles="['All', 'Using', 'Unused', 'Error', 'Warn', 'Off', 'Overloaded', 'Off Only']"
+          :options="[
+            '',
+            'using',
+            'unused',
+            'error',
+            'warn',
+            'off',
+            'overloads',
+            'off-only',
+          ]"
+          :titles="[
+            'All',
+            'Using',
+            'Unused',
+            'Error',
+            'Warn',
+            'Off',
+            'Overloaded',
+            'Off Only',
+          ]"
         >
           <template #default="{ value, title }">
             <div class="flex items-center">
               <div ml--1 mr-1 flex items-center>
-                <RuleLevelIcon v-if="value === 'error' || value === 'overloads'" level="error" />
-                <RuleLevelIcon v-if="value === 'warn' || value === 'overloads'" level="warn" />
-                <RuleLevelIcon v-if="value === 'off' || value === 'off-only' || value === 'overloads'" level="off" />
+                <RuleLevelIcon
+                  v-if="
+                    value === 'error'
+                      || value === 'overloads'
+                  "
+                  level="error"
+                />
+                <RuleLevelIcon
+                  v-if="
+                    value === 'warn'
+                      || value === 'overloads'
+                  "
+                  level="warn"
+                />
+                <RuleLevelIcon
+                  v-if="
+                    value === 'off'
+                      || value === 'off-only'
+                      || value === 'overloads'
+                  "
+                  level="off"
+                />
               </div>
               {{ title || value }}
             </div>
@@ -188,14 +319,41 @@ function resetFilters() {
         </div>
         <OptionSelectGroup
           v-model="filters.status"
-          :options="['', 'active', 'recommended', 'fixable', 'deprecated']"
-          :titles="['All', 'Active', 'Recommended', 'Fixable', 'Deprecated']"
+          :options="[
+            '',
+            'active',
+            'recommended',
+            'fixable',
+            'deprecated',
+          ]"
+          :titles="[
+            'All',
+            'Active',
+            'Recommended',
+            'Fixable',
+            'Deprecated',
+          ]"
         >
           <template #default="{ value, title }">
             <div flex items-center gap-1>
-              <div v-if="value === 'recommended'" i-ph-check-square-duotone ml--0.5 text-green />
-              <div v-if="value === 'fixable'" i-ph-wrench-duotone ml--0.5 text-amber />
-              <div v-if="value === 'deprecated'" i-ph-prohibit-inset-duotone ml--1 text-gray />
+              <div
+                v-if="value === 'recommended'"
+                i-ph-check-square-duotone
+                ml--0.5
+                text-green
+              />
+              <div
+                v-if="value === 'fixable'"
+                i-ph-wrench-duotone
+                ml--0.5
+                text-amber
+              />
+              <div
+                v-if="value === 'deprecated'"
+                i-ph-prohibit-inset-duotone
+                ml--1
+                text-gray
+              />
               {{ title || value }}
             </div>
           </template>
@@ -207,16 +365,23 @@ function resetFilters() {
       <div flex="~ gap-2" lt-sm:flex-col>
         <div
           flex="~ inline gap-2 items-center"
-          border="~ gray/20 rounded-full" bg-gray:10 px3 py1
+          border="~ gray/20 rounded-full"
+          bg-gray:10
+          px3
+          py1
         >
           <div i-ph-list-checks-duotone />
           <span>{{ filtered.length }}</span>
-          <span op75>rules {{ isDefaultFilters ? 'in use' : 'filtered' }}</span>
+          <span op75>rules
+            {{ isDefaultFilters ? "in use" : "filtered" }}</span>
           <span text-sm op50>out of {{ rules.length }} rules</span>
         </div>
         <div
           flex="~ inline gap-2 items-center"
-          border="~ gray/20 rounded-full" bg-gray:5 px3 py1
+          border="~ gray/20 rounded-full"
+          bg-gray:5
+          px3
+          py1
           text-sm
         >
           <span op70>Using</span>
@@ -227,25 +392,35 @@ function resetFilters() {
           <span op40>•</span>
           <span op70>Recommended</span>
           <span font-mono>{{ recommendedRulesCount }}</span>
+          <div
+            v-if="hasGeneratedDescriptions"
+            v-tooltip="descriptionsNoticeText"
+            i-ph-info-duotone
+            text-violet5
+            op70
+          />
         </div>
         <button
           v-if="!isDefaultFilters"
           flex="~ inline gap-2 items-center self-start"
-          border="~ purple/20 rounded-full" bg-purple:10 px3 py1
+          border="~ purple/20 rounded-full"
+          bg-purple:10
+          px3
+          py1
           @click="resetFilters()"
         >
           <div i-ph-funnel-duotone text-purple />
           <span op50>Clear Filter</span>
-          <div
-            i-ph-x ml--1 text-sm op25 hover:op100
-          />
+          <div i-ph-x ml--1 text-sm op25 hover:op100 />
         </button>
       </div>
 
       <div v-if="!bpSm" flex="~ gap-1">
         <button
           btn-action
-          :class="{ 'btn-action-active': stateStorage.viewType === 'list' }"
+          :class="{
+            'btn-action-active': stateStorage.viewType === 'list',
+          }"
           @click="stateStorage.viewType = 'list'"
         >
           <div i-ph-list-duotone />
@@ -253,7 +428,9 @@ function resetFilters() {
         </button>
         <button
           btn-action
-          :class="{ 'btn-action-active': stateStorage.viewType === 'grid' }"
+          :class="{
+            'btn-action-active': stateStorage.viewType === 'grid',
+          }"
           @click="stateStorage.viewType = 'grid'"
         >
           <div i-ph-grid-four-duotone />
@@ -261,32 +438,11 @@ function resetFilters() {
         </button>
       </div>
     </div>
-    <div
-      v-if="!isGridView"
-      mt4 grid="~ gap-x-2"
-      :style="{ gridTemplateColumns: listColumns.replaceAll('_', ' ') }"
-      items-center text-xs op60
-    >
-      <div pr1 text-right>
-        State
-      </div>
-      <div>Rule</div>
-      <div mx2 text-center>
-        Flags
-      </div>
-      <div>Description</div>
-    </div>
-    <div
-      v-if="!isGridView && hasGeneratedDescriptions"
-      mt1 text-xs op60
-    >
-      Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.
-    </div>
     <RuleList
       my4
       :rules="filtered"
       :list-columns="listColumns"
-      :get-bind="(name: string) => ({ class: (hasAnyRuleState(name) || filters.state === 'unused') ? '' : 'op40' })"
+      :get-bind="(name: string) => ({ class: getRuleRowClass(name) })"
     />
   </div>
 </template>

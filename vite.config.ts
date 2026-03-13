@@ -1,4 +1,4 @@
-/* eslint-disable n/no-process-env, comment-length/limit-single-line-comments   -- Disable specific rules for build configs */
+import process from "node:process";
 
 import pc from "picocolors";
 import {

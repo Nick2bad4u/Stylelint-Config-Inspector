@@ -1,6 +1,20 @@
 import type { Config as StylelintConfig } from 'stylelint'
-import type { FlatConfigItem, MatchedFile, Payload, RuleDescriptionSource, RuleDocsUrlSource, RuleInfo, RulesRecord } from '../../shared/types'
-import type { InspectorAdapter, InspectorReadResult, ReadConfigOptions, ResolveConfigPathOptions, ResolvedConfigPath } from './contracts'
+import type {
+  FlatConfigItem,
+  MatchedFile,
+  Payload,
+  RuleDescriptionSource,
+  RuleDocsUrlSource,
+  RuleInfo,
+  RulesRecord,
+} from '../../shared/types'
+import type {
+  InspectorAdapter,
+  InspectorReadResult,
+  ReadConfigOptions,
+  ResolveConfigPathOptions,
+  ResolvedConfigPath,
+} from './contracts'
 import { readFile, stat } from 'node:fs/promises'
 import { createRequire } from 'node:module'
 import { isAbsolute } from 'node:path'
@@ -12,12 +26,23 @@ import { findUp } from 'find-up'
 import { basename, dirname, normalize, relative, resolve } from 'pathe'
 import stylelint from 'stylelint'
 import { glob } from 'tinyglobby'
-import { isGeneralConfig, isIgnoreOnlyConfig, matchFile } from '../../shared/configs'
-import { MARK_CHECK, MARK_INFO, stylelintConfigFilenames, stylelintLegacyConfigFilenames } from '../constants'
+import {
+  isGeneralConfig,
+  isIgnoreOnlyConfig,
+  matchFile,
+} from '../../shared/configs'
+import {
+  MARK_CHECK,
+  MARK_INFO,
+  stylelintConfigFilenames,
+  stylelintLegacyConfigFilenames,
+} from '../constants'
 import { ConfigPathError } from '../errors'
 
 const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
-const DEFAULT_WORKSPACE_SCAN_GLOBS = ['**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}']
+const DEFAULT_WORKSPACE_SCAN_GLOBS = [
+  '**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}',
+]
 const DEFAULT_WORKSPACE_SCAN_IGNORES = [
   '**/node_modules/**',
   '**/.git/**',
@@ -32,10 +57,16 @@ const REGEXP_SPECIAL_CHARS_RE = /[.*+?^${}()|[\]\\]/g
 const AT_PREFIX_RE = /^@/
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
-const SCOPED_STYLELINT_PLUGIN_PACKAGE_RE = /^(@[^/]+)\/stylelint-plugin(?:-(.+))?$/
+const SCOPED_STYLELINT_PLUGIN_PACKAGE_RE
+  = /^(@[^/]+)\/stylelint-plugin(?:-(.+))?$/
 const SCOPED_STYLELINT_PACKAGE_RE = /^(@[^/]+)\/stylelint-(.+)$/
-const GENERIC_PLUGIN_PREFIXES = new Set(['plugin', 'rule', 'rules'])
-const UNSAFE_MESSAGE_DESCRIPTION_RE = /^Expected\s+"undefined"\s+to\s+be\s+one\s+of\s+"undefined"/i
+const GENERIC_PLUGIN_PREFIXES = new Set([
+  'plugin',
+  'rule',
+  'rules',
+])
+const UNSAFE_MESSAGE_DESCRIPTION_RE
+  = /^Expected\s+"undefined"\s+to\s+be\s+one\s+of\s+"undefined"/i
 const MESSAGE_PLACEHOLDER_RE = /%[a-z]/i
 const MESSAGE_UNDEFINED_RE = /\bundefined\b/i
 const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/
@@ -45,7 +76,11 @@ const MESSAGE_CALL_ARGS: readonly unknown[][] = [
   [],
   ['<value>'],
   ['<value>', '<value>'],
-  ['<value>', '<value>', '<value>'],
+  [
+    '<value>',
+    '<value>',
+    '<value>',
+  ],
 ]
 const PRIORITIZED_MESSAGE_KEYS = new Set([
   'rejected',
@@ -128,22 +163,30 @@ const OMITTED_EXTRA_CONFIG_KEYS = new Set([
 ])
 
 function isNoConfigError(error: unknown): boolean {
-  return error instanceof Error
+  return (
+    error instanceof Error
     && error.message.includes('No configuration provided for')
+  )
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function isScalarValue(value: unknown): value is string | number | boolean | null {
-  return value === null
+function isScalarValue(
+  value: unknown,
+): value is string | number | boolean | null {
+  return (
+    value === null
     || typeof value === 'string'
     || typeof value === 'number'
     || typeof value === 'boolean'
+  )
 }
 
-function isPlainSerializableObject(value: unknown): value is Record<string, string | number | boolean | null> {
+function isPlainSerializableObject(
+  value: unknown,
+): value is Record<string, string | number | boolean | null> {
   if (!isRecord(value))
     return false
 
@@ -163,7 +206,9 @@ function isSerializableExtraValue(value: unknown): boolean {
   return false
 }
 
-function sanitizeExtraConfigFields(value: Record<string, unknown>): Record<string, unknown> {
+function sanitizeExtraConfigFields(
+  value: Record<string, unknown>,
+): Record<string, unknown> {
   return Object.fromEntries(
     Object.entries(value)
       .filter(([key]) => !OMITTED_EXTRA_CONFIG_KEYS.has(key))
@@ -179,7 +224,9 @@ function getPackageNameFromPath(pathLike: string): string | undefined {
   if (nodeModulesIndex === -1)
     return undefined
 
-  const packagePath = normalized.slice(nodeModulesIndex + nodeModulesToken.length)
+  const packagePath = normalized.slice(
+    nodeModulesIndex + nodeModulesToken.length,
+  )
   const parts = packagePath.split('/').filter(Boolean)
   if (!parts.length)
     return undefined
@@ -221,9 +268,7 @@ function normalizePluginPackageName(name: string): string {
     const suffix = scopedPluginMatch[2]
     if (!scope)
       return trimmed
-    return suffix
-      ? `${scope}/${suffix}`
-      : scope
+    return suffix ? `${scope}/${suffix}` : scope
   }
 
   const scopedStylelintMatch = SCOPED_STYLELINT_PACKAGE_RE.exec(trimmed)
@@ -232,9 +277,7 @@ function normalizePluginPackageName(name: string): string {
     const suffix = scopedStylelintMatch[2]
     if (!scope)
       return trimmed
-    return suffix
-      ? `${scope}/${suffix}`
-      : scope
+    return suffix ? `${scope}/${suffix}` : scope
   }
 
   if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
@@ -247,9 +290,11 @@ function normalizePluginPackageName(name: string): string {
 }
 
 function isBareModuleSpecifier(specifier: string): boolean {
-  return !isAbsolute(specifier)
+  return (
+    !isAbsolute(specifier)
     && !specifier.startsWith('.')
     && !specifier.startsWith('file:')
+  )
 }
 
 function toPackageNameFromSpecifier(specifier: string): string | undefined {
@@ -267,23 +312,28 @@ function toPackageNameFromSpecifier(specifier: string): string | undefined {
   if (parts[0]?.startsWith('@')) {
     const scope = parts[0]
     const name = parts[1]
-    return scope && name
-      ? `${scope}/${name}`
-      : undefined
+    return scope && name ? `${scope}/${name}` : undefined
   }
 
   return parts[0]
 }
 
-function getPackageRootFromResolvedPath(resolvedPath: string): string | undefined {
+function getPackageRootFromResolvedPath(
+  resolvedPath: string,
+): string | undefined {
   const normalized = normalize(resolvedPath).replaceAll('\\', '/')
   const nodeModulesToken = '/node_modules/'
   const nodeModulesIndex = normalized.lastIndexOf(nodeModulesToken)
   if (nodeModulesIndex === -1)
     return undefined
 
-  const modulesRoot = normalized.slice(0, nodeModulesIndex + nodeModulesToken.length)
-  const packagePath = normalized.slice(nodeModulesIndex + nodeModulesToken.length)
+  const modulesRoot = normalized.slice(
+    0,
+    nodeModulesIndex + nodeModulesToken.length,
+  )
+  const packagePath = normalized.slice(
+    nodeModulesIndex + nodeModulesToken.length,
+  )
   const parts = packagePath.split('/').filter(Boolean)
   if (!parts.length)
     return undefined
@@ -297,9 +347,7 @@ function getPackageRootFromResolvedPath(resolvedPath: string): string | undefine
   }
 
   const packageName = parts[0]
-  return packageName
-    ? resolve(modulesRoot, packageName)
-    : undefined
+  return packageName ? resolve(modulesRoot, packageName) : undefined
 }
 
 function normalizeAbsoluteUrl(value: string | undefined): string | undefined {
@@ -344,9 +392,11 @@ function normalizeRepositoryUrl(repository: unknown): string | undefined {
     return `https://github.com/${trimmed.slice('git@github.com:'.length).replace(GIT_SUFFIX_RE, '')}`
 
   const withoutGitPrefix = trimmed.replace(GIT_PROTOCOL_PREFIX_RE, '')
-  const normalized = withoutGitPrefix.startsWith('http://') || withoutGitPrefix.startsWith('https://')
-    ? withoutGitPrefix
-    : undefined
+  const normalized
+    = withoutGitPrefix.startsWith('http://')
+      || withoutGitPrefix.startsWith('https://')
+      ? withoutGitPrefix
+      : undefined
 
   if (!normalized)
     return undefined
@@ -354,7 +404,9 @@ function normalizeRepositoryUrl(repository: unknown): string | undefined {
   return normalized.replace(GIT_SUFFIX_RE, '')
 }
 
-async function readPluginPackageDocsMetadata(pluginEntry: string): Promise<PluginPackageDocsMetadata | undefined> {
+async function readPluginPackageDocsMetadata(
+  pluginEntry: string,
+): Promise<PluginPackageDocsMetadata | undefined> {
   const resolvedPluginEntry = (() => {
     if (isAbsolute(pluginEntry))
       return pluginEntry
@@ -417,10 +469,13 @@ async function readPluginPackageDocsMetadata(pluginEntry: string): Promise<Plugi
       ? packageJson.homepage
       : undefined,
   )
-  const repositoryUrl = normalizeRepositoryUrl(isRecord(packageJson) ? packageJson.repository : undefined)
-  const docsUrl = homepageUrl
-    ?? repositoryUrl
-    ?? `https://www.npmjs.com/package/${packageName}`
+  const repositoryUrl = normalizeRepositoryUrl(
+    isRecord(packageJson) ? packageJson.repository : undefined,
+  )
+  const docsUrl
+    = homepageUrl
+      ?? repositoryUrl
+      ?? `https://www.npmjs.com/package/${packageName}`
 
   return {
     packageName,
@@ -436,7 +491,9 @@ function toStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value))
     return undefined
 
-  const items = value.filter((item): item is string => typeof item === 'string')
+  const items = value.filter(
+    (item): item is string => typeof item === 'string',
+  )
   return items.length ? items : undefined
 }
 
@@ -475,7 +532,7 @@ function toPluginRecord(value: unknown): Record<string, unknown> | undefined {
 
 function getRulePlugin(ruleName: string): string {
   return ruleName.includes('/')
-    ? ruleName.split('/')[0] ?? 'stylelint'
+    ? (ruleName.split('/')[0] ?? 'stylelint')
     : 'stylelint'
 }
 
@@ -484,32 +541,24 @@ function getDisplayPluginName(ruleName: string, sourcePlugin?: string): string {
   if (!sourcePlugin)
     return rulePlugin
 
-  return GENERIC_PLUGIN_PREFIXES.has(rulePlugin)
-    ? sourcePlugin
-    : rulePlugin
+  return GENERIC_PLUGIN_PREFIXES.has(rulePlugin) ? sourcePlugin : rulePlugin
 }
 
 function toUnknownArray(value: unknown): unknown[] | undefined {
-  return Array.isArray(value)
-    ? value
-    : undefined
+  return Array.isArray(value) ? value : undefined
 }
 
 function toUnknownRecord(value: unknown): Record<string, unknown> | undefined {
-  return isRecord(value)
-    ? value
-    : undefined
+  return isRecord(value) ? value : undefined
 }
 
 function toRuleMeta(value: unknown): RuleMetaLike | undefined {
-  return isRecord(value)
-    ? value
-    : undefined
+  return isRecord(value) ? value : undefined
 }
 
 function toRuleFunction(value: unknown): RuleFunctionLike | undefined {
   return typeof value === 'function'
-    ? value as RuleFunctionLike
+    ? (value as RuleFunctionLike)
     : undefined
 }
 
@@ -524,12 +573,16 @@ function getRuleNameFromUnknown(value: unknown): string | undefined {
   return undefined
 }
 
-function toRuleDefinition(value: unknown, fallbackRuleName?: string): RuleDefinitionLike | undefined {
+function toRuleDefinition(
+  value: unknown,
+  fallbackRuleName?: string,
+): RuleDefinitionLike | undefined {
   const functionValue = toRuleFunction(value)
   if (functionValue) {
-    const ruleName = typeof functionValue.ruleName === 'string'
-      ? functionValue.ruleName
-      : fallbackRuleName
+    const ruleName
+      = typeof functionValue.ruleName === 'string'
+        ? functionValue.ruleName
+        : fallbackRuleName
 
     if (!ruleName)
       return undefined
@@ -538,7 +591,9 @@ function toRuleDefinition(value: unknown, fallbackRuleName?: string): RuleDefini
       ruleName,
       meta: toRuleMeta(functionValue.meta),
       messages: toUnknownRecord(functionValue.messages),
-      primaryOptionArray: toUnknownArray(functionValue.primaryOptionArray),
+      primaryOptionArray: toUnknownArray(
+        functionValue.primaryOptionArray,
+      ),
     }
   }
 
@@ -546,9 +601,12 @@ function toRuleDefinition(value: unknown, fallbackRuleName?: string): RuleDefini
     return undefined
 
   const nestedRule = toRuleFunction(value.rule)
-  const ruleName = typeof value.ruleName === 'string'
-    ? value.ruleName
-    : (typeof nestedRule?.ruleName === 'string' ? nestedRule.ruleName : fallbackRuleName)
+  const ruleName
+    = typeof value.ruleName === 'string'
+      ? value.ruleName
+      : typeof nestedRule?.ruleName === 'string'
+        ? nestedRule.ruleName
+        : fallbackRuleName
 
   if (!ruleName)
     return undefined
@@ -556,8 +614,12 @@ function toRuleDefinition(value: unknown, fallbackRuleName?: string): RuleDefini
   return {
     ruleName,
     meta: toRuleMeta(value.meta) ?? toRuleMeta(nestedRule?.meta),
-    messages: toUnknownRecord(value.messages) ?? toUnknownRecord(nestedRule?.messages),
-    primaryOptionArray: toUnknownArray(value.primaryOptionArray) ?? toUnknownArray(nestedRule?.primaryOptionArray),
+    messages:
+            toUnknownRecord(value.messages)
+            ?? toUnknownRecord(nestedRule?.messages),
+    primaryOptionArray:
+            toUnknownArray(value.primaryOptionArray)
+            ?? toUnknownArray(nestedRule?.primaryOptionArray),
   }
 }
 
@@ -580,52 +642,53 @@ function resolveMessageText(message: unknown): string | undefined {
     }
 
     if (resolvedCandidates.length > 0) {
-      return resolvedCandidates
-        .toSorted((a, b) => {
-          const scoreA = getMessageDescriptionScore('message', a)
-          const scoreB = getMessageDescriptionScore('message', b)
-          if (scoreA !== scoreB)
-            return scoreA - scoreB
+      return resolvedCandidates.toSorted((a, b) => {
+        const scoreA = getMessageDescriptionScore('message', a)
+        const scoreB = getMessageDescriptionScore('message', b)
+        if (scoreA !== scoreB)
+          return scoreA - scoreB
 
-          if (a.length !== b.length)
-            return a.length - b.length
+        if (a.length !== b.length)
+          return a.length - b.length
 
-          return a.localeCompare(b)
-        })[0]
+        return a.localeCompare(b)
+      })[0]
     }
   }
 
   return undefined
 }
 
-function normalizeRuleMessages(messages: Record<string, unknown> | undefined): Record<string, string> | undefined {
+function normalizeRuleMessages(
+  messages: Record<string, unknown> | undefined,
+): Record<string, string> | undefined {
   if (!messages)
     return undefined
 
   const entries = Object.entries(messages)
     .map(([key, value]) => {
       const text = resolveMessageText(value)
-      return text
-        ? [key, text] as const
-        : undefined
+      return text ? ([key, text] as const) : undefined
     })
-    .filter((entry): entry is readonly [string, string] => entry !== undefined)
+    .filter(
+      (entry): entry is readonly [string, string] => entry !== undefined,
+    )
 
-  return entries.length
-    ? Object.fromEntries(entries)
-    : undefined
+  return entries.length ? Object.fromEntries(entries) : undefined
 }
 
 function humanizeRuleName(ruleName: string): string {
   const shortName = ruleName.includes('/')
-    ? ruleName.split('/').at(-1) ?? ruleName
+    ? (ruleName.split('/').at(-1) ?? ruleName)
     : ruleName
 
-  return shortName
-    .replaceAll('-', ' ')
+  return shortName.replaceAll('-', ' ')
 }
 
-function toDescriptionPrefixCandidates(ruleName: string, plugin: string): string[] {
+function toDescriptionPrefixCandidates(
+  ruleName: string,
+  plugin: string,
+): string[] {
   const unscopedPlugin = plugin.replace(AT_PREFIX_RE, '')
   const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
   const candidates = [
@@ -661,18 +724,29 @@ function sanitizeDescription(ruleName: string, description: string): string {
     if (!acc.length)
       return acc
 
-    return acc.replace(new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, 'i'), '').trim()
+    return acc
+      .replace(
+        new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, 'i'),
+        '',
+      )
+      .trim()
   }, sanitized)
 
   if (!withoutPrefix.length)
     return humanizeRuleName(ruleName)
 
   const lower = withoutPrefix.toLowerCase()
-  if (lower === ruleName.toLowerCase() || lower === humanizeRuleName(ruleName).toLowerCase())
+  if (
+    lower === ruleName.toLowerCase()
+    || lower === humanizeRuleName(ruleName).toLowerCase()
+  ) {
     return humanizeRuleName(ruleName)
+  }
 
   const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
-  const trailingRuleReference = withoutPrefix.match(TRAILING_RULE_REFERENCE_RE)
+  const trailingRuleReference = withoutPrefix.match(
+    TRAILING_RULE_REFERENCE_RE,
+  )
   if (trailingRuleReference?.[1]) {
     const referencedRule = trailingRuleReference[1].trim().toLowerCase()
     if (
@@ -687,9 +761,7 @@ function sanitizeDescription(ruleName: string, description: string): string {
 }
 
 function getMessageDescriptionScore(key: string, description: string): number {
-  let score = PRIORITIZED_MESSAGE_KEYS.has(key)
-    ? 0
-    : 10
+  let score = PRIORITIZED_MESSAGE_KEYS.has(key) ? 0 : 10
 
   if (MESSAGE_PLACEHOLDER_RE.test(description))
     score += 20
@@ -718,7 +790,9 @@ function getDescriptionFromMessages(
     .map(([key, value]) => ({ key, value: value.trim() }))
     .filter(candidate => candidate.value.length > 0)
     .toSorted((a, b) => {
-      const scoreDiff = getMessageDescriptionScore(a.key, a.value) - getMessageDescriptionScore(b.key, b.value)
+      const scoreDiff
+        = getMessageDescriptionScore(a.key, a.value)
+          - getMessageDescriptionScore(b.key, b.value)
       if (scoreDiff !== 0)
         return scoreDiff
 
@@ -744,7 +818,10 @@ function getRuleDescription(
 ): RuleDescriptionResult {
   const fallbackDescription = humanizeRuleName(ruleName)
 
-  if (typeof meta?.description === 'string' && meta.description.trim().length > 0) {
+  if (
+    typeof meta?.description === 'string'
+    && meta.description.trim().length > 0
+  ) {
     const description = sanitizeDescription(ruleName, meta.description)
     return {
       text: description,
@@ -769,17 +846,25 @@ function getRuleDescription(
   }
 }
 
-function normalizeRuleDeprecated(deprecated: unknown): RuleInfo['deprecated'] | undefined {
+function normalizeRuleDeprecated(
+  deprecated: unknown,
+): RuleInfo['deprecated'] | undefined {
   if (typeof deprecated === 'boolean')
     return deprecated
 
-  if (isRecord(deprecated))
-    return deprecated as Exclude<RuleInfo['deprecated'], boolean | undefined>
+  if (isRecord(deprecated)) {
+    return deprecated as Exclude<
+      RuleInfo['deprecated'],
+            boolean | undefined
+    >
+  }
 
   return undefined
 }
 
-function normalizeRuleFixable(fixable: unknown): RuleInfo['fixable'] | undefined {
+function normalizeRuleFixable(
+  fixable: unknown,
+): RuleInfo['fixable'] | undefined {
   if (typeof fixable === 'boolean' || typeof fixable === 'string')
     return fixable
   return undefined
@@ -797,16 +882,15 @@ function buildRuleInfo(
   const plugin = getDisplayPluginName(name, sourcePlugin)
   const meta = definition?.meta
   const messages = normalizeRuleMessages(definition?.messages)
-  const metaDocsUrl = typeof meta?.url === 'string' && meta.url.length
-    ? meta.url
-    : undefined
+  const metaDocsUrl
+    = typeof meta?.url === 'string' && meta.url.length ? meta.url : undefined
   const docsUrl = metaDocsUrl ?? sourceDocsUrl
   const docsUrlSource: RuleDocsUrlSource | undefined = metaDocsUrl
     ? 'meta'
     : sourceDocsUrlSource
   const description = getRuleDescription(name, meta, messages)
-  const isRecommended = recommendedRuleNames.has(name)
-    || meta?.recommended === true
+  const isRecommended
+    = recommendedRuleNames.has(name) || meta?.recommended === true
 
   const info: RuleInfo = {
     name,
@@ -814,7 +898,9 @@ function buildRuleInfo(
     docs: {
       description: description.text,
       descriptionSource: description.source,
-      ...(description.missingDescription ? { descriptionMissing: true } : {}),
+      ...(description.missingDescription
+        ? { descriptionMissing: true }
+        : {}),
       ...(isRecommended ? { recommended: true } : {}),
       ...(docsUrl ? { url: docsUrl } : {}),
       ...(docsUrl && docsUrlSource ? { urlSource: docsUrlSource } : {}),
@@ -868,13 +954,17 @@ async function resolveRecommendedCoreRuleNames(): Promise<Set<string>> {
   return await _recommendedCoreRulesPromise
 }
 
-async function resolveCoreRuleDefinition(ruleName: string): Promise<RuleDefinitionLike | undefined> {
+async function resolveCoreRuleDefinition(
+  ruleName: string,
+): Promise<RuleDefinitionLike | undefined> {
   const rules = stylelint.rules as Record<string, unknown>
   const ruleEntry = rules[ruleName]
   if (!ruleEntry)
     return undefined
 
-  const resolvedRule = await Promise.resolve(ruleEntry).catch(() => undefined)
+  const resolvedRule = await Promise.resolve(ruleEntry).catch(
+    () => undefined,
+  )
   return toRuleDefinition(resolvedRule, ruleName)
 }
 
@@ -933,7 +1023,9 @@ function collectPluginRuleDefinitions(value: unknown): RuleDefinitionLike[] {
   return [...definitions.values()]
 }
 
-async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<string, PluginRuleDefinitionSource>> {
+async function resolvePluginRuleDefinitions(
+  plugins: unknown,
+): Promise<Map<string, PluginRuleDefinitionSource>> {
   const definitions = new Map<string, PluginRuleDefinitionSource>()
 
   if (!Array.isArray(plugins))
@@ -941,10 +1033,13 @@ async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<strin
 
   const loaded = await Promise.all(
     plugins.map(async (pluginEntry, index) => {
-      const sourcePlugin = normalizePluginPackageName(getPluginName(pluginEntry, index))
+      const sourcePlugin = normalizePluginPackageName(
+        getPluginName(pluginEntry, index),
+      )
       try {
         if (typeof pluginEntry === 'string') {
-          const packageDocsMetadata = await readPluginPackageDocsMetadata(pluginEntry)
+          const packageDocsMetadata
+            = await readPluginPackageDocsMetadata(pluginEntry)
           return {
             sourcePlugin,
             module: await importPluginModule(pluginEntry),
@@ -1005,9 +1100,7 @@ function normalizeConfigItem(
 
   const config: FlatConfigItem = {
     index,
-    name: typeof name === 'string' && name.length
-      ? name
-      : fallbackName,
+    name: typeof name === 'string' && name.length ? name : fallbackName,
     ...sanitizedExtraFields,
   }
 
@@ -1059,16 +1152,18 @@ function extractConfigs(
       const overrideFiles = toStringArray(override.files)
       const firstGlob = overrideFiles?.[0]
       const filesSummary = firstGlob
-        ? (overrideFiles.length > 1
-            ? `${firstGlob} +${overrideFiles.length - 1}`
-            : firstGlob)
+        ? overrideFiles.length > 1
+          ? `${firstGlob} +${overrideFiles.length - 1}`
+          : firstGlob
         : undefined
 
       const fallbackName = filesSummary
         ? `stylelint/resolved/override-${index + 1} (${filesSummary})`
         : `stylelint/resolved/override-${index + 1}`
 
-      configs.push(normalizeConfigItem(override, index + 1, fallbackName))
+      configs.push(
+        normalizeConfigItem(override, index + 1, fallbackName),
+      )
     })
   }
 
@@ -1079,8 +1174,12 @@ async function buildRuleCatalog(
   configs: FlatConfigItem[],
   resolvedConfig: StylelintConfigLike,
 ): Promise<Record<string, RuleInfo>> {
-  const configuredRuleNames = new Set(configs.flatMap(config => Object.keys(config.rules ?? {})))
-  const pluginRuleDefinitions = await resolvePluginRuleDefinitions(resolvedConfig.plugins)
+  const configuredRuleNames = new Set(
+    configs.flatMap(config => Object.keys(config.rules ?? {})),
+  )
+  const pluginRuleDefinitions = await resolvePluginRuleDefinitions(
+    resolvedConfig.plugins,
+  )
   const coreRuleNames = resolveCoreRuleNames()
   const recommendedCoreRuleNames = await resolveRecommendedCoreRuleNames()
   const recommendedPluginRuleNames = Array.from(
@@ -1094,11 +1193,13 @@ async function buildRuleCatalog(
     ...recommendedPluginRuleNames,
   ])
 
-  const ruleNames = [...new Set([
-    ...configuredRuleNames,
-    ...coreRuleNames,
-    ...pluginRuleDefinitions.keys(),
-  ])]
+  const ruleNames = [
+    ...new Set([
+      ...configuredRuleNames,
+      ...coreRuleNames,
+      ...pluginRuleDefinitions.keys(),
+    ]),
+  ]
   const coreRuleDefinitions = new Map<string, RuleDefinitionLike>()
 
   await Promise.all(
@@ -1113,9 +1214,10 @@ async function buildRuleCatalog(
 
   const ruleInfoEntries = ruleNames.map((ruleName) => {
     const pluginDefinition = pluginRuleDefinitions.get(ruleName)
-    const definition = getRulePlugin(ruleName) === 'stylelint'
-      ? coreRuleDefinitions.get(ruleName)
-      : pluginDefinition?.definition
+    const definition
+      = getRulePlugin(ruleName) === 'stylelint'
+        ? coreRuleDefinitions.get(ruleName)
+        : pluginDefinition?.definition
 
     return [
       ruleName,
@@ -1140,7 +1242,9 @@ function normalizeWorkspaceFilepath(path: string): string {
 
 function toWorkspaceScanGlobs(configs: FlatConfigItem[]): string[] {
   const fileGlobs = configs.flatMap(config => config.files ?? [])
-  const positiveGlobs = fileGlobs.filter(glob => typeof glob === 'string' && !glob.startsWith('!'))
+  const positiveGlobs = fileGlobs.filter(
+    glob => typeof glob === 'string' && !glob.startsWith('!'),
+  )
   return [...new Set(positiveGlobs)]
 }
 
@@ -1150,9 +1254,17 @@ async function resolveMatchedFiles(
 ): Promise<{ files: MatchedFile[], diagnostics: string[] }> {
   const diagnostics: string[] = []
   const configuredGlobs = toWorkspaceScanGlobs(configs)
-  const hasGeneralConfig = configs.some(config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config))
+  const hasGeneralConfig = configs.some(
+    config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config),
+  )
   const scanGlobs = configuredGlobs.length
-    ? [...new Set(hasGeneralConfig ? [...configuredGlobs, ...DEFAULT_WORKSPACE_SCAN_GLOBS] : configuredGlobs)]
+    ? [
+        ...new Set(
+          hasGeneralConfig
+            ? [...configuredGlobs, ...DEFAULT_WORKSPACE_SCAN_GLOBS]
+            : configuredGlobs,
+        ),
+      ]
     : DEFAULT_WORKSPACE_SCAN_GLOBS
 
   if (!configuredGlobs.length) {
@@ -1180,7 +1292,9 @@ async function resolveMatchedFiles(
   }
 
   const generalConfigIndexes = configs
-    .filter(config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config))
+    .filter(
+      config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config),
+    )
     .map(config => config.index)
 
   const files = discoveredFiles
@@ -1188,8 +1302,13 @@ async function resolveMatchedFiles(
     .map(normalizeWorkspaceFilepath)
     .map((filepath) => {
       const matched = matchFile(filepath, configs, basePath)
-      if (matched.configs.length === 0 && matched.globs.length === 0 && generalConfigIndexes.length)
+      if (
+        matched.configs.length === 0
+        && matched.globs.length === 0
+        && generalConfigIndexes.length
+      ) {
         matched.configs.push(...generalConfigIndexes)
+      }
       return matched
     })
     .filter(result => result.configs.length > 0)
@@ -1207,10 +1326,15 @@ function getRelativeFilepath(basePath: string, filePath: string): string {
 }
 
 async function exists(path: string): Promise<boolean> {
-  return await stat(path).then(() => true).catch(() => false)
+  return await stat(path)
+    .then(() => true)
+    .catch(() => false)
 }
 
-async function loadConfigFromPath(configPath: string, basePath: string): Promise<{ config: StylelintConfig, dependencies: string[] }> {
+async function loadConfigFromPath(
+  configPath: string,
+  basePath: string,
+): Promise<{ config: StylelintConfig, dependencies: string[] }> {
   if (basename(configPath) === 'package.json') {
     const pkg = await readFile(configPath, 'utf-8')
     const parsed = JSON.parse(pkg) as unknown
@@ -1242,12 +1366,16 @@ async function loadConfigFromPath(configPath: string, basePath: string): Promise
   }
 }
 
-async function findDiscoveredConfigPath(cwd: string): Promise<string | undefined> {
+async function findDiscoveredConfigPath(
+  cwd: string,
+): Promise<string | undefined> {
   const configFilePath = await findUp(stylelintConfigFilenames, { cwd })
   if (configFilePath)
     return normalize(configFilePath)
 
-  const legacyFilePath = await findUp(stylelintLegacyConfigFilenames, { cwd })
+  const legacyFilePath = await findUp(stylelintLegacyConfigFilenames, {
+    cwd,
+  })
   if (legacyFilePath)
     return normalize(legacyFilePath)
 
@@ -1255,7 +1383,9 @@ async function findDiscoveredConfigPath(cwd: string): Promise<string | undefined
   if (!packageJsonPath)
     return undefined
 
-  const packageJsonContent = await readFile(packageJsonPath, 'utf-8').catch(() => undefined)
+  const packageJsonContent = await readFile(packageJsonPath, 'utf-8').catch(
+    () => undefined,
+  )
   if (!packageJsonContent)
     return undefined
 
@@ -1276,12 +1406,10 @@ async function findDiscoveredConfigPath(cwd: string): Promise<string | undefined
 class StylelintInspectorAdapter implements InspectorAdapter {
   readonly engine = 'stylelint' as const
 
-  async resolveConfigPath(options: ResolveConfigPathOptions): Promise<ResolvedConfigPath> {
-    const {
-      cwd,
-      userConfigPath,
-      userBasePath,
-    } = options
+  async resolveConfigPath(
+    options: ResolveConfigPathOptions,
+  ): Promise<ResolvedConfigPath> {
+    const { cwd, userConfigPath, userBasePath } = options
 
     const resolvedUserBasePath = userBasePath
       ? normalize(resolve(cwd, userBasePath))
@@ -1292,7 +1420,7 @@ class StylelintInspectorAdapter implements InspectorAdapter {
     if (userConfigPath) {
       const candidate = normalize(resolve(cwd, userConfigPath))
 
-      if (!await exists(candidate)) {
+      if (!(await exists(candidate))) {
         throw new ConfigPathError(
           `${relative(cwd, dirname(candidate))}/`,
           stylelintConfigFilenames,
@@ -1309,7 +1437,9 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       resolvedUserBasePath
       ?? (userConfigPath
         ? cwd
-        : (configPath ? dirname(configPath) : lookupBasePath)),
+        : configPath
+          ? dirname(configPath)
+          : lookupBasePath),
     )
 
     return {
@@ -1332,10 +1462,19 @@ class StylelintInspectorAdapter implements InspectorAdapter {
     if (chdir && basePath !== process.cwd())
       process.chdir(basePath)
 
-    const targetFilePath = normalize(resolve(basePath, options.targetFilePath ?? DEFAULT_TARGET_FILE))
-    const targetFilepathRelative = getRelativeFilepath(basePath, targetFilePath)
+    const targetFilePath = normalize(
+      resolve(basePath, options.targetFilePath ?? DEFAULT_TARGET_FILE),
+    )
+    const targetFilepathRelative = getRelativeFilepath(
+      basePath,
+      targetFilePath,
+    )
 
-    console.log(MARK_INFO, `Resolving Stylelint config for`, c.blue(targetFilepathRelative))
+    console.log(
+      MARK_INFO,
+      `Resolving Stylelint config for`,
+      c.blue(targetFilepathRelative),
+    )
 
     const dependencies = new Set<string>()
     const diagnostics: string[] = []
@@ -1348,15 +1487,16 @@ class StylelintInspectorAdapter implements InspectorAdapter {
 
         if (options.userConfigPath)
           loaded.dependencies.forEach(dep => dependencies.add(dep))
-        else
-          dependencies.add(configPath)
+        else dependencies.add(configPath)
       }
       catch (error) {
         if (options.userConfigPath)
           throw error
 
         dependencies.add(configPath)
-        diagnostics.push('Could not parse discovered config directly; using resolved output only for config item extraction.')
+        diagnostics.push(
+          'Could not parse discovered config directly; using resolved output only for config item extraction.',
+        )
       }
     }
 
@@ -1366,14 +1506,19 @@ class StylelintInspectorAdapter implements InspectorAdapter {
 
     if (config) {
       resolveOptions.config = config
-      resolveOptions.configBasedir = configPath ? dirname(configPath) : basePath
+      resolveOptions.configBasedir = configPath
+        ? dirname(configPath)
+        : basePath
     }
     if (options.customSyntax)
       resolveOptions.customSyntax = options.customSyntax
 
     let resolved: StylelintConfig | undefined
     try {
-      resolved = await stylelint.resolveConfig(targetFilePath, resolveOptions)
+      resolved = await stylelint.resolveConfig(
+        targetFilePath,
+        resolveOptions,
+      )
     }
     catch (error) {
       if (!isNoConfigError(error))
@@ -1412,7 +1557,10 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       resolved as StylelintConfigLike,
       config as StylelintConfigLike | undefined,
     )
-    const rules = await buildRuleCatalog(configs, resolved as StylelintConfigLike)
+    const rules = await buildRuleCatalog(
+      configs,
+      resolved as StylelintConfigLike,
+    )
 
     let files: MatchedFile[] | undefined
     if (shouldGlobMatchedFiles) {
@@ -1421,7 +1569,14 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       diagnostics.push(...resolvedFiles.diagnostics)
     }
 
-    console.log(MARK_CHECK, 'Loaded with', configs.length, 'config items and', Object.keys(rules).length, 'rules')
+    console.log(
+      MARK_CHECK,
+      'Loaded with',
+      configs.length,
+      'config items and',
+      Object.keys(rules).length,
+      'rules',
+    )
 
     const payload: Payload = {
       configs,

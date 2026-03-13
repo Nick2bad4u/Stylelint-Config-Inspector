@@ -52,9 +52,8 @@ export async function createWsServer(options: CreateWsServerOptions) {
   }
 
   function createErrorPayload(error: unknown): Payload {
-    const diagnostic = error instanceof Error
-      ? error.message
-      : String(error)
+    const diagnostic
+      = error instanceof Error ? error.message : String(error)
 
     return {
       configs: [],
@@ -83,23 +82,24 @@ export async function createWsServer(options: CreateWsServerOptions) {
     console.log()
     console.log(MARK_CHECK, 'Config change detected', path)
     wsClients.forEach((ws) => {
-      ws.send(JSON.stringify({
-        type: 'config-change',
-        path,
-      }))
+      ws.send(
+        JSON.stringify({
+          type: 'config-change',
+          path,
+        }),
+      )
     })
   })
 
   async function getData() {
     try {
       if (!payload) {
-        return await readConfig(options)
-          .then((res) => {
-            const _payload = payload = res.payload
-            _payload.meta.wsPort = port
-            watcher.add(res.dependencies)
-            return payload
-          })
+        return await readConfig(options).then((res) => {
+          const _payload = (payload = res.payload)
+          _payload.meta.wsPort = port
+          watcher.add(res.dependencies)
+          return payload
+        })
       }
       return payload
     }

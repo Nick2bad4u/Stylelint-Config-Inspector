@@ -15,12 +15,16 @@ const tempDirs: string[] = []
 
 afterEach(async () => {
   vi.clearAllMocks()
-  await Promise.all(tempDirs.map(dir => rm(dir, { recursive: true, force: true })))
+  await Promise.all(
+    tempDirs.map(dir => rm(dir, { recursive: true, force: true })),
+  )
 })
 
 describe('ws error payload contract', () => {
   it('returns a valid payload shape when readConfig throws', async () => {
-    const cwd = await mkdtemp(join(tmpdir(), 'stylelint-config-inspector-ws-'))
+    const cwd = await mkdtemp(
+      join(tmpdir(), 'stylelint-config-inspector-ws-'),
+    )
     tempDirs.push(cwd)
 
     resolveConfigPathMock.mockResolvedValue({
@@ -46,8 +50,14 @@ describe('ws error payload contract', () => {
       expect(data.meta.basePath).toBe(cwd)
       expect(data.meta.configPath).toBe('stylelint.config.mjs')
       expect(data.meta.targetFilePath).toBe('src/styles.css')
-      expect(data.diagnostics?.[0]).toContain('Failed to load Stylelint configuration')
-      expect(data.diagnostics?.some((note: string) => note.includes('broken config'))).toBe(true)
+      expect(data.diagnostics?.[0]).toContain(
+        'Failed to load Stylelint configuration',
+      )
+      expect(
+        data.diagnostics?.some((note: string) =>
+          note.includes('broken config'),
+        ),
+      ).toBe(true)
     }
     finally {
       await server.watcher.close()
@@ -55,8 +65,7 @@ describe('ws error payload contract', () => {
         server.wss.close((error) => {
           if (error)
             reject(error)
-          else
-            resolve()
+          else resolve()
         })
       })
     }

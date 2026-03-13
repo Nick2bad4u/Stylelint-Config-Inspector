@@ -49,15 +49,36 @@ function goToConfig(idx: number) {
   <details
     class="flat-config-item"
     :open="open"
-    border="~ base rounded-lg" relative
+    border="~ base rounded-lg"
+    relative
     @toggle="open = $event.target.open"
   >
     <summary block>
-      <div class="absolute right-[calc(100%+10px)] top-1.5" text-right font-mono op35 lt-lg:hidden>
+      <div
+        class="absolute right-[calc(100%+10px)] top-1.5"
+        text-right
+        font-mono
+        op35
+        lt-lg:hidden
+      >
         #{{ index + 1 }}
       </div>
-      <div flex="~ gap-2 items-start wrap items-center" cursor-pointer select-none bg-hover px2 py2 text-sm font-mono>
-        <div class="[details[open]_&]:rotate-90" i-ph-caret-right op50 transition />
+      <div
+        flex="~ gap-2 items-start wrap items-center"
+        cursor-pointer
+        select-none
+        bg-hover
+        px2
+        py2
+        text-sm
+        font-mono
+      >
+        <div
+          class="[details[open]_&]:rotate-90"
+          i-ph-caret-right
+          op50
+          transition
+        />
         <div flex flex-auto flex-col gap-3 md:flex-row>
           <span flex-auto flex="~ gap-2 items-center">
             <template v-if="groupName?.type === 'config'">
@@ -71,14 +92,12 @@ function goToConfig(idx: number) {
             <template v-else-if="groupName?.type === 'glob'">
               <span op75>Globs</span>
               <GlobItem
-                v-for="glob, idx of groupName.globs"
+                v-for="(glob, idx) of groupName.globs"
                 :key="idx"
                 :glob="glob"
               />
             </template>
-            <span v-else op50>
-              Files group #{{ index + 1 }}
-            </span>
+            <span v-else op50> Files group #{{ index + 1 }} </span>
           </span>
 
           <div flex="~ gap-2 items-start wrap">
@@ -100,21 +119,40 @@ function goToConfig(idx: number) {
       </div>
     </summary>
 
-    <div pointer-events-none absolute right-2 top-2 text-right text-5em font-mono op5>
+    <div
+      pointer-events-none
+      absolute
+      right-2
+      top-2
+      text-right
+      text-5em
+      font-mono
+      op5
+    >
       #{{ index + 1 }}
     </div>
 
     <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py4>
       <div flex="~ gap-2 items-center">
         <div i-ph-stack-duotone flex-none />
-        <div>Configs Specific to the Files ({{ group.configs.length }})</div>
+        <div>
+          Configs Specific to the Files ({{ group.configs.length }})
+        </div>
       </div>
 
       <div flex="~ col gap-1" ml6 mt--2>
-        <div v-for="config, idx of group.configs" :key="idx" font-mono flex="~ gap-2">
+        <div
+          v-for="(config, idx) of group.configs"
+          :key="idx"
+          font-mono
+          flex="~ gap-2"
+        >
           <VDropdown>
             <button badge text-start>
-              <ColorizedConfigName :name="config.name" :index="idx" />
+              <ColorizedConfigName
+                :name="config.name"
+                :index="idx"
+              />
             </button>
             <template #popper="{ shown }">
               <div v-if="shown" max-h="50vh" min-w-100>
@@ -131,17 +169,28 @@ function goToConfig(idx: number) {
                 </div>
                 <div p3 border="t base">
                   <div flex="~ gap-2 items-start">
-                    <div i-ph-file-magnifying-glass-duotone my1 flex-none op75 />
+                    <div
+                      i-ph-file-magnifying-glass-duotone
+                      my1
+                      flex-none
+                      op75
+                    />
                     <div flex="~ col gap-2">
                       <div op50>
                         Applies to files matching
                       </div>
-                      <div flex="~ gap-2 items-center wrap">
+                      <div
+                        flex="~ gap-2 items-center wrap"
+                      >
                         <GlobItem
-                          v-for="glob, idx2 of config.files?.flat()"
+                          v-for="(
+                            glob, idx2
+                          ) of config.files?.flat()"
                           :key="idx2"
                           :glob="glob"
-                          :active="group.globs.has(glob)"
+                          :active="
+                            group.globs.has(glob)
+                          "
                         />
                       </div>
                     </div>
@@ -159,7 +208,11 @@ function goToConfig(idx: number) {
       </div>
 
       <div flex="~ gap-1 wrap" ml6 mt--2>
-        <GlobItem v-for="glob, idx2 of group.globs" :key="idx2" :glob="glob" />
+        <GlobItem
+          v-for="(glob, idx2) of group.globs"
+          :key="idx2"
+          :glob="glob"
+        />
       </div>
 
       <div flex="~ gap-2 items-center">
@@ -168,7 +221,12 @@ function goToConfig(idx: number) {
       </div>
 
       <div flex="~ col gap-1" ml7 mt--2>
-        <FileItem v-for="file of group.files" :key="file" font-mono :filepath="file" />
+        <FileItem
+          v-for="file of group.files"
+          :key="file"
+          font-mono
+          :filepath="file"
+        />
       </div>
     </div>
   </details>

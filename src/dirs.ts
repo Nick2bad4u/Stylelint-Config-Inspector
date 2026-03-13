@@ -9,5 +9,8 @@ const distDirCandidates = [
   join(moduleDir, './public'),
 ] as const
 
-export const dataDir = fileURLToPath(new URL('../.stylelint-config-inspector', import.meta.url))
-export const distDir = distDirCandidates.find(path => existsSync(path)) ?? distDirCandidates[0]
+export const dataDir = fileURLToPath(
+  new URL('../.stylelint-config-inspector', import.meta.url),
+)
+export const distDir
+  = distDirCandidates.find(path => existsSync(path)) ?? distDirCandidates[0]

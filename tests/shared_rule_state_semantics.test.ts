@@ -1,6 +1,10 @@
 import type { RuleConfigState } from '../shared/types'
 import { describe, expect, it } from 'vitest'
-import { getRulePrimaryOption, isRuleConfigured, isRuleEnabled } from '../shared/rules'
+import {
+  getRulePrimaryOption,
+  isRuleConfigured,
+  isRuleEnabled,
+} from '../shared/rules'
 
 describe('rule state semantics', () => {
   it('treats unconfigured rules as not configured and not enabled', () => {
@@ -38,8 +42,12 @@ describe('rule state semantics', () => {
 
   it('extracts primary options for enabled rule entries and omits disabled values', () => {
     expect(getRulePrimaryOption('0,3,0')).toBe('0,3,0')
-    expect(getRulePrimaryOption(['always', { severity: 'warning' }])).toBe('always')
-    expect(getRulePrimaryOption([null, { except: ['foo'] }])).toBeUndefined()
+    expect(getRulePrimaryOption(['always', { severity: 'warning' }])).toBe(
+      'always',
+    )
+    expect(
+      getRulePrimaryOption([null, { except: ['foo'] }]),
+    ).toBeUndefined()
     expect(getRulePrimaryOption(null)).toBeUndefined()
   })
 })

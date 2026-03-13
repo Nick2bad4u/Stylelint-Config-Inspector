@@ -11,7 +11,15 @@ init(config.app.baseURL)
 </script>
 
 <template>
-  <div v-if="errorInfo" grid h-full w-full place-content-center whitespace-pre-line p4>
+  <div
+    v-if="errorInfo"
+    grid
+    h-full
+    w-full
+    place-content-center
+    whitespace-pre-line
+    p4
+  >
     <ConfigInspectorBadge mb6 text-xl font-200 />
 
     <div text-2xl text-red5 font-bold>
@@ -24,11 +32,23 @@ init(config.app.baseURL)
 
     <div mt6 op50>
       Note that
-      <a href="https://stylelint.io/user-guide/configure" target="_blank" hover:underline>Stylelint configuration</a>
+      <a
+        href="https://stylelint.io/user-guide/configure"
+        target="_blank"
+        hover:underline
+      >Stylelint configuration</a>
       must be discoverable for the selected target file.
     </div>
   </div>
-  <div v-else-if="isLoading" flex="~ col" h-full w-full items-center justify-center p4>
+  <div
+    v-else-if="isLoading"
+    flex="~ col"
+    h-full
+    w-full
+    items-center
+    justify-center
+    p4
+  >
     <div flex="~ gap-2 items-center" flex-auto animate-pulse text-xl>
       <div i-svg-spinners-90-ring-with-bg />
       Loading config...

@@ -35,7 +35,10 @@ function getParentDirectories(filepath: string): string[] {
   return directories
 }
 
-function isIgnoredByGlobalIgnoreGlobs(filepath: string, globs: string[]): boolean {
+function isIgnoredByGlobalIgnoreGlobs(
+  filepath: string,
+  globs: string[],
+): boolean {
   const parentDirectories = getParentDirectories(filepath)
   let isFileIgnored = false
   const ignoredDirectories = new Map<string, boolean>(
@@ -60,8 +63,7 @@ function isIgnoredByGlobalIgnoreGlobs(filepath: string, globs: string[]): boolea
 
 function isIgnoredByConfigGlobs(filepath: string, globs: string[]): boolean {
   const matchedGlobs = getMatchedGlobs(filepath, globs)
-  return matchedGlobs.length > 0
-    && !matchedGlobs.at(-1)?.startsWith('!')
+  return matchedGlobs.length > 0 && !matchedGlobs.at(-1)?.startsWith('!')
 }
 
 const META_KEYS = new Set(['name', 'index'])
@@ -75,7 +77,8 @@ export function isIgnoreOnlyConfig(config: FlatConfigItem) {
 }
 
 /**
- * Config without `files` and `ignores` properties or with only `ignores` property
+ * Config without `files` and `ignores` properties or with only `ignores`
+ * property
  */
 export function isGeneralConfig(config: FlatConfigItem) {
   return (!config.files && !config.ignores) || isIgnoreOnlyConfig(config)
@@ -97,24 +100,31 @@ export function matchFile(
   const globalIgnoreGlobs = configs
     .filter(config => isIgnoreOnlyConfig(config))
     .flatMap(config => config.ignores ?? [])
-  const isGloballyIgnored = isIgnoredByGlobalIgnoreGlobs(filepath, globalIgnoreGlobs)
+  const isGloballyIgnored = isIgnoredByGlobalIgnoreGlobs(
+    filepath,
+    globalIgnoreGlobs,
+  )
 
   configs.forEach((config) => {
     if (isIgnoreOnlyConfig(config)) {
-      result.globs.push(...getMatchedGlobs(filepath, config.ignores ?? []))
+      result.globs.push(
+        ...getMatchedGlobs(filepath, config.ignores ?? []),
+      )
       return
     }
 
     const positive = getMatchedGlobs(filepath, config.files || [])
     const negative = getMatchedGlobs(filepath, config.ignores || [])
-    const isIgnoredByConfig = isIgnoredByConfigGlobs(filepath, config.ignores ?? [])
+    const isIgnoredByConfig = isIgnoredByConfigGlobs(
+      filepath,
+      config.ignores ?? [],
+    )
 
     const hasNoFilesConstraint = !config.files?.length
     const matchesByFiles = hasNoFilesConstraint || positive.length > 0
 
-    const isMatched = !isGloballyIgnored
-      && matchesByFiles
-      && !isIgnoredByConfig
+    const isMatched
+      = !isGloballyIgnored && matchesByFiles && !isIgnoredByConfig
 
     if (isMatched) {
       result.configs.push(config.index)
@@ -169,7 +179,10 @@ const FLAT_CONFIG_NOOP_SCHEMA = {
   rules: NOOP_SCHEMA,
 }
 
-export function buildConfigArray(configs: Array<Record<string, unknown>>, basePath: string) {
+export function buildConfigArray(
+  configs: Array<Record<string, unknown>>,
+  basePath: string,
+) {
   return new ConfigArray(configs, {
     basePath,
     schema: FLAT_CONFIG_NOOP_SCHEMA as unknown as never,

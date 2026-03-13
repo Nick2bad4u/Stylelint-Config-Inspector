@@ -5,11 +5,25 @@ import type { FlatConfigItem, MatchedFile, RulesRecord } from '~~/shared/types'
 import { useRoute } from '#app/composables/router'
 import { debouncedWatch } from '@vueuse/core'
 import Fuse from 'fuse.js'
-import { computed, defineComponent, h, nextTick, onMounted, ref, shallowRef, watch, watchEffect } from 'vue'
+import {
+  computed,
+  defineComponent,
+  h,
+  nextTick,
+  onMounted,
+  ref,
+  shallowRef,
+  watch,
+  watchEffect,
+} from 'vue'
 import { isIgnoreOnlyConfig, matchFile } from '~~/shared/configs'
 import { getRuleLevel } from '~~/shared/rules'
 import { payload } from '~/composables/payload'
-import { configsOpenState, filtersConfigs as filters, stateStorage } from '~/composables/state'
+import {
+  configsOpenState,
+  filtersConfigs as filters,
+  stateStorage,
+} from '~/composables/state'
 
 // TODO: fix the lint
 // eslint-disable-next-line unimport/auto-insert
@@ -44,7 +58,9 @@ watchEffect(() => {
     if (fileMatchResult.value.configs.length) {
       const deduplicatedConfigIndexes = new Set([
         ...fileMatchResult.value.configs,
-        ...payload.value.configsGeneral.filter(i => !isIgnoreOnlyConfig(i)).map(i => i.index),
+        ...payload.value.configsGeneral
+          .filter(i => !isIgnoreOnlyConfig(i))
+          .map(i => i.index),
       ])
 
       configs = [...deduplicatedConfigIndexes]
@@ -59,8 +75,11 @@ watchEffect(() => {
     fileMatchResult.value = null
   }
 
-  if (filters.rule)
-    configs = configs.filter(config => filters.rule! in (config.rules || {}))
+  if (filters.rule) {
+    configs = configs.filter(
+      config => filters.rule! in (config.rules || {}),
+    )
+  }
 
   filteredConfigs.value = configs
 })
@@ -82,7 +101,8 @@ const autoCompleteOpen = ref(false)
 function autoCompleteConfirm(idx = autoCompleteIndex.value) {
   if (!autoCompleteOpen.value)
     return
-  input.value = filters.filepath = autoCompleteFiles.value[idx]?.item || filters.filepath
+  input.value = filters.filepath
+    = autoCompleteFiles.value[idx]?.item || filters.filepath
   autoCompleteOpen.value = false
 }
 
@@ -103,7 +123,10 @@ function autoCompleteMove(delta: number) {
 }
 
 const mergedRules = computed(() => {
-  if (!filters.filepath || stateStorage.value.viewFileMatchType !== 'merged') {
+  if (
+    !filters.filepath
+    || stateStorage.value.viewFileMatchType !== 'merged'
+  ) {
     return {
       all: {},
       common: {},
@@ -122,16 +145,17 @@ const mergedRules = computed(() => {
     Object.assign(all, config.rules)
     if (config.files)
       Object.assign(specific, config.rules)
-    else
-      Object.assign(common, config.rules)
+    else Object.assign(common, config.rules)
   })
   const specificDisabled = Object.fromEntries(
-    Object.entries(specific)
-      .filter(([_, value]) => getRuleLevel(value) === 'off'),
+    Object.entries(specific).filter(
+      ([_, value]) => getRuleLevel(value) === 'off',
+    ),
   )
   const specificEnabled = Object.fromEntries(
-    Object.entries(specific)
-      .filter(([_, value]) => getRuleLevel(value) !== 'off'),
+    Object.entries(specific).filter(
+      ([_, value]) => getRuleLevel(value) !== 'off',
+    ),
   )
   for (const key in all) {
     if (getRuleLevel(all[key]) === 'off')
@@ -151,21 +175,38 @@ const HighlightMatch = defineComponent({
     matches: Array as PropType<readonly FuseResultMatch[]>,
   },
   setup(props) {
-    return () => props.matches?.map((match) => {
-      let start = 0
-      const content = match.value || ''
-      const array: VNode[] = []
+    return () =>
+      props.matches?.map((match) => {
+        let start = 0
+        const content = match.value || ''
+        const array: VNode[] = []
 
-      for (const [from, to] of match.indices) {
-        if (start < from)
-          array.push(h('span', { class: 'op50' }, content.slice(start, from)))
-        array.push(h('span', { class: 'text-purple font-bold' }, content.slice(from, to + 1)))
-        start = to + 1
-      }
-      if (start < content.length)
-        array.push(h('span', { class: 'op50' }, content.slice(start)))
-      return array
-    })
+        for (const [from, to] of match.indices) {
+          if (start < from) {
+            array.push(
+              h(
+                'span',
+                { class: 'op50' },
+                content.slice(start, from),
+              ),
+            )
+          }
+          array.push(
+            h(
+              'span',
+              { class: 'text-purple font-bold' },
+              content.slice(from, to + 1),
+            ),
+          )
+          start = to + 1
+        }
+        if (start < content.length) {
+          array.push(
+            h('span', { class: 'op50' }, content.slice(start)),
+          )
+        }
+        return array
+      })
   },
 })
 
@@ -193,9 +234,13 @@ const route = useRoute()
 onMounted(async () => {
   if (route.query.index != null) {
     const index = Number(route.query.index) - 1
-    configsOpenState.value = configsOpenState.value.map((_, idx) => idx === index)
+    configsOpenState.value = configsOpenState.value.map(
+      (_, idx) => idx === index,
+    )
     await nextTick()
-    configEls.get(index)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    configEls
+      .get(index)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 })
 </script>
@@ -209,7 +254,12 @@ onMounted(async () => {
           placeholder="Test matching with filepath..."
           border="~ base rounded-full"
           :class="input ? 'font-mono' : ''"
-          w-full bg-transparent px3 py2 pl10 outline-none
+          w-full
+          bg-transparent
+          px3
+          py2
+          pl10
+          outline-none
           @focus="autoCompleteOpen = true"
           @click="autoCompleteOpen = true"
           @blur="autoCompleteBlur"
@@ -218,20 +268,39 @@ onMounted(async () => {
           @keydown.up.prevent="autoCompleteMove(-1)"
           @keydown.enter.prevent="autoCompleteConfirm()"
         >
-        <div absolute bottom-0 left-0 top-0 flex="~ items-center justify-center" p4 op50>
+        <div
+          absolute
+          bottom-0
+          left-0
+          top-0
+          flex="~ items-center justify-center"
+          p4
+          op50
+        >
           <div i-ph-magnifying-glass-duotone />
         </div>
         <div
           v-show="autoCompleteOpen && autoCompleteFiles.length"
           pos="absolute left-8 right-8 top-1/1"
           border="~ base rounded"
-          flex="~ col" z-1 mt--1 max-h-80 of-auto bg-glass py1 shadow
+          flex="~ col"
+          z-1
+          mt--1
+          max-h-80
+          of-auto
+          bg-glass
+          py1
+          shadow
         >
           <button
-            v-for="file, idx of autoCompleteFiles"
+            v-for="(file, idx) of autoCompleteFiles"
             :key="file.item"
             :class="idx === autoCompleteIndex ? 'bg-active' : ''"
-            px3 py0.5 text-left font-mono hover:bg-active
+            px3
+            py0.5
+            text-left
+            font-mono
+            hover:bg-active
             @click="autoCompleteConfirm(idx)"
           >
             <template v-if="file.matches">
@@ -243,11 +312,18 @@ onMounted(async () => {
           </button>
         </div>
       </div>
-      <div v-if="filters.filepath || filters.rule" flex="~ gap-2 items-center wrap" mb2>
+      <div
+        v-if="filters.filepath || filters.rule"
+        flex="~ gap-2 items-center wrap"
+        mb2
+      >
         <div v-if="filters.filepath">
           <div
             flex="~ gap-2 items-center wrap"
-            border="~ purple/20 rounded-full" bg-purple:10 px3 py1
+            border="~ purple/20 rounded-full"
+            bg-purple:10
+            px3
+            py1
             :class="{ 'saturate-0': !filteredConfigs.length }"
           >
             <div i-ph-file-dotted-duotone text-purple />
@@ -257,35 +333,56 @@ onMounted(async () => {
             <template v-if="!filteredConfigs.length">
               <span op50>is not included or has been ignored</span>
             </template>
-            <template v-else-if="stateStorage.viewFileMatchType === 'configs'">
+            <template
+              v-else-if="
+                stateStorage.viewFileMatchType === 'configs'
+              "
+            >
               <span op50>matched with</span>
-              <span>{{ filteredConfigs.length }} / {{ payload.configs.length }}</span>
+              <span>{{ filteredConfigs.length }} /
+                {{ payload.configs.length }}</span>
               <span op50>config items</span>
             </template>
             <template v-else>
               <span op50>matched with total </span>
-              <span>{{ Object.keys(mergedRules.all).length }}</span>
+              <span>{{
+                Object.keys(mergedRules.all).length
+              }}</span>
               <span op50>rules, </span>
-              <span>{{ Object.keys(mergedRules.specific).length }}</span>
+              <span>{{
+                Object.keys(mergedRules.specific).length
+              }}</span>
               <span op50>of them are specific to the file</span>
             </template>
             <button
-              i-ph-x text-sm op25 hover:op100
-              @click="filters.filepath = ''; input = ''"
+              i-ph-x
+              text-sm
+              op25
+              hover:op100
+              @click="
+                filters.filepath = '';
+                input = '';
+              "
             />
           </div>
         </div>
         <div v-if="filters.rule">
           <div
             flex="~ gap-2 items-center"
-            border="~ blue/20 rounded-full" bg-blue:10 px3 py1
+            border="~ blue/20 rounded-full"
+            bg-blue:10
+            px3
+            py1
           >
             <div i-ph-funnel-duotone />
             <span op50>Filtered by</span>
             <ColorizedRuleName :name="filters.rule" />
             <span op50>rule</span>
             <button
-              i-ph-x text-sm op25 hover:op100
+              i-ph-x
+              text-sm
+              op25
+              hover:op100
               @click="filters.rule = ''"
             />
           </div>
@@ -295,18 +392,38 @@ onMounted(async () => {
         <template v-if="filters.filepath">
           <div border="~ base rounded" flex>
             <button
-              :class="stateStorage.viewFileMatchType === 'configs' ? 'btn-action-active' : 'op50'"
-              btn-action border-none
-              @click="stateStorage.viewFileMatchType = stateStorage.viewFileMatchType === 'configs' ? 'merged' : 'configs'"
+              :class="
+                stateStorage.viewFileMatchType === 'configs'
+                  ? 'btn-action-active'
+                  : 'op50'
+              "
+              btn-action
+              border-none
+              @click="
+                stateStorage.viewFileMatchType
+                  = stateStorage.viewFileMatchType === 'configs'
+                    ? 'merged'
+                    : 'configs'
+              "
             >
               <div i-ph-stack-duotone />
               <span>Matched Config Items</span>
             </button>
             <div border="l base" />
             <button
-              :class="stateStorage.viewFileMatchType !== 'configs' ? 'btn-action-active' : 'op50'"
-              btn-action border-none
-              @click="stateStorage.viewFileMatchType = stateStorage.viewFileMatchType === 'configs' ? 'merged' : 'configs'"
+              :class="
+                stateStorage.viewFileMatchType !== 'configs'
+                  ? 'btn-action-active'
+                  : 'op50'
+              "
+              btn-action
+              border-none
+              @click="
+                stateStorage.viewFileMatchType
+                  = stateStorage.viewFileMatchType === 'configs'
+                    ? 'merged'
+                    : 'configs'
+              "
             >
               <div i-ph-film-script-duotone />
               <span>Merged Rules</span>
@@ -315,27 +432,30 @@ onMounted(async () => {
         </template>
 
         <label
-          v-if="filters.filepath && stateStorage.viewFileMatchType === 'configs'"
-          flex="~ gap-2 items-center" ml2 select-none
+          v-if="
+            filters.filepath
+              && stateStorage.viewFileMatchType === 'configs'
+          "
+          flex="~ gap-2 items-center"
+          ml2
+          select-none
         >
           <input
             :checked="stateStorage.showSpecificOnly"
             type="checkbox"
-            @change="stateStorage.showSpecificOnly = !!($event.target as any).checked"
+            @change="
+              stateStorage.showSpecificOnly = !!(
+                $event.target as any
+              ).checked
+            "
           >
           <span op50>Show Specific Rules Only</span>
         </label>
         <div flex-auto />
-        <button
-          btn-action px3
-          @click="expandAll"
-        >
+        <button btn-action px3 @click="expandAll">
           Expand All
         </button>
-        <button
-          btn-action px3
-          @click="collapseAll"
-        >
+        <button btn-action px3 @click="collapseAll">
           Collapse All
         </button>
       </div>
@@ -348,7 +468,7 @@ onMounted(async () => {
           <div>Ignored by globs:</div>
           <div flex="~ gap-2 items-center wrap">
             <GlobItem
-              v-for="glob, idx of fileMatchResult.globs"
+              v-for="(glob, idx) of fileMatchResult.globs"
               :key="idx"
               :glob="glob"
               popup="configs"
@@ -358,44 +478,102 @@ onMounted(async () => {
       </template>
       <template v-else>
         <!-- Merged Rules -->
-        <template v-if="filters.filepath && stateStorage.viewFileMatchType === 'merged'">
-          <details class="flat-config-item" border="~ base rounded-lg" relative>
+        <template
+          v-if="
+            filters.filepath
+              && stateStorage.viewFileMatchType === 'merged'
+          "
+        >
+          <details
+            class="flat-config-item"
+            border="~ base rounded-lg"
+            relative
+          >
             <summary block>
-              <div flex="~ gap-2 items-start" cursor-pointer select-none bg-hover px2 py2 text-sm font-mono op75>
-                <div i-ph-caret-right class="[details[open]_&]:rotate-90" transition />
-                Merged Rules: Common to every file ({{ Object.keys(mergedRules.common).length }} rules)
+              <div
+                flex="~ gap-2 items-start"
+                cursor-pointer
+                select-none
+                bg-hover
+                px2
+                py2
+                text-sm
+                font-mono
+                op75
+              >
+                <div
+                  i-ph-caret-right
+                  class="[details[open]_&]:rotate-90"
+                  transition
+                />
+                Merged Rules: Common to every file ({{
+                  Object.keys(mergedRules.common).length
+                }}
+                rules)
               </div>
             </summary>
-            <RuleList
-              m4
-              :rules="mergedRules.common"
-            />
+            <RuleList m4 :rules="mergedRules.common" />
           </details>
-          <details class="flat-config-item" border="~ base rounded-lg" open relative>
+          <details
+            class="flat-config-item"
+            border="~ base rounded-lg"
+            open
+            relative
+          >
             <summary block>
-              <div flex="~ gap-2 items-start" cursor-pointer select-none bg-hover px2 py2 text-sm font-mono op75>
-                <div i-ph-caret-right class="[details[open]_&]:rotate-90" transition />
-                Merged Rules: Specific to matched file ({{ Object.keys(mergedRules.specific).length }} rules)
+              <div
+                flex="~ gap-2 items-start"
+                cursor-pointer
+                select-none
+                bg-hover
+                px2
+                py2
+                text-sm
+                font-mono
+                op75
+              >
+                <div
+                  i-ph-caret-right
+                  class="[details[open]_&]:rotate-90"
+                  transition
+                />
+                Merged Rules: Specific to matched file ({{
+                  Object.keys(mergedRules.specific).length
+                }}
+                rules)
               </div>
             </summary>
-            <template v-if="Object.keys(mergedRules.specificDisabled).length">
+            <template
+              v-if="
+                Object.keys(mergedRules.specificDisabled).length
+              "
+            >
               <div px4 pt4>
-                Disables ({{ Object.keys(mergedRules.specificDisabled).length }})
+                Disables ({{
+                  Object.keys(mergedRules.specificDisabled)
+                    .length
+                }})
               </div>
               <RuleList
                 m4
-                :get-bind="(name: string) => ({ class: 'op50' })"
+                :get-bind="
+                  (name: string) => ({ class: 'op50' })
+                "
                 :rules="mergedRules.specificDisabled"
               />
             </template>
-            <template v-if="Object.keys(mergedRules.specificEnabled).length">
+            <template
+              v-if="
+                Object.keys(mergedRules.specificEnabled).length
+              "
+            >
               <div px4 pt4>
-                Enables ({{ Object.keys(mergedRules.specificEnabled).length }})
+                Enables ({{
+                  Object.keys(mergedRules.specificEnabled)
+                    .length
+                }})
               </div>
-              <RuleList
-                m4
-                :rules="mergedRules.specificEnabled"
-              />
+              <RuleList m4 :rules="mergedRules.specificEnabled" />
             </template>
           </details>
         </template>
@@ -403,19 +581,31 @@ onMounted(async () => {
         <!-- Config Items -->
         <template v-else>
           <template
-            v-for="config, idx in payload.configs"
+            v-for="(config, idx) in payload.configs"
             :key="idx"
           >
             <ConfigItem
-              v-show="filteredConfigs.includes(config) && (!filters.filepath || (!stateStorage.showSpecificOnly || config.files))"
-              :ref="(el) => { configEls.set(idx, (el as ComponentPublicInstance)?.$el) }"
+              v-show="
+                filteredConfigs.includes(config)
+                  && (!filters.filepath
+                    || !stateStorage.showSpecificOnly
+                    || config.files)
+              "
+              :ref="
+                (el) => {
+                  configEls.set(
+                    idx,
+                    (el as ComponentPublicInstance)?.$el,
+                  );
+                }
+              "
               v-model:open="configsOpenState[idx]"
               :config
               :index="idx"
               :filters="filters"
               :active="!!(filters.filepath && config.files)"
               :matched-globs="fileMatchResult?.globs"
-              @badge-click="e => filters.rule = e"
+              @badge-click="(e) => (filters.rule = e)"
             />
           </template>
         </template>

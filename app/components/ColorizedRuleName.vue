@@ -7,10 +7,12 @@ const props = defineProps<{
   prefix?: string
   url?: string
   as?: string
-  deprecated?: boolean | {
-    message?: string
-    url?: string
-  }
+  deprecated?:
+    | boolean
+    | {
+      message?: string
+      url?: string
+    }
   borderless?: boolean
   break?: boolean
 }>()
@@ -22,7 +24,9 @@ const parsed = computed(() => {
     if (props.name.startsWith(props.prefix)) {
       return {
         scope: props.prefix,
-        name: props.name.slice(props.prefix.length).replace(LEADING_SLASHES_RE, ''),
+        name: props.name
+          .slice(props.prefix.length)
+          .replace(LEADING_SLASHES_RE, ''),
       }
     }
     else {
@@ -50,13 +54,16 @@ const parsed = computed(() => {
   <component
     :is="as || 'div'"
     :title="props.name"
-    of-hidden text-ellipsis ws-nowrap font-mono
-    :class="[
-      deprecated ? 'line-through' : '',
-      borderless ? '' : 'badge',
-    ]"
+    of-hidden
+    text-ellipsis
+    ws-nowrap
+    font-mono
+    :class="[deprecated ? 'line-through' : '', borderless ? '' : 'badge']"
   >
-    <span v-if="parsed.scope" :style="{ color: getPluginColor(parsed.scope) }">{{ parsed.scope }}</span>
+    <span
+      v-if="parsed.scope"
+      :style="{ color: getPluginColor(parsed.scope) }"
+    >{{ parsed.scope }}</span>
     <span v-if="parsed.scope" op30>/</span>
     <br v-if="parsed.scope && props.break">
     <span op75>{{ parsed.name }}</span>

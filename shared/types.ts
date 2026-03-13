@@ -32,8 +32,7 @@ export interface ResolvedPayload extends Payload {
   globToConfigs: Map<string, FlatConfigItem[]>
 
   /**
-   * Resolved data from files
-   * Undefined if users disabled glob matching
+   * Resolved data from files Undefined if users disabled glob matching
    */
   filesResolved?: {
     list: string[]
@@ -100,22 +99,24 @@ export interface RuleInfo {
   messages?: Record<string, string>
   defaultOptions?: unknown[]
   fixable?: boolean | string
-  deprecated?: boolean | {
-    message?: string
-    deprecatedSince?: string
-    availableUntil?: string
-    url?: string
-    replacedBy?: Array<{
-      rule?: {
-        name?: string
-        url?: string
-      }
-      plugin?: {
-        name?: string
-        url?: string
-      }
-    }>
-  }
+  deprecated?:
+    | boolean
+    | {
+      message?: string
+      deprecatedSince?: string
+      availableUntil?: string
+      url?: string
+      replacedBy?: Array<{
+        rule?: {
+          name?: string
+          url?: string
+        }
+        plugin?: {
+          name?: string
+          url?: string
+        }
+      }>
+    }
   /**
    * The rule may be removed
    */

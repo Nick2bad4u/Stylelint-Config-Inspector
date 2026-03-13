@@ -41,9 +41,10 @@ export default defineComponent({
       })
     })
 
-    return () => h('div', {
-      class: 'filter-hue-rotate-90',
-      innerHTML: highlighted.value,
-    })
+    return () =>
+      h('div', {
+        class: 'filter-hue-rotate-90',
+        innerHTML: highlighted.value,
+      })
   },
 })

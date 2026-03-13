@@ -10,7 +10,8 @@ export interface ResolveConfigPathOptions {
    */
   userConfigPath?: string
   /**
-   * Override base path. When not provided, will use directory of discovered config file.
+   * Override base path. When not provided, will use directory of discovered
+   * config file.
    */
   userBasePath?: string
 }
@@ -22,6 +23,7 @@ export interface ReadConfigOptions extends ResolveConfigPathOptions {
   globMatchedFiles?: boolean
   /**
    * Change current working directory to basePath
+   *
    * @default true
    */
   chdir?: boolean
@@ -50,6 +52,8 @@ export interface InspectorReadResult {
 
 export interface InspectorAdapter {
   readonly engine: 'stylelint'
-  resolveConfigPath: (options: ResolveConfigPathOptions) => Promise<ResolvedConfigPath>
+  resolveConfigPath: (
+    options: ResolveConfigPathOptions,
+  ) => Promise<ResolvedConfigPath>
   readConfig: (options: ReadConfigOptions) => Promise<InspectorReadResult>
 }

@@ -17,12 +17,18 @@ export async function createHostServer(options: CreateWsServerOptions) {
 
   const fileMap = new Map<string, Promise<Uint8Array | undefined>>()
   const readCachedFile = (id: string) => {
-    if (!fileMap.has(id))
-      fileMap.set(id, readFile(id).catch(() => undefined))
+    if (!fileMap.has(id)) {
+      fileMap.set(
+        id,
+        readFile(id).catch(() => undefined),
+      )
+    }
     return fileMap.get(id)
   }
 
-  const resolveDistFilePath = (id: string): { relative: string, absolute: string } | undefined => {
+  const resolveDistFilePath = (
+    id: string,
+  ): { relative: string, absolute: string } | undefined => {
     const cleanId = id
       .split('?')[0]
       ?.split('#')[0]
@@ -47,56 +53,70 @@ export async function createHostServer(options: CreateWsServerOptions) {
     return extname(path) === ''
   }
 
-  app.use('/api/payload.json', eventHandler(() => ws.getData()))
+  app.use(
+    '/api/payload.json',
+    eventHandler(() => ws.getData()),
+  )
 
-  app.use(eventHandler(async (event) => {
-    const indexHtml = await readCachedFile(join(distDir, 'index.html'))
+  app.use(
+    eventHandler(async (event) => {
+      const indexHtml = await readCachedFile(join(distDir, 'index.html'))
 
-    if (event.path === '/' && indexHtml) {
-      setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
-      return indexHtml
-    }
+      if (event.path === '/' && indexHtml) {
+        setResponseHeader(
+          event,
+          'Content-Type',
+          'text/html; charset=UTF-8',
+        )
+        return indexHtml
+      }
 
-    const result = await serveStatic(event, {
-      fallthrough: true,
-      getContents: (id) => {
-        if (!id)
-          return undefined
+      const result = await serveStatic(event, {
+        fallthrough: true,
+        getContents: (id) => {
+          if (!id)
+            return undefined
 
-        const resolved = resolveDistFilePath(id)
-        if (!resolved)
-          return undefined
+          const resolved = resolveDistFilePath(id)
+          if (!resolved)
+            return undefined
 
-        return readCachedFile(resolved.absolute)
-      },
-      getMeta: async (id) => {
-        if (!id)
-          return
+          return readCachedFile(resolved.absolute)
+        },
+        getMeta: async (id) => {
+          if (!id)
+            return
 
-        const resolved = resolveDistFilePath(id)
-        if (!resolved)
-          return
+          const resolved = resolveDistFilePath(id)
+          if (!resolved)
+            return
 
-        const stats = await stat(resolved.absolute).catch(() => {})
-        if (!stats || !stats.isFile())
-          return
+          const stats = await stat(resolved.absolute).catch(() => {})
+          if (!stats || !stats.isFile())
+            return
 
-        return {
-          type: lookup(resolved.relative),
-          size: stats.size,
-          mtime: stats.mtimeMs,
+          return {
+            type: lookup(resolved.relative),
+            size: stats.size,
+            mtime: stats.mtimeMs,
+          }
+        },
+      })
+
+      if (!result && shouldServeIndexFallback(event.path)) {
+        if (indexHtml) {
+          setResponseHeader(
+            event,
+            'Content-Type',
+            'text/html; charset=UTF-8',
+          )
         }
-      },
-    })
+        return indexHtml
+      }
 
-    if (!result && shouldServeIndexFallback(event.path)) {
-      if (indexHtml)
-        setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
-      return indexHtml
-    }
-
-    return result
-  }))
+      return result
+    }),
+  )
 
   return createServer(toNodeHandler(app))
 }

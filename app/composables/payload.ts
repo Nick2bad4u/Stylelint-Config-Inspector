@@ -1,9 +1,21 @@
 /* eslint-disable no-console */
-import type { ErrorInfo, FilesGroup, FlatConfigItem, Payload, ResolvedPayload, RuleConfigStates, RuleInfo } from '~~/shared/types'
+import type {
+  ErrorInfo,
+  FilesGroup,
+  FlatConfigItem,
+  Payload,
+  ResolvedPayload,
+  RuleConfigStates,
+  RuleInfo,
+} from '~~/shared/types'
 import { $fetch } from 'ofetch'
 import { computed, ref } from 'vue'
 import { isGeneralConfig, isIgnoreOnlyConfig } from '~~/shared/configs'
-import { getRuleLevel, getRuleOptions, getRulePrimaryOption } from '~~/shared/rules'
+import {
+  getRuleLevel,
+  getRuleOptions,
+  getRulePrimaryOption,
+} from '~~/shared/rules'
 import { configsOpenState, fileGroupsOpenState } from './state'
 
 const LOG_NAME = '[Config Inspector]'
@@ -33,7 +45,9 @@ function isErrorInfo(payload: Payload | ErrorInfo): payload is ErrorInfo {
 
 async function get(baseURL: string) {
   isFetching.value = true
-  const payload = await $fetch<Payload | ErrorInfo>('/api/payload.json', { baseURL })
+  const payload = await $fetch<Payload | ErrorInfo>('/api/payload.json', {
+    baseURL,
+  })
   if (isErrorInfo(payload)) {
     errorInfo.value = payload
     isLoading.value = false
@@ -53,46 +67,52 @@ let _promise: Promise<Payload | undefined> | undefined
 export function init(baseURL: string) {
   if (_promise)
     return
-  _promise = get(baseURL)
-    .then((payload) => {
-      if (!payload)
-        return
+  _promise = get(baseURL).then((payload) => {
+    if (!payload)
+      return
 
-      if (typeof payload.meta.wsPort === 'number') {
+    if (typeof payload.meta.wsPort === 'number') {
       // Connect to WebSocket, listen for config changes
-        const ws = new WebSocket(`ws://${location.hostname}:${payload.meta.wsPort}`)
-        ws.addEventListener('message', async (event) => {
-          console.log(LOG_NAME, 'WebSocket message', event.data)
-          const payload = JSON.parse(event.data)
-          if (payload.type === 'config-change')
-            get(baseURL)
-        })
-        ws.addEventListener('open', () => {
-          console.log(LOG_NAME, 'WebSocket connected')
-        })
-        ws.addEventListener('close', () => {
-          console.log(LOG_NAME, 'WebSocket closed')
-        })
-        ws.addEventListener('error', (error) => {
-          console.error(LOG_NAME, 'WebSocket error', error)
-        })
-      }
+      const ws = new WebSocket(
+        `ws://${location.hostname}:${payload.meta.wsPort}`,
+      )
+      ws.addEventListener('message', async (event) => {
+        console.log(LOG_NAME, 'WebSocket message', event.data)
+        const payload = JSON.parse(event.data)
+        if (payload.type === 'config-change')
+          get(baseURL)
+      })
+      ws.addEventListener('open', () => {
+        console.log(LOG_NAME, 'WebSocket connected')
+      })
+      ws.addEventListener('close', () => {
+        console.log(LOG_NAME, 'WebSocket closed')
+      })
+      ws.addEventListener('error', (error) => {
+        console.error(LOG_NAME, 'WebSocket error', error)
+      })
+    }
 
-      return payload
-    })
+    return payload
+  })
 }
 
 export function ensureDataFetch() {
   return _promise
 }
 
-export const payload = computed(() => Object.freeze(resolvePayload(data.value!)))
+export const payload = computed(() =>
+  Object.freeze(resolvePayload(data.value!)),
+)
 
 export function getRuleFromName(name: string): RuleInfo {
-  return payload.value.rules[name] || {
-    name,
-    invalid: true,
-  } as RuleInfo
+  return (
+    payload.value.rules[name]
+    || ({
+      name,
+      invalid: true,
+    } as RuleInfo)
+  )
 }
 
 export function getRuleDefaultOptions(name: string): any[] {
@@ -141,8 +161,8 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
     }
   })
 
+  // collapse all if there are too many items
   configsOpenState.value = payload.configs.length >= 10
-    // collapse all if there are too many items
     ? payload.configs.map(() => false)
     : payload.configs.map(() => true)
 
@@ -186,8 +206,12 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
       fileToConfigs.get(file.filepath)!.add(configIndex)
     }
 
-    const specialConfigs = file.configs.filter(i => !isGeneralConfig(payload.configs[i]!))
-    const displayConfigs = [...new Set(file.configs)].toSorted((a, b) => a - b)
+    const specialConfigs = file.configs.filter(
+      i => !isGeneralConfig(payload.configs[i]!),
+    )
+    const displayConfigs = [...new Set(file.configs)].toSorted(
+      (a, b) => a - b,
+    )
     const positiveGlobs = file.globs
       .filter(glob => !glob.startsWith('!'))
       .toSorted((a, b) => a.localeCompare(b))
@@ -214,7 +238,14 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     list: files,
     globToFiles,
     fileToGlobs,
-    fileToConfigs: new Map(Array.from(fileToConfigs.entries(), ([file, configs]) => [file, [...configs].toSorted((a, b) => a - b).map(i => payload.configs[i]!)])),
+    fileToConfigs: new Map(
+      Array.from(fileToConfigs.entries(), ([file, configs]) => [
+        file,
+        [...configs]
+          .toSorted((a, b) => a - b)
+          .map(i => payload.configs[i]!),
+      ]),
+    ),
     configToFiles,
     groups,
   }

@@ -15,17 +15,17 @@ export function nth(n: number) {
 
 export function stringifyOptions(object: any) {
   /**
-   * Replaces all occurrences of the pattern:
-   * `['--', value, '--']`
+   * Replaces all occurrences of the pattern: `['--', value, '--']`
    *
-   * with:
-   * `value, // [!code muted]
+   * With: `value, // [!code muted]
    *
    * Lines with the [!code muted] comment will be processed by Shiki's diff
    * notation transformer and have the `.line.muted` classes applied
    */
-  return stringifyUnquoted(object)
-    .replace(MUTED_ARRAY_MARKER_RE, '$1, // [!code muted]')
+  return stringifyUnquoted(object).replace(
+    MUTED_ARRAY_MARKER_RE,
+    '$1, // [!code muted]',
+  )
 }
 
 export function stringifyUnquoted(obj: any) {

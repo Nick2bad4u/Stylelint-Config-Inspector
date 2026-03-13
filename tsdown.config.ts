@@ -1,9 +1,7 @@
 import { defineConfig } from 'tsdown'
 
 export default defineConfig({
-  entry: [
-    'src/cli.ts',
-  ],
+  entry: ['src/cli.ts'],
   deps: {
     onlyBundle: false,
   },

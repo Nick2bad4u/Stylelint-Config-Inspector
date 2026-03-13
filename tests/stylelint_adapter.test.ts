@@ -22,7 +22,11 @@ async function createTempProject(
   tempDirs.push(dir)
 
   if (configContent) {
-    await writeFile(join(dir, 'stylelint.config.mjs'), configContent, 'utf-8')
+    await writeFile(
+      join(dir, 'stylelint.config.mjs'),
+      configContent,
+      'utf-8',
+    )
   }
 
   if (extraFiles) {
@@ -59,8 +63,12 @@ describe('stylelint adapter', () => {
     expect(result.payload.meta.engine).toBe('stylelint')
     expect(result.payload.meta.configNotFound).toBeUndefined()
     expect(result.payload.meta.targetFilePath).toBe('src/styles.css')
-    expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
-    expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
+    expect(Object.keys(result.payload.rules)).toContain(
+      'color-no-invalid-hex',
+    )
+    expect(Object.keys(result.payload.rules)).toContain(
+      'alpha-value-notation',
+    )
     expect(result.payload.rules['alpha-value-notation']).toMatchObject({
       name: 'alpha-value-notation',
       plugin: 'stylelint',
@@ -112,7 +120,8 @@ describe('stylelint adapter', () => {
   })
 
   it('normalizes extends, plugins, and customSyntax fields', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         extends: ["./stylelint.base.mjs"],
         plugins: [{
@@ -124,9 +133,11 @@ describe('stylelint adapter', () => {
           "color-no-invalid-hex": true
         }
       }
-    `, {
-      'stylelint.base.mjs': 'export default { rules: {} }',
-    })
+    `,
+      {
+        'stylelint.base.mjs': 'export default { rules: {} }',
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -140,7 +151,9 @@ describe('stylelint adapter', () => {
     if (rootConfig?.extends)
       expect(rootConfig.extends[0]).toContain('stylelint.base.mjs')
     expect(result.payload.configs[0]?.customSyntax).toBe('postcss-scss')
-    expect(Object.keys(result.payload.configs[0]?.plugins ?? {})).toEqual(['local'])
+    expect(Object.keys(result.payload.configs[0]?.plugins ?? {})).toEqual([
+      'local',
+    ])
     expect(result.payload.configs[0]).not.toHaveProperty('pluginFunctions')
     expect(result.payload.rules['color-no-invalid-hex']).toMatchObject({
       name: 'color-no-invalid-hex',
@@ -153,7 +166,8 @@ describe('stylelint adapter', () => {
   })
 
   it('resolves matched workspace files when globMatchedFiles is enabled', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         overrides: [
           {
@@ -164,10 +178,12 @@ describe('stylelint adapter', () => {
           }
         ]
       }
-    `, {
-      'src/demo.css': 'a { color: #123abc; }',
-      'src/ignored.ts': 'export const x = 1',
-    })
+    `,
+      {
+        'src/demo.css': 'a { color: #123abc; }',
+        'src/ignored.ts': 'export const x = 1',
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -185,20 +201,26 @@ describe('stylelint adapter', () => {
         'color-no-invalid-hex': true,
       },
     })
-    expect(matched.some(file => file.filepath === 'src/demo.css')).toBe(true)
-    expect(matched.some(file => file.filepath === 'src/ignored.ts')).toBe(false)
+    expect(matched.some(file => file.filepath === 'src/demo.css')).toBe(
+      true,
+    )
+    expect(matched.some(file => file.filepath === 'src/ignored.ts')).toBe(
+      false,
+    )
   })
 
   it('collects plugin rule metadata for configured plugin rules', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./demo-plugin.mjs"],
         rules: {
           "acme/demo-rule": true,
         },
       }
-    `, {
-      'demo-plugin.mjs': `
+    `,
+      {
+        'demo-plugin.mjs': `
         export default [
           {
             ruleName: 'acme/demo-rule',
@@ -219,7 +241,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -251,15 +274,17 @@ describe('stylelint adapter', () => {
   })
 
   it('attributes generic plugin-prefixed rule names to the owning plugin package', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./stylelint-no-browser-hacks.mjs"],
         rules: {
           "plugin/no-browser-hacks": true,
         },
       }
-    `, {
-      'stylelint-no-browser-hacks.mjs': `
+    `,
+      {
+        'stylelint-no-browser-hacks.mjs': `
         export default [
           {
             ruleName: 'plugin/no-browser-hacks',
@@ -270,7 +295,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -279,19 +305,23 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['plugin/no-browser-hacks']?.plugin).toBe('no-browser-hacks')
+    expect(result.payload.rules['plugin/no-browser-hacks']?.plugin).toBe(
+      'no-browser-hacks',
+    )
   })
 
   it('uses plugin static messages as fallback rule descriptions when metadata description is missing', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./defensive-plugin.mjs"],
         rules: {
           "defensive-css/require-background-repeat": true,
         },
       }
-    `, {
-      'defensive-plugin.mjs': `
+    `,
+      {
+        'defensive-plugin.mjs': `
         export default [
           {
             ruleName: 'defensive-css/require-background-repeat',
@@ -307,7 +337,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -316,30 +347,36 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['defensive-css/require-background-repeat']).toMatchObject({
+    expect(
+      result.payload.rules['defensive-css/require-background-repeat'],
+    ).toMatchObject({
       plugin: 'defensive-css',
       docs: {
-        description: 'Expected background-repeat to be declared when using background-image',
+        description:
+                    'Expected background-repeat to be declared when using background-image',
         descriptionSource: 'message',
         url: 'https://github.com/yuschick/stylelint-plugin-defensive-css',
         urlSource: 'meta',
       },
       messages: {
-        rejected: 'Expected background-repeat to be declared when using background-image',
+        rejected:
+                    'Expected background-repeat to be declared when using background-image',
       },
     })
   })
 
   it('resolves function-based plugin messages into fallback descriptions when metadata description is missing', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./templated-plugin.mjs"],
         rules: {
           "acme/templated-rule": true,
         },
       }
-    `, {
-      'templated-plugin.mjs': `
+    `,
+      {
+        'templated-plugin.mjs': `
         export default [
           {
             ruleName: 'acme/templated-rule',
@@ -353,7 +390,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -362,20 +400,26 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['acme/templated-rule']?.docs?.description).toBe('Unexpected token "<value>" for acme/templated-rule')
-    expect(result.payload.rules['acme/templated-rule']?.messages?.rejected).toBe('Unexpected token "<value>" for acme/templated-rule')
+    expect(
+      result.payload.rules['acme/templated-rule']?.docs?.description,
+    ).toBe('Unexpected token "<value>" for acme/templated-rule')
+    expect(
+      result.payload.rules['acme/templated-rule']?.messages?.rejected,
+    ).toBe('Unexpected token "<value>" for acme/templated-rule')
   })
 
   it('flags generated fallback descriptions when plugin metadata and messages are missing', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./minimal-plugin.mjs"],
         rules: {
           "acme/fallback-rule": true,
         },
       }
-    `, {
-      'minimal-plugin.mjs': `
+    `,
+      {
+        'minimal-plugin.mjs': `
         export default [
           {
             ruleName: 'acme/fallback-rule',
@@ -386,7 +430,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -403,21 +448,29 @@ describe('stylelint adapter', () => {
   })
 
   it('infers plugin docs URL from package metadata when rule meta.url is missing', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["stylelint-no-url-plugin"],
         rules: {
           "plugin/no-url": true,
         },
       }
-    `, {
-      'node_modules/stylelint-no-url-plugin/package.json': JSON.stringify({
-        name: 'stylelint-no-url-plugin',
-        type: 'module',
-        main: './index.mjs',
-        homepage: 'https://example.test/stylelint-no-url-plugin',
-      }, null, 2),
-      'node_modules/stylelint-no-url-plugin/index.mjs': `
+    `,
+      {
+        'node_modules/stylelint-no-url-plugin/package.json':
+                    JSON.stringify(
+                      {
+                        name: 'stylelint-no-url-plugin',
+                        type: 'module',
+                        main: './index.mjs',
+                        homepage:
+                                'https://example.test/stylelint-no-url-plugin',
+                      },
+                      null,
+                      2,
+                    ),
+        'node_modules/stylelint-no-url-plugin/index.mjs': `
         export default [
           {
             ruleName: 'plugin/no-url',
@@ -428,7 +481,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -449,15 +503,17 @@ describe('stylelint adapter', () => {
   })
 
   it('removes trailing rule-name references from message descriptions', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./sizes-plugin.mjs"],
         rules: {
           "scales/sizes": true,
         },
       }
-    `, {
-      'sizes-plugin.mjs': `
+    `,
+      {
+        'sizes-plugin.mjs': `
         export default [
           {
             ruleName: 'scales/sizes',
@@ -468,7 +524,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -477,19 +534,23 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['scales/sizes']?.docs?.description).toBe('Expected "<value>" to be one of "<value>"')
+    expect(result.payload.rules['scales/sizes']?.docs?.description).toBe(
+      'Expected "<value>" to be one of "<value>"',
+    )
   })
 
   it('marks plugin rules as recommended from plugin metadata even when not configured', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./recommended-plugin.mjs"],
         rules: {
           "acme/enabled-rule": true,
         },
       }
-    `, {
-      'recommended-plugin.mjs': `
+    `,
+      {
+        'recommended-plugin.mjs': `
         export default [
           {
             ruleName: 'acme/enabled-rule',
@@ -508,7 +569,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -517,7 +579,9 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['acme/recommended-unused-rule']).toMatchObject({
+    expect(
+      result.payload.rules['acme/recommended-unused-rule'],
+    ).toMatchObject({
       plugin: 'acme',
       docs: {
         description: 'recommended unused rule',
@@ -527,15 +591,17 @@ describe('stylelint adapter', () => {
   })
 
   it('falls back to humanized rule name when plugin description is unsafe/noisy', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./scales-plugin.mjs"],
         rules: {
           "scales/alpha-values": true,
         },
       }
-    `, {
-      'scales-plugin.mjs': `
+    `,
+      {
+        'scales-plugin.mjs': `
         export default [
           {
             ruleName: 'scales/alpha-values',
@@ -546,7 +612,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -555,19 +622,23 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['scales/alpha-values']?.docs?.description).toBe('alpha values')
+    expect(
+      result.payload.rules['scales/alpha-values']?.docs?.description,
+    ).toBe('alpha values')
   })
 
   it('strips scoped plugin prefixes from plugin rule descriptions', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         plugins: ["./stylistic-plugin.mjs"],
         rules: {
           "@stylistic/at-rule-name-case": ["lower"],
         },
       }
-    `, {
-      'stylistic-plugin.mjs': `
+    `,
+      {
+        'stylistic-plugin.mjs': `
         export default [
           {
             ruleName: '@stylistic/at-rule-name-case',
@@ -578,7 +649,8 @@ describe('stylelint adapter', () => {
           },
         ]
       `,
-    })
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -587,20 +659,26 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.rules['@stylistic/at-rule-name-case']?.docs?.description).toBe('at rule name case')
+    expect(
+      result.payload.rules['@stylistic/at-rule-name-case']?.docs
+        ?.description,
+    ).toBe('at rule name case')
   })
 
   it('matches style files for general configs without files globs', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         rules: {
           "color-no-invalid-hex": true
         }
       }
-    `, {
-      'src/general.css': 'a { color: #123abc; }',
-      'src/not-style.ts': 'export const y = 2',
-    })
+    `,
+      {
+        'src/general.css': 'a { color: #123abc; }',
+        'src/not-style.ts': 'export const y = 2',
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -610,13 +688,22 @@ describe('stylelint adapter', () => {
     })
 
     const matched = result.payload.files ?? []
-    expect(matched.some(file => file.filepath === 'src/general.css')).toBe(true)
-    expect(matched.some(file => file.filepath === 'src/not-style.ts')).toBe(false)
-    expect(result.payload.diagnostics?.some(note => note.includes('No explicit `files` globs'))).toBe(true)
+    expect(
+      matched.some(file => file.filepath === 'src/general.css'),
+    ).toBe(true)
+    expect(
+      matched.some(file => file.filepath === 'src/not-style.ts'),
+    ).toBe(false)
+    expect(
+      result.payload.diagnostics?.some(note =>
+        note.includes('No explicit `files` globs'),
+      ),
+    ).toBe(true)
   })
 
   it('includes default style globs in workspace scan when general config coexists with explicit files globs', async () => {
-    const cwd = await createTempProject(`
+    const cwd = await createTempProject(
+      `
       export default {
         rules: {
           "color-no-invalid-hex": true,
@@ -630,10 +717,12 @@ describe('stylelint adapter', () => {
           },
         ],
       }
-    `, {
-      'src/app.ts': 'export const app = 1',
-      'src/styles.css': 'a { color: #123abc; }',
-    })
+    `,
+      {
+        'src/app.ts': 'export const app = 1',
+        'src/styles.css': 'a { color: #123abc; }',
+      },
+    )
 
     const result = await readConfig({
       cwd,
@@ -643,9 +732,17 @@ describe('stylelint adapter', () => {
     })
 
     const matched = result.payload.files ?? []
-    expect(matched.some(file => file.filepath === 'src/app.ts')).toBe(true)
-    expect(matched.some(file => file.filepath === 'src/styles.css')).toBe(true)
-    expect(result.payload.diagnostics?.some(note => note.includes('General config items were detected'))).toBe(true)
+    expect(matched.some(file => file.filepath === 'src/app.ts')).toBe(
+      true,
+    )
+    expect(matched.some(file => file.filepath === 'src/styles.css')).toBe(
+      true,
+    )
+    expect(
+      result.payload.diagnostics?.some(note =>
+        note.includes('General config items were detected'),
+      ),
+    ).toBe(true)
   })
 
   it('reports relative config path and base path override diagnostics', async () => {
@@ -669,10 +766,18 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/app.css',
     })
 
-    expect(result.payload.meta.configPath).toBe('configs/stylelint.config.mjs')
-    expect(result.payload.meta.basePath.endsWith('/packages/web')).toBe(true)
+    expect(result.payload.meta.configPath).toBe(
+      'configs/stylelint.config.mjs',
+    )
+    expect(result.payload.meta.basePath.endsWith('/packages/web')).toBe(
+      true,
+    )
     expect(result.payload.meta.targetFilePath).toBe('src/app.css')
-    expect(result.payload.diagnostics?.some(note => note.includes('Base path overridden to packages/web'))).toBe(true)
+    expect(
+      result.payload.diagnostics?.some(note =>
+        note.includes('Base path overridden to packages/web'),
+      ),
+    ).toBe(true)
   })
 
   it('uses override names that include compact files summaries', async () => {
@@ -696,11 +801,14 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(result.payload.configs[1]?.name).toBe('stylelint/resolved/override-1 (src/**/*.css +2)')
+    expect(result.payload.configs[1]?.name).toBe(
+      'stylelint/resolved/override-1 (src/**/*.css +2)',
+    )
   })
 
   it('populates recommended metadata for core rules when recommended config package is available', async () => {
-    const recommendedConfig = await import('stylelint-config-recommended').catch(() => undefined)
+    const recommendedConfig
+      = await import('stylelint-config-recommended').catch(() => undefined)
 
     const cwd = await createTempProject(`
       export default {
@@ -717,9 +825,9 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    const recommendedCount = Object.values(result.payload.rules)
-      .filter(rule => rule.docs?.recommended)
-      .length
+    const recommendedCount = Object.values(result.payload.rules).filter(
+      rule => rule.docs?.recommended,
+    ).length
 
     if (recommendedConfig) {
       expect(recommendedCount).toBeGreaterThan(0)

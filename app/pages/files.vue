@@ -14,15 +14,21 @@ function collapseAll() {
 <template>
   <div flex="~ col gap-4" my4>
     <div text-gray:75>
-      This tab shows a preview of file matches from the workspace.
-      This feature is <span text-amber>experimental</span> and may not be 100% accurate.
+      This tab shows a preview of file matches from the workspace. This
+      feature is <span text-amber>experimental</span> and may not be 100%
+      accurate.
     </div>
     <template v-if="payload.filesResolved">
       <div flex="~ gap-2 items-center">
         <div border="~ base rounded" flex="~ inline">
           <button
-            :class="stateStorage.viewFilesTab === 'list' ? 'btn-action-active' : 'op50'"
-            btn-action border-none
+            :class="
+              stateStorage.viewFilesTab === 'list'
+                ? 'btn-action-active'
+                : 'op50'
+            "
+            btn-action
+            border-none
             @click="stateStorage.viewFilesTab = 'list'"
           >
             <div i-ph-files-duotone />
@@ -30,9 +36,14 @@ function collapseAll() {
           </button>
           <div border="l base" />
           <button
-            :class="stateStorage.viewFilesTab === 'group' ? 'btn-action-active' : 'op50'"
-            btn-action border-none
-            @click="stateStorage.viewFilesTab = 'group' "
+            :class="
+              stateStorage.viewFilesTab === 'group'
+                ? 'btn-action-active'
+                : 'op50'
+            "
+            btn-action
+            border-none
+            @click="stateStorage.viewFilesTab = 'group'"
           >
             <div i-ph-rows-duotone />
             <span>File Groups</span>
@@ -40,24 +51,21 @@ function collapseAll() {
         </div>
         <div flex-auto />
         <template v-if="stateStorage.viewFilesTab === 'group'">
-          <button
-            btn-action px3
-            @click="expandAll"
-          >
+          <button btn-action px3 @click="expandAll">
             Expand All
           </button>
-          <button
-            btn-action px3
-            @click="collapseAll"
-          >
+          <button btn-action px3 @click="collapseAll">
             Collapse All
           </button>
         </template>
       </div>
 
-      <div v-if="stateStorage.viewFilesTab === 'group'" flex="~ gap-2 col">
+      <div
+        v-if="stateStorage.viewFilesTab === 'group'"
+        flex="~ gap-2 col"
+      >
         <FileGroupItem
-          v-for="group, idx of payload.filesResolved.groups"
+          v-for="(group, idx) of payload.filesResolved.groups"
           :key="group.id"
           v-model:open="fileGroupsOpenState[idx]"
           :group="group"
@@ -67,16 +75,25 @@ function collapseAll() {
       <div v-else>
         <div flex="~ gap-2 items-center">
           <div i-ph-files-duotone flex-none />
-          <div>Matched Local Files ({{ payload.filesResolved.list.length }})</div>
+          <div>
+            Matched Local Files ({{
+              payload.filesResolved.list.length
+            }})
+          </div>
         </div>
         <div flex="~ col gap-1" py4 font-mono>
-          <FileItem v-for="file of payload.filesResolved.list" :key="file" :filepath="file" />
+          <FileItem
+            v-for="file of payload.filesResolved.list"
+            :key="file"
+            :filepath="file"
+          />
         </div>
       </div>
     </template>
     <div v-else rounded border="~ base" bg-gray:5 p3 text-sm>
-      File matching data is unavailable in the current payload.
-      In CLI mode, enable file matching with <code font-mono>--files</code> to populate this tab.
+      File matching data is unavailable in the current payload. In CLI
+      mode, enable file matching with <code font-mono>--files</code> to
+      populate this tab.
     </div>
   </div>
 </template>

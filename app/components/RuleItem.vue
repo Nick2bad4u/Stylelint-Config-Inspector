@@ -3,7 +3,11 @@ import type { RuleConfigStates, RuleInfo, RuleLevel } from '~~/shared/types'
 import { useClipboard } from '@vueuse/core'
 import { vTooltip } from 'floating-vue'
 import { computed } from 'vue'
-import { getRuleLevel, getRuleOptions, getRulePrimaryOption } from '~~/shared/rules'
+import {
+  getRuleLevel,
+  getRuleOptions,
+  getRulePrimaryOption,
+} from '~~/shared/rules'
 import { deepCompareOptions } from '~/composables/options'
 import { getRuleDefaultOptions } from '~/composables/payload'
 
@@ -20,10 +24,14 @@ const emit = defineEmits<{
   stateClick: [RuleLevel]
 }>()
 
-const PLACEHOLDER_CONTEXT_RE = /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/
+const PLACEHOLDER_CONTEXT_RE
+  = /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/
 
 function redundantOptions(options: any) {
-  const { hasRedundantOptions } = deepCompareOptions(options ?? [], getRuleDefaultOptions(props.rule.name))
+  const { hasRedundantOptions } = deepCompareOptions(
+    options ?? [],
+    getRuleDefaultOptions(props.rule.name),
+  )
   return hasRedundantOptions
 }
 
@@ -40,21 +48,27 @@ function stringifyInline(value: unknown): string {
     return value
 
   const serialized = JSON.stringify(value)
-  return serialized === undefined
-    ? String(value)
-    : serialized
+  return serialized === undefined ? String(value) : serialized
 }
 
 function isScalarDisplayValue(value: unknown): value is string | number {
   return typeof value === 'string' || typeof value === 'number'
 }
 
-function shouldReplacePlaceholderByContext(description: string, index: number): boolean {
-  const lookBehind = description.slice(Math.max(0, index - 56), index).toLowerCase()
+function shouldReplacePlaceholderByContext(
+  description: string,
+  index: number,
+): boolean {
+  const lookBehind = description
+    .slice(Math.max(0, index - 56), index)
+    .toLowerCase()
   return PLACEHOLDER_CONTEXT_RE.test(lookBehind)
 }
 
-function applyPlaceholderGuesses(description: string, configuredValue: unknown): string {
+function applyPlaceholderGuesses(
+  description: string,
+  configuredValue: unknown,
+): string {
   if (!description.includes('<value>'))
     return description
 
@@ -98,9 +112,7 @@ function applyPlaceholderGuesses(description: string, configuredValue: unknown):
   }
   parts.push(description.slice(cursor))
 
-  return replaced
-    ? parts.join('')
-    : description
+  return replaced ? parts.join('') : description
 }
 
 const effectiveState = computed(() => {
@@ -108,15 +120,19 @@ const effectiveState = computed(() => {
   if (!states?.length)
     return undefined
 
-  return states.toReversed().find(state => state.level !== 'off')
+  return (
+    states.toReversed().find(state => state.level !== 'off')
     ?? states.at(-1)
+  )
 })
 
 const localConfiguredValue = computed(() => {
   if (props.value === undefined)
     return undefined
 
-  return getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
+  return (
+    getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
+  )
 })
 
 const effectiveConfiguredValue = computed(() => {
@@ -135,7 +151,8 @@ const resolvedDescription = computed(() => {
     return 'Invalid rule has no description'
 
   const rawDescription = props.rule.docs?.description
-  const baseDescription = capitalize(rawDescription) ?? 'No description available'
+  const baseDescription
+    = capitalize(rawDescription) ?? 'No description available'
   const configuredValue = effectiveConfiguredValue.value
   if (configuredValue === undefined)
     return baseDescription
@@ -143,10 +160,16 @@ const resolvedDescription = computed(() => {
   return applyPlaceholderGuesses(baseDescription, configuredValue)
 })
 
-const isMissingDescription = computed(() => !!props.rule.docs?.descriptionMissing && !props.rule.invalid)
+const isMissingDescription = computed(
+  () => !!props.rule.docs?.descriptionMissing && !props.rule.invalid,
+)
 const descriptionSource = computed(() => props.rule.docs?.descriptionSource)
-const isMessageDerivedDescription = computed(() => descriptionSource.value === 'message' && !isMissingDescription.value)
-const isInferredDocsUrl = computed(() => props.rule.docs?.urlSource === 'inferred')
+const isMessageDerivedDescription = computed(
+  () => descriptionSource.value === 'message' && !isMissingDescription.value,
+)
+const isInferredDocsUrl = computed(
+  () => props.rule.docs?.urlSource === 'inferred',
+)
 const docsTooltip = computed(() => {
   if (isInferredDocsUrl.value)
     return 'Docs (inferred from plugin package metadata)'
@@ -157,15 +180,18 @@ const docsTooltip = computed(() => {
 <template>
   <div
     v-if="ruleStates"
-    flex="~ items-center gap-0.5 justify-end" text-lg
+    flex="~ items-center gap-0.5 justify-end"
+    text-lg
     :class="gridView ? 'absolute top-2 right-2 flex-col' : ''"
   >
-    <template v-for="s, idx of ruleStates" :key="idx">
+    <template v-for="(s, idx) of ruleStates" :key="idx">
       <VDropdown>
         <RuleLevelIcon
           :level="s.level"
           :config-index="s.configIndex"
-          :has-options="s.primaryOption !== undefined || !!s.options?.length"
+          :has-options="
+            s.primaryOption !== undefined || !!s.options?.length
+          "
           :has-redundant-options="redundantOptions(s.options)"
         />
         <template #popper="{ shown }">
@@ -177,11 +203,17 @@ const docsTooltip = computed(() => {
 
   <div
     v-if="value !== undefined"
-    :class="[props.class, gridView ? 'absolute top-2 right-2 flex-col' : '']"
+    :class="[
+      props.class,
+      gridView ? 'absolute top-2 right-2 flex-col' : '',
+    ]"
   >
     <RuleLevelIcon
       :level="getRuleLevel(value)"
-      :has-options="getRulePrimaryOption(value) !== undefined || !!getRuleOptions(value)?.length"
+      :has-options="
+        getRulePrimaryOption(value) !== undefined
+          || !!getRuleOptions(value)?.length
+      "
       :has-redundant-options="redundantOptions(getRuleOptions(value))"
     />
   </div>
@@ -207,12 +239,18 @@ const docsTooltip = computed(() => {
               v-if="!rule.invalid && rule.docs?.url"
               v-tooltip="docsTooltip"
               btn-action-sm
-              :to="rule.docs?.url" target="_blank" rel="noopener noreferrer"
+              :to="rule.docs?.url"
+              target="_blank"
+              rel="noopener noreferrer"
               :title="docsTooltip"
             >
               <div i-ph-book-duotone />
               Docs
-              <div v-if="isInferredDocsUrl" i-ph-magic-wand-duotone op60 />
+              <div
+                v-if="isInferredDocsUrl"
+                i-ph-magic-wand-duotone
+                op60
+              />
             </NuxtLink>
             <button
               btn-action-sm
@@ -230,27 +268,45 @@ const docsTooltip = computed(() => {
     </VDropdown>
   </div>
 
-  <div v-if="!gridView" :class="props.class" mx2 min-w-0 flex="~ items-center justify-center gap-2">
+  <div v-if="!gridView" :class="props.class" mx2 min-w-0 flex justify-center>
     <div
-      v-if="rule.invalid"
-      v-tooltip="'❌ Invalid rule'"
-      i-ph-seal-warning-duotone text-red5 op80
-    />
-    <div
-      v-if="rule.docs?.recommended"
-      v-tooltip="'✅ Recommended'"
-      i-ph-check-square-duotone text-green6 op70
-    />
-    <div
-      v-if="rule.fixable"
-      v-tooltip="'🔧 Fixable'"
-      i-ph-wrench-duotone text-amber6 op70
-    />
-    <div
-      v-if="rule.deprecated"
-      v-tooltip="'🪦 Deprecated'"
-      i-ph-prohibit-inset-duotone op60
-    />
+      grid="~ cols-[repeat(4,1.1rem)]"
+      min-h-5
+      items-center
+      justify-items-center
+    >
+      <div
+        v-if="rule.invalid"
+        v-tooltip="'❌ Invalid rule'"
+        class="col-start-1"
+        i-ph-seal-warning-duotone
+        text-red5
+        op80
+      />
+      <div
+        v-if="rule.docs?.recommended"
+        v-tooltip="'✅ Recommended'"
+        class="col-start-2"
+        i-ph-check-square-duotone
+        text-green6
+        op70
+      />
+      <div
+        v-if="rule.fixable"
+        v-tooltip="'🔧 Fixable'"
+        class="col-start-3"
+        i-ph-wrench-duotone
+        text-amber6
+        op70
+      />
+      <div
+        v-if="rule.deprecated"
+        v-tooltip="'🪦 Deprecated'"
+        class="col-start-4"
+        i-ph-prohibit-inset-duotone
+        op60
+      />
+    </div>
   </div>
 
   <div :class="props.class" min-w-0 flex="~ gap-2 items-center" of-hidden>
@@ -259,26 +315,48 @@ const docsTooltip = computed(() => {
       :class="[
         rule.deprecated ? 'line-through' : '',
         rule.invalid ? 'text-red' : '',
-        gridView ? 'op55 text-sm leading-5' : 'op75 text-sm ws-nowrap of-hidden text-ellipsis line-clamp-1',
+        gridView
+          ? 'op55 text-sm leading-5'
+          : 'op75 text-sm ws-nowrap of-hidden text-ellipsis line-clamp-1',
       ]"
     >
       {{ resolvedDescription }}
     </div>
     <div
       v-if="isMissingDescription"
-      v-tooltip="'No description metadata found for this rule; showing a generated fallback.'"
-      i-ph-asterisk text-2.5 text-amber5 op55
+      v-tooltip="
+        'No description metadata found for this rule; showing a generated fallback.'
+      "
+      i-ph-asterisk
+      text-2.5
+      text-amber5
+      op55
     />
     <div
       v-else-if="isMessageDerivedDescription"
-      v-tooltip="'Description derived from plugin message templates because dedicated metadata is missing.'"
-      i-ph-chat-centered-text-duotone text-3 text-violet5 op55
+      v-tooltip="
+        'Description derived from plugin message templates because dedicated metadata is missing.'
+      "
+      i-ph-chat-centered-text-duotone
+      text-3
+      text-violet5
+      op55
     />
   </div>
 
   <div
-    v-if="gridView && (rule.invalid || rule.deprecated || rule.fixable || rule.docs?.recommended)"
-    flex flex-auto flex-col items-start justify-end
+    v-if="
+      gridView
+        && (rule.invalid
+          || rule.deprecated
+          || rule.fixable
+          || rule.docs?.recommended)
+    "
+    flex
+    flex-auto
+    flex-col
+    items-start
+    justify-end
   >
     <div flex="~ gap-2" mt1>
       <RuleDeprecatedInfo
@@ -289,12 +367,14 @@ const docsTooltip = computed(() => {
       <div
         v-if="rule.docs?.recommended"
         v-tooltip="'✅ Recommended'"
-        i-ph-check-square-duotone op50
+        i-ph-check-square-duotone
+        op50
       />
       <div
         v-if="rule.fixable"
         v-tooltip="'🔧 Fixable'"
-        i-ph-wrench-duotone op50
+        i-ph-wrench-duotone
+        op50
       />
     </div>
   </div>

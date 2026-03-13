@@ -17,22 +17,39 @@ const title = computed(() => {
   return `Enabled as '${props.level}', in the ${nth(props.configIndex + 1)} config item`
 })
 
-const color = computed(() => ({
-  error: 'text-red op80',
-  warn: 'text-yellow5 op80 dark:text-yellow4',
-  off: 'text-gray op50',
-}[props.level]))
+const color = computed(
+  () =>
+    ({
+      error: 'text-red op80',
+      warn: 'text-yellow5 op80 dark:text-yellow4',
+      off: 'text-gray op62',
+    })[props.level],
+)
 
-const icon = computed(() => ({
-  error: 'i-ph-warning-circle-duotone',
-  warn: 'i-ph-warning-duotone',
-  off: 'i-ph-circle-half-tilt-duotone',
-}[props.level]))
+const icon = computed(
+  () =>
+    ({
+      error: 'i-ph-warning-circle-duotone',
+      warn: 'i-ph-warning-duotone',
+      off: 'i-ph-circle-half-tilt-duotone',
+    })[props.level],
+)
 </script>
 
 <template>
   <div relative :class="[color, props.class]" :title="title">
     <div :class="icon" />
-    <div v-if="hasOptions" absolute right--2px top--2px h-6px w-6px rounded-full bg-current op75 :class="hasRedundantOptions ? 'text-blue5' : ''" />
+    <div
+      v-if="hasOptions"
+      absolute
+      right--2px
+      top--2px
+      h-6px
+      w-6px
+      rounded-full
+      bg-current
+      op75
+      :class="hasRedundantOptions ? 'text-blue5' : ''"
+    />
   </div>
 </template>

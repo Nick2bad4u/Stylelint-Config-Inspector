@@ -25,7 +25,8 @@ export default defineConfig({
     'border-active': 'border-primary-600/25 dark:border-primary-400/25',
     'bg-active': 'bg-primary-400:10',
 
-    'btn-action': 'border border-base rounded flex gap-2 items-center px2 py1 op75 hover:op100 hover:bg-hover',
+    'btn-action':
+            'border border-base rounded flex gap-2 items-center px2 py1 op75 hover:op100 hover:bg-hover',
     'btn-action-sm': 'btn-action text-sm',
     'btn-action-active': 'color-active border-active! bg-active op100!',
 
@@ -126,8 +127,5 @@ export default defineConfig({
       }),
     }),
   ],
-  transformers: [
-    transformerDirectives(),
-    transformerVariantGroup(),
-  ],
+  transformers: [transformerDirectives(), transformerVariantGroup()],
 })

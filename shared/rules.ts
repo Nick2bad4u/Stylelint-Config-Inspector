@@ -1,6 +1,8 @@
 import type { RuleConfigState, RuleEntry } from './types'
 
-export function isRuleConfigured(states: RuleConfigState[] | undefined): boolean {
+export function isRuleConfigured(
+  states: RuleConfigState[] | undefined,
+): boolean {
   return (states?.length ?? 0) > 0
 }
 
@@ -12,24 +14,22 @@ export function isRuleEnabled(states: RuleConfigState[] | undefined): boolean {
 }
 
 function toRulePrimaryValue(level: RuleEntry | undefined): unknown {
-  return Array.isArray(level)
-    ? level[0]
-    : level
+  return Array.isArray(level) ? level[0] : level
 }
 
 function isDisabledRuleValue(value: unknown): boolean {
-  return value === undefined
+  return (
+    value === undefined
     || value === null
     || value === false
     || value === 0
     || value === 'off'
+  )
 }
 
 export function getRulePrimaryOption(level: RuleEntry | undefined): unknown {
   const primary = toRulePrimaryValue(level)
-  return isDisabledRuleValue(primary)
-    ? undefined
-    : primary
+  return isDisabledRuleValue(primary) ? undefined : primary
 }
 
 export function getRuleLevel(level: RuleEntry | undefined) {
@@ -73,7 +73,9 @@ export function getRuleLevel(level: RuleEntry | undefined) {
   }
 }
 
-export function getRuleOptions(level: RuleEntry | undefined): unknown[] | undefined {
+export function getRuleOptions(
+  level: RuleEntry | undefined,
+): unknown[] | undefined {
   if (Array.isArray(level))
     return level.slice(1)
 }

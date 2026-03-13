@@ -20,7 +20,7 @@ body {
             #fefcff 0%,
             #f7f0ff 38%,
             #eddfff 68%,
-            #e0ccff 100%
+            #d6bdff 100%
         ),
         radial-gradient(
             115% 120% at 50% 118%,
@@ -42,16 +42,31 @@ html.dark {
                 #05030a 0%,
                 #090510 36%,
                 #170826 66%,
-                #2e1065 100%
+                #240b4e 100%
             ),
             radial-gradient(
                 120% 125% at 52% 118%,
-                #7c3aed7a 0%,
-                #6d28d958 44%,
-                #4c1d9548 64%,
+                #7c3aed66 0%,
+                #6d28d94b 44%,
+                #4c1d953f 64%,
                 #00000000 84%
             ),
             radial-gradient(110% 95% at 8% 8%, #00000073 0%, #00000000 72%);
+    }
+}
+
+.rule-muted-off {
+    opacity: 62%;
+    transition: opacity 140ms ease;
+
+    @media screen and (prefers-reduced-motion: reduce) {
+        opacity: 62%;
+        transition: none;
+    }
+
+    &:hover,
+    &:focus {
+        opacity: 100%;
     }
 }
 

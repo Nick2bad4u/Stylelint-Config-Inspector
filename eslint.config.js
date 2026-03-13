@@ -4,16 +4,14 @@ import nuxt from './.nuxt/eslint.config.mjs'
 
 export default await nuxt()
   .prepend(
-    await antfu(
-      {
-        unocss: true,
-        vue: {
-          overrides: {
-            'vue/no-extra-parens': 'off',
-          },
+    await antfu({
+      unocss: true,
+      vue: {
+        overrides: {
+          'vue/no-extra-parens': 'off',
         },
       },
-    ),
+    }),
   )
   .append({
     files: ['src/**/*.ts'],

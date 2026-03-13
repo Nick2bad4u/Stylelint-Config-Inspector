@@ -1,4 +1,8 @@
-import type { InspectorReadResult, ReadConfigOptions, ResolveConfigPathOptions } from './inspectors/contracts'
+import type {
+  InspectorReadResult,
+  ReadConfigOptions,
+  ResolveConfigPathOptions,
+} from './inspectors/contracts'
 import { createStylelintInspectorAdapter } from './inspectors/stylelint'
 
 const adapter = createStylelintInspectorAdapter()
@@ -20,6 +24,8 @@ export async function resolveConfigPath(options: ResolveConfigPathOptions) {
 /**
  * Read and normalize the Stylelint config into inspector payload.
  */
-export async function readConfig(options: ReadConfigOptions): Promise<InspectorReadResult> {
+export async function readConfig(
+  options: ReadConfigOptions,
+): Promise<InspectorReadResult> {
   return await adapter.readConfig(options)
 }
