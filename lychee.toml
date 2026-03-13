@@ -2,13 +2,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Nick2bad4u/Uptime-Watcher/refs/heads/main/config/schemas/generic.schema.json
 # Verbose program output
 # Accepts log level: "error", "warn", "info", "debug", "trace"
-name        = "lychee"
+name = "lychee"
 description = "Configuration file for lychee link checker."
-version     = "1.0.0"
-git         = "LycheeOrg/Lychee"
-changelog   = "https://github.com/LycheeOrg/Lychee/blob/master/README.md"
-"$schema"   = "https://raw.githubusercontent.com/Nick2bad4u/Uptime-Watcher/refs/heads/main/config/schemas/generic.schema.json"
-verbose     = "info"
+version = "1.0.0"
+git = "LycheeOrg/Lychee"
+changelog = "https://github.com/LycheeOrg/Lychee/blob/master/README.md"
+"$schema" = "https://raw.githubusercontent.com/Nick2bad4u/Uptime-Watcher/refs/heads/main/config/schemas/generic.schema.json"
+verbose = "info"
 
 # Don't show interactive progress bar while checking links.
 no_progress = false
@@ -62,8 +62,8 @@ retry_wait_time = 2
 # accept = ["200", "429"]
 # accept = "200, 429"
 accept = [
-    "200",
-    "429",
+  "200",
+  "429",
 ]
 
 # Proceed for server connections considered insecure (invalid TLS).
@@ -89,8 +89,8 @@ remap = [ "https://example.com http://example.invalid" ]
 # Fallback extensions to apply when a URL does not specify one.
 # This is common in documentation tools that cross-reference files without extensions.
 fallback_extensions = [
-    "html",
-    "md",
+  "html",
+  "md",
 ]
 
 # Base URL or website root directory to check relative URLs.
@@ -121,17 +121,17 @@ glob_ignore_case = false
 
 # Exclude URLs and mail addresses from checking. The values are treated as regular expressions
 exclude = [
-    '^https://(.*\.)?github(usercontent)?\.(com|io)', # exclude common GitHub URLs
-    '^https://(www\.)?linkedin\.com',                 # optional subdomains
-    '^https://example\.com/home$',                    # specific URL
-    '^https?://example\.com',                         # match both HTTP and HTTPS
+  '^https://(.*\.)?github(usercontent)?\.(com|io)', # exclude common GitHub URLs
+  '^https://(www\.)?linkedin\.com', # optional subdomains
+  '^https://example\.com/home$', # specific URL
+  '^https?://example\.com', # match both HTTP and HTTPS
 ]
 
 # Exclude paths from getting checked. The values are treated as regular expressions
 exclude_path = [
-    "(^|/)test/",   # skip directories named "test"
-    "[aeiouAEIOU]", # exclude paths containing vowels
-    "\\.txt$",      # skip .txt extensions
+  "(^|/)test/", # skip directories named "test"
+  "[aeiouAEIOU]", # exclude paths containing vowels
+  "\\.txt$", # skip .txt extensions
 ]
 
 # URLs to check (supports regex). Has preference over all excludes.

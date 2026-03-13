@@ -9,10 +9,10 @@ import {
 } from "vitest/config";
 
 /** `true` when running under CI where worker parallelism should be bounded. */
-const isCiEnvironment = process.env["CI"] === "true";
+const isCiEnvironment = process.env.CI === "true";
 /** Raw worker-count input from environment or CI/local defaults. */
 const configuredMaxWorkers =
-    process.env["MAX_THREADS"] ?? (isCiEnvironment ? "1" : "8");
+    process.env.MAX_THREADS ?? (isCiEnvironment ? "1" : "8");
 /** Parsed integer worker count prior to validation. */
 const parsedMaxWorkers = Number.parseInt(configuredMaxWorkers, 10);
 /** Safe positive worker-count used by Vitest thread pool settings. */
@@ -22,8 +22,8 @@ const maxWorkerCount =
         : 1;
 /** Raw flag controlling optional hanging-process reporter activation. */
 const rawHangingReporterFlag =
-    process.env["TYPEFEST_VITEST_HANGING_PROCESS_REPORTER"] ??
-    process.env["VITEST_HANGING_PROCESS_REPORTER"] ??
+    process.env.TYPEFEST_VITEST_HANGING_PROCESS_REPORTER ??
+    process.env.VITEST_HANGING_PROCESS_REPORTER ??
     "false";
 /** Normalized `true` when hanging-process reporter is explicitly enabled. */
 const shouldEnableHangingProcessReporter = [
@@ -181,7 +181,7 @@ const vitestConfig: ReturnType<typeof defineConfig> = defineConfig({
             omitAnnotationLines: true,
             printBasicPrototype: false,
             truncateAnnotation: pc.yellow(
-                pc.bold("... Diff output truncated for readability")
+                pc.bold("... Diff output truncated for readability"),
             ), // Yellow is more eye-catching than cyan
             // The value 250 for truncateThreshold was selected to balance readability and performance.
             // It limits the maximum number of diff lines shown, preventing excessively long outputs
@@ -191,7 +191,7 @@ const vitestConfig: ReturnType<typeof defineConfig> = defineConfig({
         },
         env: {
             NODE_ENV: "test",
-            PACKAGE_VERSION: process.env["PACKAGE_VERSION"] ?? "unknown",
+            PACKAGE_VERSION: process.env.PACKAGE_VERSION ?? "unknown",
         },
         environment: "node",
         // Test file patterns - exclude electron tests as they have their own config

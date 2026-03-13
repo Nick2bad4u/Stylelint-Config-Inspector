@@ -1,6 +1,6 @@
 // @ts-check
 const processEnvironment = globalThis.process.env;
-const isCI = (processEnvironment["CI"] ?? "").toLowerCase() === "true";
+const isCI = (processEnvironment.CI ?? "").toLowerCase() === "true";
 
 /** @type {import("@stryker-mutator/api/core").PartialStrykerOptions} */
 const config = {

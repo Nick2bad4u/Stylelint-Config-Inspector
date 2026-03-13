@@ -1,26 +1,26 @@
 {
     "$schema": "https://www.schemastore.org/tsconfig.json",
+    "extends": "./tsconfig.json",
     "compilerOptions": {
-        "allowJs": true,
-        "checkJs": true,
-        "erasableSyntaxOnly": true,
-        "isolatedDeclarations": false,
-        "noEmit": true,
         "tsBuildInfoFile": "./.cache/tsbuildinfo/tsconfig.js.tsbuildinfo",
         "types": [
             "node"
-        ]
+        ],
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "isolatedDeclarations": false,
+        "erasableSyntaxOnly": true
     },
+    "include": [
+        "*.mjs",
+        "test/_internal/**/*.d.ts"
+    ],
     "exclude": [
         ".cache/**",
         "coverage/**",
         "dist/**",
         "eslint.config.bundled_*.mjs",
         "node_modules/**"
-    ],
-    "extends": "./tsconfig.json",
-    "include": [
-        "*.mjs",
-        "test/_internal/**/*.d.ts"
     ]
 }

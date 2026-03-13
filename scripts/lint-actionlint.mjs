@@ -11,9 +11,9 @@
  * - Use config/linting/ActionLintConfig.yaml unless -config-file is provided.
  */
 
+import { spawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import * as path from "node:path";
-import { spawnSync } from "node:child_process";
 import pc from "picocolors";
 
 const repoRoot = process.cwd();
@@ -64,9 +64,9 @@ for (let index = 0; index < rawArgs.length; index += 1) {
 }
 
 /** @param {string} flag */
-const hasFlag = (flag) => userArgs.includes(flag);
+const hasFlag = flag => userArgs.includes(flag);
 /** @param {string[]} flags */
-const hasAnyFlag = (flags) => flags.some((flag) => hasFlag(flag));
+const hasAnyFlag = flags => flags.some(flag => hasFlag(flag));
 const useDefaultFiles =
     fileArgs.length === 0 && !hasAnyFlag(["-version", "-init-config"]);
 
@@ -88,8 +88,8 @@ if (!hasFlag("-pyflakes")) {
 
 const workflowFiles = useDefaultFiles
     ? readdirSync(workflowsDir, { withFileTypes: true })
-          .filter((entry) => entry.isFile())
-          .map((entry) => path.join(workflowsDir, entry.name))
+          .filter(entry => entry.isFile())
+          .map(entry => path.join(workflowsDir, entry.name))
           .filter((filePath) => {
               const ext = path.extname(filePath).toLowerCase();
               if (ext !== ".yml" && ext !== ".yaml") {
@@ -118,8 +118,8 @@ if (useDefaultFiles) {
         : "excluding" + ` ${pc.magenta([...excludedFiles].join(", "))}`;
     console.log(
         `${pc.bold(pc.cyan("Running actionlint on"))} ${pc.magenta(
-            String(targetFiles.length)
-        )} ${pc.cyan(`workflow file(s), ${scopeText}.`)}`
+            String(targetFiles.length),
+        )} ${pc.cyan(`workflow file(s), ${scopeText}.`)}`,
     );
 }
 
@@ -140,8 +140,8 @@ if (result.status === 0) {
 if (result.status !== null) {
     console.error(
         `${pc.red("actionlint failed with exit code")} ${pc.bold(
-            pc.magenta(String(result.status))
-        )}.`
+            pc.magenta(String(result.status)),
+        )}.`,
     );
     process.exit(result.status);
 }
@@ -149,8 +149,8 @@ if (result.status !== null) {
 if (result.signal !== null) {
     console.error(
         `${pc.red("actionlint terminated by signal")} ${pc.bold(
-            pc.magenta(result.signal)
-        )}.`
+            pc.magenta(result.signal),
+        )}.`,
     );
     process.exit(1);
 }

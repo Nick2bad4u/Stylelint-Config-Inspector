@@ -344,7 +344,7 @@ const remarkConfig = {
         ["remark-lint-no-html", false], // We rely on inline HTML for badges and layout snippets
 
         // File naming conventions
-        ["remark-lint-no-file-name-irregular-characters", /[^-._\dA-Za-z]/], // Allow underscores in filenames
+        ["remark-lint-no-file-name-irregular-characters", /[^-.\w]/], // Allow underscores in filenames
         ["remark-lint-no-file-name-mixed-case", true], // Enforce lowercase/kebab-case style filenames
         ["remark-lint-no-file-name-articles", true], // Avoid leading articles in filenames
         ["remark-lint-no-file-name-consecutive-dashes", true], // Prevent accidental double dashes
