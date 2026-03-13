@@ -337,7 +337,7 @@ onMounted(async () => {
               op25
               hover:op100
               @click="
-                filters.filepath = ''
+                filters.filepath = '';
                 input = ''
               "
             />
