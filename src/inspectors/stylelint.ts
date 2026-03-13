@@ -1,7 +1,8 @@
 import type { Config as StylelintConfig } from 'stylelint'
-import type { FlatConfigItem, MatchedFile, Payload, RuleInfo, RulesRecord } from '../../shared/types'
+import type { FlatConfigItem, MatchedFile, Payload, RuleDescriptionSource, RuleDocsUrlSource, RuleInfo, RulesRecord } from '../../shared/types'
 import type { InspectorAdapter, InspectorReadResult, ReadConfigOptions, ResolveConfigPathOptions, ResolvedConfigPath } from './contracts'
 import { readFile, stat } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 import { isAbsolute } from 'node:path'
 import process from 'node:process'
 import { pathToFileURL } from 'node:url'
@@ -27,6 +28,34 @@ const DEFAULT_WORKSPACE_SCAN_IGNORES = [
 ]
 const MAX_WORKSPACE_MATCHED_FILES = 5000
 const FILE_EXTENSION_RE = /\.[^.]+$/
+const REGEXP_SPECIAL_CHARS_RE = /[.*+?^${}()|[\]\\]/g
+const AT_PREFIX_RE = /^@/
+const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
+const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
+const SCOPED_STYLELINT_PLUGIN_PACKAGE_RE = /^(@[^/]+)\/stylelint-plugin(?:-(.+))?$/
+const SCOPED_STYLELINT_PACKAGE_RE = /^(@[^/]+)\/stylelint-(.+)$/
+const GENERIC_PLUGIN_PREFIXES = new Set(['plugin', 'rule', 'rules'])
+const UNSAFE_MESSAGE_DESCRIPTION_RE = /^Expected\s+"undefined"\s+to\s+be\s+one\s+of\s+"undefined"/i
+const MESSAGE_PLACEHOLDER_RE = /%[a-z]/i
+const MESSAGE_UNDEFINED_RE = /\bundefined\b/i
+const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/
+const GIT_SUFFIX_RE = /\.git$/i
+const GIT_PROTOCOL_PREFIX_RE = /^git\+/i
+const MESSAGE_CALL_ARGS: readonly unknown[][] = [
+  [],
+  ['<value>'],
+  ['<value>', '<value>'],
+  ['<value>', '<value>', '<value>'],
+]
+const PRIORITIZED_MESSAGE_KEYS = new Set([
+  'rejected',
+  'unexpected',
+  'expected',
+  'message',
+  'default',
+])
+
+const require = createRequire(import.meta.url)
 
 interface StylelintConfigLike extends Record<string, unknown> {
   files?: unknown
@@ -51,6 +80,7 @@ interface RuleMetaLike extends Record<string, unknown> {
   fixable?: unknown
   deprecated?: unknown
   description?: unknown
+  recommended?: unknown
 }
 
 interface RuleFunctionLike {
@@ -67,6 +97,28 @@ interface RuleDefinitionLike {
   messages?: Record<string, unknown>
   primaryOptionArray?: unknown[]
 }
+
+interface PluginRuleDefinitionSource {
+  definition: RuleDefinitionLike
+  sourcePlugin: string
+  sourcePackageName?: string
+  sourceDocsUrl?: string
+  sourceDocsUrlSource?: RuleDocsUrlSource
+}
+
+interface RuleDescriptionResult {
+  text: string
+  missingDescription: boolean
+  source: RuleDescriptionSource
+}
+
+interface PluginPackageDocsMetadata {
+  packageName?: string
+  docsUrl?: string
+  docsUrlSource?: RuleDocsUrlSource
+}
+
+let _recommendedCoreRulesPromise: Promise<Set<string>> | undefined
 
 const OMITTED_EXTRA_CONFIG_KEYS = new Set([
   'pluginFunctions',
@@ -155,6 +207,228 @@ function sanitizePluginName(name: string): string {
   return stem || name
 }
 
+function normalizePluginPackageName(name: string): string {
+  const trimmed = name.trim()
+  if (!trimmed)
+    return trimmed
+
+  if (trimmed === 'stylelint')
+    return trimmed
+
+  const scopedPluginMatch = SCOPED_STYLELINT_PLUGIN_PACKAGE_RE.exec(trimmed)
+  if (scopedPluginMatch) {
+    const scope = scopedPluginMatch[1]
+    const suffix = scopedPluginMatch[2]
+    if (!scope)
+      return trimmed
+    return suffix
+      ? `${scope}/${suffix}`
+      : scope
+  }
+
+  const scopedStylelintMatch = SCOPED_STYLELINT_PACKAGE_RE.exec(trimmed)
+  if (scopedStylelintMatch) {
+    const scope = scopedStylelintMatch[1]
+    const suffix = scopedStylelintMatch[2]
+    if (!scope)
+      return trimmed
+    return suffix
+      ? `${scope}/${suffix}`
+      : scope
+  }
+
+  if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
+    return trimmed.replace(STYLELINT_PLUGIN_PREFIX_RE, '')
+
+  if (STYLELINT_PACKAGE_PREFIX_RE.test(trimmed))
+    return trimmed.replace(STYLELINT_PACKAGE_PREFIX_RE, '')
+
+  return trimmed
+}
+
+function isBareModuleSpecifier(specifier: string): boolean {
+  return !isAbsolute(specifier)
+    && !specifier.startsWith('.')
+    && !specifier.startsWith('file:')
+}
+
+function toPackageNameFromSpecifier(specifier: string): string | undefined {
+  if (!isBareModuleSpecifier(specifier))
+    return undefined
+
+  const trimmed = specifier.trim()
+  if (!trimmed)
+    return undefined
+
+  const parts = trimmed.split('/').filter(Boolean)
+  if (!parts.length)
+    return undefined
+
+  if (parts[0]?.startsWith('@')) {
+    const scope = parts[0]
+    const name = parts[1]
+    return scope && name
+      ? `${scope}/${name}`
+      : undefined
+  }
+
+  return parts[0]
+}
+
+function getPackageRootFromResolvedPath(resolvedPath: string): string | undefined {
+  const normalized = normalize(resolvedPath).replaceAll('\\', '/')
+  const nodeModulesToken = '/node_modules/'
+  const nodeModulesIndex = normalized.lastIndexOf(nodeModulesToken)
+  if (nodeModulesIndex === -1)
+    return undefined
+
+  const modulesRoot = normalized.slice(0, nodeModulesIndex + nodeModulesToken.length)
+  const packagePath = normalized.slice(nodeModulesIndex + nodeModulesToken.length)
+  const parts = packagePath.split('/').filter(Boolean)
+  if (!parts.length)
+    return undefined
+
+  if (parts[0]?.startsWith('@')) {
+    const scope = parts[0]
+    const name = parts[1]
+    if (!scope || !name)
+      return undefined
+    return resolve(modulesRoot, scope, name)
+  }
+
+  const packageName = parts[0]
+  return packageName
+    ? resolve(modulesRoot, packageName)
+    : undefined
+}
+
+function normalizeAbsoluteUrl(value: string | undefined): string | undefined {
+  if (!value)
+    return undefined
+
+  const trimmed = value.trim()
+  if (!trimmed)
+    return undefined
+
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://'))
+    return trimmed
+
+  if (trimmed.startsWith('//'))
+    return `https:${trimmed}`
+
+  return undefined
+}
+
+function normalizeRepositoryUrl(repository: unknown): string | undefined {
+  const raw = (() => {
+    if (typeof repository === 'string')
+      return repository
+
+    if (isRecord(repository) && typeof repository.url === 'string')
+      return repository.url
+
+    return undefined
+  })()
+
+  if (!raw)
+    return undefined
+
+  const trimmed = raw.trim()
+  if (!trimmed)
+    return undefined
+
+  if (trimmed.startsWith('github:'))
+    return `https://github.com/${trimmed.slice('github:'.length)}`
+
+  if (trimmed.startsWith('git@github.com:'))
+    return `https://github.com/${trimmed.slice('git@github.com:'.length).replace(GIT_SUFFIX_RE, '')}`
+
+  const withoutGitPrefix = trimmed.replace(GIT_PROTOCOL_PREFIX_RE, '')
+  const normalized = withoutGitPrefix.startsWith('http://') || withoutGitPrefix.startsWith('https://')
+    ? withoutGitPrefix
+    : undefined
+
+  if (!normalized)
+    return undefined
+
+  return normalized.replace(GIT_SUFFIX_RE, '')
+}
+
+async function readPluginPackageDocsMetadata(pluginEntry: string): Promise<PluginPackageDocsMetadata | undefined> {
+  const resolvedPluginEntry = (() => {
+    if (isAbsolute(pluginEntry))
+      return pluginEntry
+
+    if (!isBareModuleSpecifier(pluginEntry))
+      return undefined
+
+    try {
+      return require.resolve(pluginEntry, { paths: [process.cwd()] })
+    }
+    catch {
+      return undefined
+    }
+  })()
+
+  const packageName = (() => {
+    const fromSpecifier = toPackageNameFromSpecifier(pluginEntry)
+    if (fromSpecifier)
+      return fromSpecifier
+
+    if (!resolvedPluginEntry)
+      return undefined
+
+    return getPackageNameFromPath(resolvedPluginEntry)
+  })()
+
+  if (!packageName)
+    return undefined
+
+  const packageRoot = resolvedPluginEntry
+    ? getPackageRootFromResolvedPath(resolvedPluginEntry)
+    : undefined
+
+  const packageJsonPath = packageRoot
+    ? resolve(packageRoot, 'package.json')
+    : undefined
+
+  const packageJsonContent = packageJsonPath
+    ? await readFile(packageJsonPath, 'utf-8').catch(() => undefined)
+    : undefined
+
+  if (!packageJsonContent) {
+    return {
+      packageName,
+      docsUrl: `https://www.npmjs.com/package/${packageName}`,
+      docsUrlSource: 'inferred',
+    }
+  }
+
+  let packageJson: unknown
+  try {
+    packageJson = JSON.parse(packageJsonContent)
+  }
+  catch {
+    packageJson = undefined
+  }
+
+  const homepageUrl = normalizeAbsoluteUrl(
+    isRecord(packageJson) && typeof packageJson.homepage === 'string'
+      ? packageJson.homepage
+      : undefined,
+  )
+  const repositoryUrl = normalizeRepositoryUrl(isRecord(packageJson) ? packageJson.repository : undefined)
+  const docsUrl = homepageUrl
+    ?? repositoryUrl
+    ?? `https://www.npmjs.com/package/${packageName}`
+
+  return {
+    packageName,
+    docsUrl,
+    docsUrlSource: 'inferred',
+  }
+}
+
 function toStringArray(value: unknown): string[] | undefined {
   if (typeof value === 'string')
     return [value]
@@ -205,6 +479,16 @@ function getRulePlugin(ruleName: string): string {
     : 'stylelint'
 }
 
+function getDisplayPluginName(ruleName: string, sourcePlugin?: string): string {
+  const rulePlugin = getRulePlugin(ruleName)
+  if (!sourcePlugin)
+    return rulePlugin
+
+  return GENERIC_PLUGIN_PREFIXES.has(rulePlugin)
+    ? sourcePlugin
+    : rulePlugin
+}
+
 function toUnknownArray(value: unknown): unknown[] | undefined {
   return Array.isArray(value)
     ? value
@@ -233,8 +517,9 @@ function getRuleNameFromUnknown(value: unknown): string | undefined {
   if (isRecord(value) && typeof value.ruleName === 'string')
     return value.ruleName
 
-  if (typeof value === 'function' && typeof value.ruleName === 'string')
-    return value.ruleName
+  const functionValue = toRuleFunction(value)
+  if (typeof functionValue?.ruleName === 'string')
+    return functionValue.ruleName
 
   return undefined
 }
@@ -280,19 +565,37 @@ function resolveMessageText(message: unknown): string | undefined {
   if (typeof message === 'string')
     return message
 
-  if (typeof message !== 'function')
-    return undefined
+  if (typeof message === 'function') {
+    const resolvedCandidates: string[] = []
 
-  try {
-    const args = Array.from({ length: Math.max(message.length, 0) }).fill('…')
-    const value = message(...args)
-    return typeof value === 'string'
-      ? value
-      : undefined
+    for (const args of MESSAGE_CALL_ARGS) {
+      try {
+        const resolved = message(...args)
+        if (typeof resolved === 'string' && resolved.trim().length > 0)
+          resolvedCandidates.push(resolved.trim())
+      }
+      catch {
+        // Ignore plugin message invocation failures and continue trying alternatives.
+      }
+    }
+
+    if (resolvedCandidates.length > 0) {
+      return resolvedCandidates
+        .toSorted((a, b) => {
+          const scoreA = getMessageDescriptionScore('message', a)
+          const scoreB = getMessageDescriptionScore('message', b)
+          if (scoreA !== scoreB)
+            return scoreA - scoreB
+
+          if (a.length !== b.length)
+            return a.length - b.length
+
+          return a.localeCompare(b)
+        })[0]
+    }
   }
-  catch {
-    return undefined
-  }
+
+  return undefined
 }
 
 function normalizeRuleMessages(messages: Record<string, unknown> | undefined): Record<string, string> | undefined {
@@ -314,24 +617,156 @@ function normalizeRuleMessages(messages: Record<string, unknown> | undefined): R
 }
 
 function humanizeRuleName(ruleName: string): string {
-  return ruleName
-    .replaceAll('/', ' ')
+  const shortName = ruleName.includes('/')
+    ? ruleName.split('/').at(-1) ?? ruleName
+    : ruleName
+
+  return shortName
     .replaceAll('-', ' ')
+}
+
+function toDescriptionPrefixCandidates(ruleName: string, plugin: string): string[] {
+  const unscopedPlugin = plugin.replace(AT_PREFIX_RE, '')
+  const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
+  const candidates = [
+    plugin,
+    unscopedPlugin,
+    ruleName,
+    shortRuleName,
+  ].filter(Boolean)
+
+  const deduplicatedCandidates = [...new Set(candidates)]
+  return deduplicatedCandidates
+}
+
+function isUnsafeGeneratedDescription(description: string): boolean {
+  return UNSAFE_MESSAGE_DESCRIPTION_RE.test(description)
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(REGEXP_SPECIAL_CHARS_RE, '\\$&')
+}
+
+function sanitizeDescription(ruleName: string, description: string): string {
+  const plugin = getRulePlugin(ruleName)
+  const sanitized = description.trim()
+  if (!sanitized.length)
+    return humanizeRuleName(ruleName)
+
+  if (isUnsafeGeneratedDescription(sanitized))
+    return humanizeRuleName(ruleName)
+
+  const prefixCandidates = toDescriptionPrefixCandidates(ruleName, plugin)
+  const withoutPrefix = prefixCandidates.reduce((acc, candidate) => {
+    if (!acc.length)
+      return acc
+
+    return acc.replace(new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, 'i'), '').trim()
+  }, sanitized)
+
+  if (!withoutPrefix.length)
+    return humanizeRuleName(ruleName)
+
+  const lower = withoutPrefix.toLowerCase()
+  if (lower === ruleName.toLowerCase() || lower === humanizeRuleName(ruleName).toLowerCase())
+    return humanizeRuleName(ruleName)
+
+  const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
+  const trailingRuleReference = withoutPrefix.match(TRAILING_RULE_REFERENCE_RE)
+  if (trailingRuleReference?.[1]) {
+    const referencedRule = trailingRuleReference[1].trim().toLowerCase()
+    if (
+      referencedRule === ruleName.toLowerCase()
+      || referencedRule === shortRuleName.toLowerCase()
+    ) {
+      return withoutPrefix.slice(0, trailingRuleReference.index).trim()
+    }
+  }
+
+  return withoutPrefix
+}
+
+function getMessageDescriptionScore(key: string, description: string): number {
+  let score = PRIORITIZED_MESSAGE_KEYS.has(key)
+    ? 0
+    : 10
+
+  if (MESSAGE_PLACEHOLDER_RE.test(description))
+    score += 20
+
+  if (MESSAGE_UNDEFINED_RE.test(description))
+    score += 40
+
+  if (isUnsafeGeneratedDescription(description))
+    score += 100
+
+  if (description.length < 8)
+    score += 5
+
+  return score
+}
+
+function getDescriptionFromMessages(
+  ruleName: string,
+  messages: Record<string, string> | undefined,
+): string | undefined {
+  if (!messages)
+    return undefined
+
+  const fallbackDescription = humanizeRuleName(ruleName)
+  const candidates = Object.entries(messages)
+    .map(([key, value]) => ({ key, value: value.trim() }))
+    .filter(candidate => candidate.value.length > 0)
+    .toSorted((a, b) => {
+      const scoreDiff = getMessageDescriptionScore(a.key, a.value) - getMessageDescriptionScore(b.key, b.value)
+      if (scoreDiff !== 0)
+        return scoreDiff
+
+      if (a.value.length !== b.value.length)
+        return a.value.length - b.value.length
+
+      return a.key.localeCompare(b.key)
+    })
+
+  for (const candidate of candidates) {
+    const description = sanitizeDescription(ruleName, candidate.value)
+    if (description !== fallbackDescription)
+      return description
+  }
+
+  return undefined
 }
 
 function getRuleDescription(
   ruleName: string,
   meta: RuleMetaLike | undefined,
   messages: Record<string, string> | undefined,
-): string {
-  if (typeof meta?.description === 'string' && meta.description.trim().length > 0)
-    return meta.description
+): RuleDescriptionResult {
+  const fallbackDescription = humanizeRuleName(ruleName)
 
-  const firstMessage = messages
-    ? Object.values(messages).find(message => message.trim().length > 0)
-    : undefined
+  if (typeof meta?.description === 'string' && meta.description.trim().length > 0) {
+    const description = sanitizeDescription(ruleName, meta.description)
+    return {
+      text: description,
+      missingDescription: false,
+      source: 'meta',
+    }
+  }
 
-  return firstMessage ?? humanizeRuleName(ruleName)
+  const messageDescription = getDescriptionFromMessages(ruleName, messages)
+  if (messageDescription) {
+    return {
+      text: messageDescription,
+      missingDescription: false,
+      source: 'message',
+    }
+  }
+
+  return {
+    text: fallbackDescription,
+    missingDescription: true,
+    source: 'generated',
+  }
 }
 
 function normalizeRuleDeprecated(deprecated: unknown): RuleInfo['deprecated'] | undefined {
@@ -353,21 +788,36 @@ function normalizeRuleFixable(fixable: unknown): RuleInfo['fixable'] | undefined
 function buildRuleInfo(
   name: string,
   definition: RuleDefinitionLike | undefined,
+  recommendedRuleNames: Set<string>,
+  configuredRuleNames: Set<string>,
+  sourcePlugin?: string,
+  sourceDocsUrl?: string,
+  sourceDocsUrlSource?: RuleDocsUrlSource,
 ): RuleInfo {
-  const plugin = getRulePlugin(name)
+  const plugin = getDisplayPluginName(name, sourcePlugin)
   const meta = definition?.meta
   const messages = normalizeRuleMessages(definition?.messages)
-  const docsUrl = typeof meta?.url === 'string' && meta.url.length
+  const metaDocsUrl = typeof meta?.url === 'string' && meta.url.length
     ? meta.url
     : undefined
+  const docsUrl = metaDocsUrl ?? sourceDocsUrl
+  const docsUrlSource: RuleDocsUrlSource | undefined = metaDocsUrl
+    ? 'meta'
+    : sourceDocsUrlSource
   const description = getRuleDescription(name, meta, messages)
+  const isRecommended = recommendedRuleNames.has(name)
+    || meta?.recommended === true
 
   const info: RuleInfo = {
     name,
     plugin,
     docs: {
-      description,
+      description: description.text,
+      descriptionSource: description.source,
+      ...(description.missingDescription ? { descriptionMissing: true } : {}),
+      ...(isRecommended ? { recommended: true } : {}),
       ...(docsUrl ? { url: docsUrl } : {}),
+      ...(docsUrl && docsUrlSource ? { urlSource: docsUrlSource } : {}),
     },
   }
 
@@ -386,7 +836,36 @@ function buildRuleInfo(
   if (deprecated !== undefined)
     info.deprecated = deprecated
 
+  if (!definition && configuredRuleNames.has(name))
+    info.invalid = true
+
   return info
+}
+
+function resolveCoreRuleNames(): string[] {
+  const rules = stylelint.rules as Record<string, unknown>
+  return Object.keys(rules)
+}
+
+async function resolveRecommendedCoreRuleNames(): Promise<Set<string>> {
+  if (_recommendedCoreRulesPromise)
+    return await _recommendedCoreRulesPromise
+
+  _recommendedCoreRulesPromise = (async () => {
+    try {
+      const moduleValue = await import('stylelint-config-recommended')
+      const configValue = (moduleValue.default ?? moduleValue) as unknown
+      if (!isRecord(configValue) || !isRecord(configValue.rules))
+        return new Set<string>()
+
+      return new Set(Object.keys(configValue.rules))
+    }
+    catch {
+      return new Set<string>()
+    }
+  })()
+
+  return await _recommendedCoreRulesPromise
 }
 
 async function resolveCoreRuleDefinition(ruleName: string): Promise<RuleDefinitionLike | undefined> {
@@ -454,19 +933,30 @@ function collectPluginRuleDefinitions(value: unknown): RuleDefinitionLike[] {
   return [...definitions.values()]
 }
 
-async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<string, RuleDefinitionLike>> {
-  const definitions = new Map<string, RuleDefinitionLike>()
+async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<string, PluginRuleDefinitionSource>> {
+  const definitions = new Map<string, PluginRuleDefinitionSource>()
 
   if (!Array.isArray(plugins))
     return definitions
 
   const loaded = await Promise.all(
-    plugins.map(async (pluginEntry) => {
+    plugins.map(async (pluginEntry, index) => {
+      const sourcePlugin = normalizePluginPackageName(getPluginName(pluginEntry, index))
       try {
-        if (typeof pluginEntry === 'string')
-          return await importPluginModule(pluginEntry)
+        if (typeof pluginEntry === 'string') {
+          const packageDocsMetadata = await readPluginPackageDocsMetadata(pluginEntry)
+          return {
+            sourcePlugin,
+            module: await importPluginModule(pluginEntry),
+            packageDocsMetadata,
+          }
+        }
 
-        return pluginEntry
+        return {
+          sourcePlugin,
+          module: pluginEntry,
+          packageDocsMetadata: undefined,
+        }
       }
       catch {
         return undefined
@@ -474,12 +964,20 @@ async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<strin
     }),
   )
 
-  loaded.forEach((pluginModule) => {
-    if (pluginModule === undefined)
+  loaded.forEach((pluginLoaded) => {
+    if (!pluginLoaded)
       return
 
-    collectPluginRuleDefinitions(pluginModule).forEach((definition) => {
-      definitions.set(definition.ruleName, definition)
+    const { sourcePlugin, module, packageDocsMetadata } = pluginLoaded
+
+    collectPluginRuleDefinitions(module).forEach((definition) => {
+      definitions.set(definition.ruleName, {
+        definition,
+        sourcePlugin,
+        sourcePackageName: packageDocsMetadata?.packageName,
+        sourceDocsUrl: packageDocsMetadata?.docsUrl,
+        sourceDocsUrlSource: packageDocsMetadata?.docsUrlSource,
+      })
     })
   })
 
@@ -557,7 +1055,20 @@ function extractConfigs(
     overrideSource.forEach((override, index) => {
       if (!isRecord(override))
         return
-      configs.push(normalizeConfigItem(override, index + 1, `stylelint/resolved/override-${index + 1}`))
+
+      const overrideFiles = toStringArray(override.files)
+      const firstGlob = overrideFiles?.[0]
+      const filesSummary = firstGlob
+        ? (overrideFiles.length > 1
+            ? `${firstGlob} +${overrideFiles.length - 1}`
+            : firstGlob)
+        : undefined
+
+      const fallbackName = filesSummary
+        ? `stylelint/resolved/override-${index + 1} (${filesSummary})`
+        : `stylelint/resolved/override-${index + 1}`
+
+      configs.push(normalizeConfigItem(override, index + 1, fallbackName))
     })
   }
 
@@ -568,8 +1079,26 @@ async function buildRuleCatalog(
   configs: FlatConfigItem[],
   resolvedConfig: StylelintConfigLike,
 ): Promise<Record<string, RuleInfo>> {
-  const ruleNames = [...new Set(configs.flatMap(config => Object.keys(config.rules ?? {})))]
+  const configuredRuleNames = new Set(configs.flatMap(config => Object.keys(config.rules ?? {})))
   const pluginRuleDefinitions = await resolvePluginRuleDefinitions(resolvedConfig.plugins)
+  const coreRuleNames = resolveCoreRuleNames()
+  const recommendedCoreRuleNames = await resolveRecommendedCoreRuleNames()
+  const recommendedPluginRuleNames = Array.from(
+    pluginRuleDefinitions.values(),
+    entry => entry.definition,
+  )
+    .filter(definition => definition.meta?.recommended === true)
+    .map(definition => definition.ruleName)
+  const recommendedRuleNames = new Set<string>([
+    ...recommendedCoreRuleNames,
+    ...recommendedPluginRuleNames,
+  ])
+
+  const ruleNames = [...new Set([
+    ...configuredRuleNames,
+    ...coreRuleNames,
+    ...pluginRuleDefinitions.keys(),
+  ])]
   const coreRuleDefinitions = new Map<string, RuleDefinitionLike>()
 
   await Promise.all(
@@ -583,11 +1112,23 @@ async function buildRuleCatalog(
   )
 
   const ruleInfoEntries = ruleNames.map((ruleName) => {
+    const pluginDefinition = pluginRuleDefinitions.get(ruleName)
     const definition = getRulePlugin(ruleName) === 'stylelint'
       ? coreRuleDefinitions.get(ruleName)
-      : pluginRuleDefinitions.get(ruleName)
+      : pluginDefinition?.definition
 
-    return [ruleName, buildRuleInfo(ruleName, definition)] as const
+    return [
+      ruleName,
+      buildRuleInfo(
+        ruleName,
+        definition,
+        recommendedRuleNames,
+        configuredRuleNames,
+        pluginDefinition?.sourcePlugin,
+        pluginDefinition?.sourceDocsUrl,
+        pluginDefinition?.sourceDocsUrlSource,
+      ),
+    ] as const
   })
 
   return Object.fromEntries(ruleInfoEntries)
@@ -609,11 +1150,19 @@ async function resolveMatchedFiles(
 ): Promise<{ files: MatchedFile[], diagnostics: string[] }> {
   const diagnostics: string[] = []
   const configuredGlobs = toWorkspaceScanGlobs(configs)
-  const scanGlobs = configuredGlobs.length ? configuredGlobs : DEFAULT_WORKSPACE_SCAN_GLOBS
+  const hasGeneralConfig = configs.some(config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config))
+  const scanGlobs = configuredGlobs.length
+    ? [...new Set(hasGeneralConfig ? [...configuredGlobs, ...DEFAULT_WORKSPACE_SCAN_GLOBS] : configuredGlobs)]
+    : DEFAULT_WORKSPACE_SCAN_GLOBS
 
   if (!configuredGlobs.length) {
     diagnostics.push(
       'No explicit `files` globs found in resolved config items; scanned common style-related extensions for workspace matching.',
+    )
+  }
+  else if (hasGeneralConfig) {
+    diagnostics.push(
+      'General config items were detected; included common style-related extensions in workspace scan alongside configured `files` globs.',
     )
   }
 

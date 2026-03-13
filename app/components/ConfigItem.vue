@@ -2,8 +2,9 @@
 import type { FiltersConfigsPage, FlatConfigItem } from '~~/shared/types'
 import { useRouter } from '#app/composables/router'
 import { computed, ref, watchEffect } from 'vue'
-import { getRuleLevel, getRuleOptions } from '~~/shared/rules'
+import { getRuleLevel, getRuleOptions, getRulePrimaryOption } from '~~/shared/rules'
 import { getPluginColor } from '~/composables/color'
+import { payload } from '~/composables/payload'
 import { filtersRules, isGridView } from '~/composables/state'
 import { stringifyUnquoted } from '~/composables/strings'
 
@@ -30,7 +31,13 @@ const META_FIELDS = new Set(['name'])
  * @type {Set<string>}
  */
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
-const STYLELINT_OVERRIDE_NAME_RE = /^stylelint\/resolved\/override-(\d+)$/
+const STYLELINT_OVERRIDE_NAME_RE = /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
+const OVERRIDE_GLOB_PREVIEW_MAX_LENGTH = 24
+const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
+const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
+const FILE_EXTENSION_SUFFIX_RE = /\.[^.]+$/
+const SCOPED_STYLELINT_PLUGIN_RE = /^(@[^/]+)\/stylelint-plugin(?:-(.+))?$/
+const SCOPED_STYLELINT_PACKAGE_RE = /^(@[^/]+)\/stylelint-(.+)$/
 
 const open = defineModel('open', {
   default: true,
@@ -47,9 +54,132 @@ if (!hasShown.value) {
 }
 
 const router = useRouter()
+const knownRulePlugins = computed(() => new Set(Object.values(payload.value.rules).map(rule => rule.plugin)))
+const configRulePlugins = computed(() => {
+  const rules = props.config.rules
+  if (!rules)
+    return new Set<string>()
+
+  return new Set(Object.keys(rules)
+    .filter(name => name.includes('/'))
+    .map(name => name.split('/')[0]!)
+    .filter(Boolean))
+})
+
+function toPluginFilterCandidates(name: string): string[] {
+  const trimmed = name.trim()
+  if (!trimmed)
+    return []
+
+  const candidates = new Set<string>([trimmed])
+  const scopedMatch = SCOPED_STYLELINT_PLUGIN_RE.exec(trimmed)
+  if (scopedMatch) {
+    const scope = scopedMatch[1]
+    const suffix = scopedMatch[2]
+
+    if (scope)
+      candidates.add(scope)
+    if (scope && suffix)
+      candidates.add(`${scope}/${suffix}`)
+    if (suffix)
+      candidates.add(suffix)
+  }
+
+  const scopedPackageMatch = SCOPED_STYLELINT_PACKAGE_RE.exec(trimmed)
+  if (scopedPackageMatch) {
+    const scope = scopedPackageMatch[1]
+    const suffix = scopedPackageMatch[2]
+    if (scope)
+      candidates.add(scope)
+    if (scope && suffix)
+      candidates.add(`${scope}/${suffix}`)
+    if (suffix)
+      candidates.add(suffix)
+  }
+
+  if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
+    candidates.add(trimmed.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
+
+  if (STYLELINT_PACKAGE_PREFIX_RE.test(trimmed) && trimmed !== 'stylelint')
+    candidates.add(trimmed.replace(STYLELINT_PACKAGE_PREFIX_RE, ''))
+
+  const tail = trimmed.split('/').at(-1)
+  if (tail) {
+    candidates.add(tail)
+    const tailWithoutExt = tail.replace(FILE_EXTENSION_SUFFIX_RE, '')
+    if (tailWithoutExt)
+      candidates.add(tailWithoutExt)
+    if (STYLELINT_PLUGIN_PREFIX_RE.test(tail))
+      candidates.add(tail.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
+    if (STYLELINT_PLUGIN_PREFIX_RE.test(tailWithoutExt))
+      candidates.add(tailWithoutExt.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
+    if (STYLELINT_PACKAGE_PREFIX_RE.test(tail) && tail !== 'stylelint')
+      candidates.add(tail.replace(STYLELINT_PACKAGE_PREFIX_RE, ''))
+    if (STYLELINT_PACKAGE_PREFIX_RE.test(tailWithoutExt) && tailWithoutExt !== 'stylelint')
+      candidates.add(tailWithoutExt.replace(STYLELINT_PACKAGE_PREFIX_RE, ''))
+  }
+
+  return [...candidates]
+}
+
+function resolvePluginFilter(name: string): string {
+  const availablePlugins = knownRulePlugins.value
+  const candidates = toPluginFilterCandidates(name)
+
+  for (const candidate of candidates) {
+    if (availablePlugins.has(candidate))
+      return candidate
+  }
+
+  for (const candidate of candidates) {
+    for (const configPlugin of configRulePlugins.value) {
+      if (
+        candidate === configPlugin
+        || candidate.endsWith(`/${configPlugin}`)
+        || candidate.endsWith(`-${configPlugin}`)
+      ) {
+        if (availablePlugins.has(configPlugin))
+          return configPlugin
+      }
+    }
+  }
+
+  return ''
+}
+
 function gotoPlugin(name: string) {
-  filtersRules.plugin = name
+  const pluginFilter = resolvePluginFilter(name)
+  filtersRules.plugin = pluginFilter
+  filtersRules.search = ''
+  filtersRules.state = pluginFilter ? '' : 'using'
+  filtersRules.status = ''
+  filtersRules.fixable = null
   router.push('/rules')
+}
+
+const affectedFilesCount = computed(() => {
+  const configToFiles = payload.value.filesResolved?.configToFiles
+  if (!configToFiles)
+    return props.config.files?.length || 0
+
+  return configToFiles.get(props.config.index)?.size ?? 0
+})
+
+function summarizeOverrideFiles(files: string[] | undefined): string | undefined {
+  if (!files?.length)
+    return undefined
+
+  const [first] = files
+  if (!first)
+    return undefined
+
+  const head = first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
+    ? `${first.slice(0, OVERRIDE_GLOB_PREVIEW_MAX_LENGTH)}…`
+    : first
+
+  return files.length === 1
+    ? head
+    : `${head} +${files.length - 1}`
 }
 
 const extraConfigs = computed(() => {
@@ -73,8 +203,11 @@ const sourceBadge = computed(() => {
 
   const override = STYLELINT_OVERRIDE_NAME_RE.exec(name)
   if (override?.[1]) {
+    const overrideFileSummary = summarizeOverrideFiles(props.config.files)
     return {
-      text: `Override #${override[1]}`,
+      text: overrideFileSummary
+        ? `Override #${override[1]} · ${overrideFileSummary}`
+        : `Override #${override[1]}`,
       colorClass: 'text-amber6 dark:text-amber3',
       bgClass: 'bg-amber:10',
     }
@@ -115,7 +248,7 @@ const sourceBadge = computed(() => {
           <div flex="~ gap-2 items-start">
             <SummarizeItem
               icon="i-ph-file-magnifying-glass-duotone"
-              :number="config.files?.length || 0"
+              :number="affectedFilesCount"
               color="text-yellow5"
               title="Files"
             />
@@ -257,6 +390,7 @@ const sourceBadge = computed(() => {
                 name: ruleName,
                 level: getRuleLevel(value)!,
                 configIndex: index,
+                primaryOption: getRulePrimaryOption(value),
                 options: getRuleOptions(value),
               }"
             />

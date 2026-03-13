@@ -3,7 +3,7 @@ import type { ErrorInfo, FilesGroup, FlatConfigItem, Payload, ResolvedPayload, R
 import { $fetch } from 'ofetch'
 import { computed, ref } from 'vue'
 import { isGeneralConfig, isIgnoreOnlyConfig } from '~~/shared/configs'
-import { getRuleLevel, getRuleOptions } from '~~/shared/rules'
+import { getRuleLevel, getRuleOptions, getRulePrimaryOption } from '~~/shared/rules'
 import { configsOpenState, fileGroupsOpenState } from './state'
 
 const LOG_NAME = '[Config Inspector]'
@@ -113,6 +113,7 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
       Object.entries(config.rules).forEach(([name, raw]) => {
         const value = getRuleLevel(raw)
         if (value) {
+          const primaryOption = getRulePrimaryOption(raw)
           const options = getRuleOptions(raw)
           if (!ruleToState.has(name))
             ruleToState.set(name, [])
@@ -120,6 +121,7 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
             name,
             configIndex: index,
             level: value,
+            primaryOption,
             options,
           })
         }
@@ -158,9 +160,6 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
   if (!payload.files)
     return undefined
 
-  const generalConfigIndex = payload.configs.filter(i => isGeneralConfig(i))
-    .map(i => i.index)
-
   const files: string[] = []
   const globToFiles = new Map<string, Set<string>>()
   const fileToGlobs = new Map<string, Set<string>>()
@@ -187,13 +186,19 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
       fileToConfigs.get(file.filepath)!.add(configIndex)
     }
 
-    const specialConfigs = file.configs.filter(i => !generalConfigIndex.includes(i))
-    const groupId = specialConfigs.join('-')
+    const specialConfigs = file.configs.filter(i => !isGeneralConfig(payload.configs[i]!))
+    const displayConfigs = [...new Set(file.configs)].toSorted((a, b) => a - b)
+    const positiveGlobs = file.globs
+      .filter(glob => !glob.startsWith('!'))
+      .toSorted((a, b) => a.localeCompare(b))
+    const groupId = specialConfigs.length
+      ? `configs:${specialConfigs.join('-')}`
+      : `globs:${positiveGlobs.join('|') || '<general>'}`
     if (!filesGroupMap.has(groupId)) {
       filesGroupMap.set(groupId, {
         id: groupId,
         files: [],
-        configs: specialConfigs.map(i => payload.configs[i]!),
+        configs: displayConfigs.map(i => payload.configs[i]!),
         globs: new Set<string>(),
       })
     }

@@ -24,7 +24,11 @@ const defaultOptions = computed(() => getRuleDefaultOptions(props.state.name))
 
 const comparedOptions = computed(() => deepCompareOptions(props.state.options ?? [], defaultOptions.value))
 
-const initialRuleOptionsView = computed(() => !props.state.options?.length && defaultOptions.value?.length ? 'default' : 'state')
+const hasStateOptions = computed(() => props.state.primaryOption !== undefined || !!props.state.options?.length)
+const hasDefaultOptions = computed(() => !!defaultOptions.value?.length)
+const hasOptionTabs = computed(() => hasStateOptions.value && hasDefaultOptions.value)
+
+const initialRuleOptionsView = computed(() => !hasStateOptions.value && defaultOptions.value?.length ? 'default' : 'state')
 
 const ruleOptions = reactive({
   viewType: initialRuleOptionsView.value as 'state' | 'default',
@@ -82,30 +86,58 @@ function goto() {
         </div>
       </template>
     </div>
-    <template v-if="state.options?.length || defaultOptions?.length">
+    <template v-if="hasStateOptions || defaultOptions?.length">
       <div items-center justify-between md:flex>
         <div flex="~ gap-1" op50>
-          <button
-            v-if="state.options?.length"
-            btn-action
-            :class="{ 'btn-action-active': ruleOptions.viewType === 'state' }"
-            @click="ruleOptions.viewType = 'state'"
-          >
-            <div i-ph-sliders-duotone my1 flex-none op75 />
-            Rule options
-          </button>
-          <button
-            v-if="defaultOptions?.length"
-            btn-action
-            :class="{ 'btn-action-active': ruleOptions.viewType === 'default' }"
-            @click="ruleOptions.viewType = 'default'"
-          >
-            <div i-ph-faders-duotone my1 flex-none op75 />
-            Option defaults
-          </button>
+          <template v-if="hasOptionTabs">
+            <button
+              v-if="hasStateOptions"
+              btn-action
+              :class="{ 'btn-action-active': ruleOptions.viewType === 'state' }"
+              @click="ruleOptions.viewType = 'state'"
+            >
+              <div i-ph-sliders-duotone my1 flex-none op75 />
+              Rule options
+            </button>
+            <button
+              v-if="hasDefaultOptions"
+              btn-action
+              :class="{ 'btn-action-active': ruleOptions.viewType === 'default' }"
+              @click="ruleOptions.viewType = 'default'"
+            >
+              <div i-ph-faders-duotone my1 flex-none op75 />
+              Option defaults
+            </button>
+          </template>
+          <template v-else>
+            <div
+              v-if="hasStateOptions"
+              border="~ base rounded-full"
+              flex="~ gap-2 items-center"
+              bg-active px2 py1 text-sm
+            >
+              <div i-ph-sliders-duotone my1 flex-none op75 />
+              Rule options
+            </div>
+            <div
+              v-else-if="hasDefaultOptions"
+              border="~ base rounded-full"
+              flex="~ gap-2 items-center"
+              bg-active px2 py1 text-sm
+            >
+              <div i-ph-faders-duotone my1 flex-none op75 />
+              Option defaults
+            </div>
+          </template>
         </div>
       </div>
       <template v-if="ruleOptions.viewType === 'state'">
+        <Shiki
+          v-if="state.primaryOption !== undefined"
+          lang="ts"
+          :code="`configuredPrimaryOption: ${stringifyOptions(state.primaryOption)}`"
+          rounded bg-code p2 text-sm
+        />
         <Shiki
           v-for="options, idx of comparedOptions.options"
           :key="idx"
@@ -115,6 +147,9 @@ function goto() {
         />
       </template>
       <template v-if="ruleOptions.viewType === 'default'">
+        <div v-if="!hasStateOptions" op50>
+          No explicit options are configured in this state; showing Stylelint defaults.
+        </div>
         <Shiki
           v-for="options, idx of defaultOptions"
           :key="idx"

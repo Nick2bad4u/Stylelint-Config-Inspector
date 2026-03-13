@@ -228,6 +228,9 @@ importers:
       '@nuxt/eslint':
         specifier: 'catalog:'
         version: 1.15.2(@typescript-eslint/utils@8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(@vue/compiler-sfc@3.5.30)(eslint@10.0.3(jiti@2.6.1))(magicast@0.5.2)(typescript@5.9.3)(vite@8.0.0(@types/node@24.5.2)(esbuild@0.27.4)(jiti@2.6.1)(terser@5.44.0)(yaml@2.8.2))
+      '@nuxt/eslint-plugin':
+        specifier: ^1.15.2
+        version: 1.15.2(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)
       '@shikijs/langs-precompiled':
         specifier: 'catalog:'
         version: 4.0.2
@@ -8254,7 +8257,7 @@ snapshots:
 
   '@nuxt/eslint-plugin@1.15.2(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)':
     dependencies:
-      '@typescript-eslint/types': 8.56.1
+      '@typescript-eslint/types': 8.57.0
       '@typescript-eslint/utils': 8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)
       eslint: 10.0.3(jiti@2.6.1)
     transitivePeerDependencies:

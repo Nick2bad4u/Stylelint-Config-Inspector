@@ -1,13 +1,32 @@
 <script setup lang="ts">
 import { debouncedWatch } from '@vueuse/core'
 import Fuse from 'fuse.js'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { isRuleConfigured, isRuleEnabled } from '~~/shared/rules'
 import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
-import { bpSm, filtersRules as filters, stateStorage } from '~/composables/state'
+import { bpSm, filtersRules as filters, isGridView, stateStorage } from '~/composables/state'
 
 const rules = computed(() => Object.values(payload.value.rules))
+const listColumns = '64px_minmax(220px,360px)_150px_minmax(0,1fr)'
 const pluginNames = computed(() => [...new Set(rules.value.map(i => i.plugin))].filter(Boolean))
+const hasGeneratedDescriptions = computed(() => rules.value.some(rule => rule.docs?.descriptionSource === 'generated' || !!rule.docs?.descriptionMissing))
+
+function hasAnyRuleState(ruleName: string): boolean {
+  return (payload.value.ruleToState.get(ruleName)?.length ?? 0) > 0
+}
+
+function isConfiguredRule(ruleName: string): boolean {
+  return isRuleConfigured(payload.value.ruleToState.get(ruleName))
+}
+
+function hasEnabledRuleState(ruleName: string): boolean {
+  return isRuleEnabled(payload.value.ruleToState.get(ruleName))
+}
+
+const usingRulesCount = computed(() => rules.value.filter(rule => isConfiguredRule(rule.name)).length)
+const unusedRulesCount = computed(() => rules.value.filter(rule => !isConfiguredRule(rule.name)).length)
+const recommendedRulesCount = computed(() => rules.value.filter(rule => !!rule.docs?.recommended).length)
 
 const conditionalFiltered = computed(() => {
   let conditional = rules.value
@@ -24,10 +43,10 @@ const conditionalFiltered = computed(() => {
 
   switch (filters.state) {
     case 'using':
-      conditional = conditional.filter(rule => payload.value.ruleToState.get(rule.name))
+      conditional = conditional.filter(rule => isConfiguredRule(rule.name))
       break
     case 'unused':
-      conditional = conditional.filter(rule => !payload.value.ruleToState.get(rule.name))
+      conditional = conditional.filter(rule => !isConfiguredRule(rule.name))
       break
     case 'overloads':
       conditional = conditional.filter(rule => (payload.value.ruleToState.get(rule.name)?.length || 0) > 1)
@@ -53,7 +72,7 @@ const conditionalFiltered = computed(() => {
 
   switch (filters.status) {
     case 'active':
-      conditional = conditional.filter(rule => !rule.deprecated)
+      conditional = conditional.filter(rule => hasEnabledRuleState(rule.name))
       break
     case 'recommended':
       conditional = conditional.filter(rule => rule.docs?.recommended)
@@ -76,6 +95,25 @@ const fuse = computed(() => new Fuse(conditionalFiltered.value, {
 
 const filtered = ref(conditionalFiltered.value)
 
+if (!filters.search && !filters.plugin && filters.state === 'using' && filters.status === 'active')
+  filters.status = ''
+
+watch(
+  () => filters.status,
+  (status) => {
+    if (status === 'recommended' && filters.state === 'using')
+      filters.state = ''
+  },
+)
+
+watch(
+  () => filters.state,
+  (state) => {
+    if (state === 'unused' && filters.status === 'active')
+      filters.status = ''
+  },
+)
+
 debouncedWatch(
   () => [filters.search, conditionalFiltered.value],
   () => {
@@ -85,13 +123,13 @@ debouncedWatch(
   },
   { debounce: 200 },
 )
-const isDefaultFilters = computed(() => !(filters.search || filters.plugin || filters.state !== 'using' || filters.status !== 'active'))
+const isDefaultFilters = computed(() => !(filters.search || filters.plugin || filters.state !== 'using' || filters.status))
 
 function resetFilters() {
   filters.search = ''
   filters.plugin = ''
   filters.state = 'using'
-  filters.status = 'active'
+  filters.status = ''
 }
 </script>
 
@@ -173,8 +211,22 @@ function resetFilters() {
         >
           <div i-ph-list-checks-duotone />
           <span>{{ filtered.length }}</span>
-          <span op75>rules {{ isDefaultFilters ? 'enabled' : 'filtered' }}</span>
+          <span op75>rules {{ isDefaultFilters ? 'in use' : 'filtered' }}</span>
           <span text-sm op50>out of {{ rules.length }} rules</span>
+        </div>
+        <div
+          flex="~ inline gap-2 items-center"
+          border="~ gray/20 rounded-full" bg-gray:5 px3 py1
+          text-sm
+        >
+          <span op70>Using</span>
+          <span font-mono>{{ usingRulesCount }}</span>
+          <span op40>•</span>
+          <span op70>Unused</span>
+          <span font-mono>{{ unusedRulesCount }}</span>
+          <span op40>•</span>
+          <span op70>Recommended</span>
+          <span font-mono>{{ recommendedRulesCount }}</span>
         </div>
         <button
           v-if="!isDefaultFilters"
@@ -209,10 +261,32 @@ function resetFilters() {
         </button>
       </div>
     </div>
+    <div
+      v-if="!isGridView"
+      mt4 grid="~ gap-x-2"
+      :style="{ gridTemplateColumns: listColumns.replaceAll('_', ' ') }"
+      items-center text-xs op60
+    >
+      <div pr1 text-right>
+        State
+      </div>
+      <div>Rule</div>
+      <div mx2 text-center>
+        Flags
+      </div>
+      <div>Description</div>
+    </div>
+    <div
+      v-if="!isGridView && hasGeneratedDescriptions"
+      mt1 text-xs op60
+    >
+      Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.
+    </div>
     <RuleList
       my4
       :rules="filtered"
-      :get-bind="(name: string) => ({ class: (payload.ruleToState.get(name)?.length || filters.state === 'unused') ? '' : 'op40' })"
+      :list-columns="listColumns"
+      :get-bind="(name: string) => ({ class: (hasAnyRuleState(name) || filters.state === 'unused') ? '' : 'op40' })"
     />
   </div>
 </template>

@@ -8,7 +8,10 @@ const props = defineProps<{
   rules: Partial<RulesRecord> | RuleInfo[]
   getBind?: (ruleName: string) => Record<string, any>
   filter?: (ruleName: string) => boolean
+  listColumns?: string
 }>()
+
+const defaultListColumns = 'max-content_max-content_max-content_minmax(0,1fr)'
 
 const names = computed(() => Array.isArray(props.rules) ? props.rules.map(i => i.name) : Object.keys(props.rules))
 function getRule(name: string) {
@@ -27,10 +30,17 @@ const containerClass = computed(() => {
     return 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-2'
   }
   else {
-    if (Array.isArray(props.rules))
-      return 'grid grid-cols-[max-content_max-content_max-content_1fr] gap-x-2 gap-y-2 items-center'
-    else
-      return 'grid grid-cols-[max-content_max-content_max-content_1fr] gap-x-2 gap-y-2 items-center'
+    return 'grid gap-x-2 gap-y-2 items-center'
+  }
+})
+
+const containerStyle = computed(() => {
+  if (isGridView.value)
+    return undefined
+
+  const columns = props.listColumns || defaultListColumns
+  return {
+    gridTemplateColumns: columns.replaceAll('_', ' '),
   }
 })
 
@@ -44,7 +54,7 @@ const Wrapper = defineComponent({
 </script>
 
 <template>
-  <div :class="containerClass">
+  <div :class="containerClass" :style="containerStyle">
     <template
       v-for="name in names"
       :key="name"

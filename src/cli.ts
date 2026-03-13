@@ -24,7 +24,7 @@ const cli = cac(
 cli
   .command('build', 'Build inspector with current config file for static hosting')
   .option('--config <configFile>', 'Config file path')
-  .option('--files', 'Include matched file paths in payload', { default: false })
+  .option('--files', 'Include matched file paths in payload', { default: true })
   .option('--file <filePath>', 'Alias of --target')
   .option('--target <filePath>', 'Target file path used to resolve effective config', { default: 'stylelint-inspector-target.css' })
   .option('--basePath <basePath>', 'Base directory for globs to resolve. Default to directory of config file if not provided')
@@ -102,7 +102,7 @@ cli
 cli
   .command('', 'Start dev inspector')
   .option('--config <configFile>', 'Config file path')
-  .option('--files', 'Include matched file paths in payload', { default: false })
+  .option('--files', 'Include matched file paths in payload', { default: true })
   .option('--file <filePath>', 'Alias of --target')
   .option('--target <filePath>', 'Target file path used to resolve effective config', { default: 'stylelint-inspector-target.css' })
   .option('--basePath <basePath>', 'Base directory for globs to resolve. Default to directory of config file if not provided')

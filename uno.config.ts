@@ -34,7 +34,7 @@ export default defineConfig({
     'btn-badge': 'badge hover:bg-active',
   },
   theme: {
-    // Reference: https://github.com/eslint/eslint.org/blob/main/src/assets/scss/tokens/themes.scss
+    // Purple-first palette to better align with Stylelint branding.
     colors: {
       neutral: {
         25: '#FCFCFD',
@@ -51,18 +51,18 @@ export default defineConfig({
       },
 
       primary: {
-        DEFAULT: '#8080F2',
-        25: '#FBFBFF',
-        50: '#F6F6FE',
-        100: '#ECECFD',
-        200: '#DEDEFF',
-        300: '#CCCCFA',
-        400: '#B7B7FF',
-        500: '#A0A0F5',
-        600: '#8080F2',
-        700: '#6358D4',
-        800: '#4B32C3',
-        900: '#341BAB',
+        DEFAULT: '#7C3AED',
+        25: '#FBF8FF',
+        50: '#F5EEFF',
+        100: '#EDE0FF',
+        200: '#DCC2FF',
+        300: '#C6A1FF',
+        400: '#AE7AFF',
+        500: '#9553FA',
+        600: '#7C3AED',
+        700: '#6D28D9',
+        800: '#5B21B6',
+        900: '#4C1D95',
       },
 
       warning: {

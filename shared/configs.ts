@@ -3,20 +3,65 @@ import type { FlatConfigItem, MatchedFile } from './types'
 import { ConfigArray } from '@eslint/config-array'
 import { Minimatch } from 'minimatch'
 
-const minimatchOpts: MinimatchOptions = { dot: true, flipNegate: true }
+const minimatchOpts: MinimatchOptions = { dot: true }
 const _matchInstances = new Map<string, Minimatch>()
 
 function minimatch(file: string, pattern: string) {
-  let m = _matchInstances.get(pattern)
+  const normalizedPattern = pattern.startsWith('!')
+    ? pattern.slice(1)
+    : pattern
+
+  let m = _matchInstances.get(normalizedPattern)
   if (!m) {
-    m = new Minimatch(pattern, minimatchOpts)
-    _matchInstances.set(pattern, m)
+    m = new Minimatch(normalizedPattern, minimatchOpts)
+    _matchInstances.set(normalizedPattern, m)
   }
   return m.match(file)
 }
 
 export function getMatchedGlobs(file: string, globs: string[]) {
   return globs.filter(glob => minimatch(file, glob))
+}
+
+function getParentDirectories(filepath: string): string[] {
+  const parts = filepath.split('/').filter(Boolean)
+  if (parts.length <= 1)
+    return []
+
+  const directories: string[] = []
+  for (let i = 1; i < parts.length; i += 1)
+    directories.push(`${parts.slice(0, i).join('/')}/`)
+
+  return directories
+}
+
+function isIgnoredByGlobalIgnoreGlobs(filepath: string, globs: string[]): boolean {
+  const parentDirectories = getParentDirectories(filepath)
+  let isFileIgnored = false
+  const ignoredDirectories = new Map<string, boolean>(
+    parentDirectories.map(directory => [directory, false]),
+  )
+
+  for (const glob of globs) {
+    const isUnignore = glob.startsWith('!')
+    const nextIgnored = !isUnignore
+
+    if (minimatch(filepath, glob))
+      isFileIgnored = nextIgnored
+
+    parentDirectories.forEach((directory) => {
+      if (minimatch(directory, glob))
+        ignoredDirectories.set(directory, nextIgnored)
+    })
+  }
+
+  return isFileIgnored || [...ignoredDirectories.values()].some(Boolean)
+}
+
+function isIgnoredByConfigGlobs(filepath: string, globs: string[]): boolean {
+  const matchedGlobs = getMatchedGlobs(filepath, globs)
+  return matchedGlobs.length > 0
+    && !matchedGlobs.at(-1)?.startsWith('!')
 }
 
 const META_KEYS = new Set(['name', 'index'])
@@ -41,23 +86,40 @@ export function matchFile(
   configs: FlatConfigItem[],
   basePath: string,
 ): MatchedFile {
+  void basePath
+
   const result: MatchedFile = {
     filepath,
     globs: [],
     configs: [],
   }
 
-  const {
-    config: globalMatchedConfig = {},
-    status: globalMatchStatus,
-  } = buildConfigArray(configs, basePath).getConfigWithStatus(filepath)
+  const globalIgnoreGlobs = configs
+    .filter(config => isIgnoreOnlyConfig(config))
+    .flatMap(config => config.ignores ?? [])
+  const isGloballyIgnored = isIgnoredByGlobalIgnoreGlobs(filepath, globalIgnoreGlobs)
+
   configs.forEach((config) => {
+    if (isIgnoreOnlyConfig(config)) {
+      result.globs.push(...getMatchedGlobs(filepath, config.ignores ?? []))
+      return
+    }
+
     const positive = getMatchedGlobs(filepath, config.files || [])
     const negative = getMatchedGlobs(filepath, config.ignores || [])
+    const isIgnoredByConfig = isIgnoredByConfigGlobs(filepath, config.ignores ?? [])
 
-    if (globalMatchStatus === 'matched' && globalMatchedConfig.index?.includes(config.index) && positive.length > 0) {
+    const hasNoFilesConstraint = !config.files?.length
+    const matchesByFiles = hasNoFilesConstraint || positive.length > 0
+
+    const isMatched = !isGloballyIgnored
+      && matchesByFiles
+      && !isIgnoredByConfig
+
+    if (isMatched) {
       result.configs.push(config.index)
-      // push positive globs only when there are configs matched
+
+      // Push positive globs only when config is matched and has explicit files globs.
       result.globs.push(...positive)
     }
 

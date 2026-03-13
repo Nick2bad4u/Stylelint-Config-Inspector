@@ -6,12 +6,12 @@
   "description": "A visual tool for inspecting and understanding your Stylelint configs",
   "license": "Apache-2.0",
   "funding": "https://opencollective.com/stylelint",
-  "homepage": "https://github.com/stylelint/config-inspector#readme",
+  "homepage": "https://github.com/Nick2bad4u/Stylelint-Config-Inspector#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/stylelint/config-inspector.git"
+    "url": "git+https://github.com/Nick2bad4u/Stylelint-Config-Inspector.git"
   },
-  "bugs": "https://github.com/stylelint/config-inspector/issues",
+  "bugs": "https://github.com/Nick2bad4u/Stylelint-Config-Inspector/issues",
   "bin": {
     "@stylelint/config-inspector": "./bin.mjs",
     "stylelint-config-inspector": "./bin.mjs",
@@ -29,7 +29,7 @@
     "prestart": "pnpm build",
     "start": "node bin.mjs",
     "prepack": "pnpm build",
-    "lint": "nuxt prepare && eslint .",
+    "lint": "eslint app shared src tests bin.mjs eslint.config.js nuxt.config.ts tsdown.config.ts uno.config.ts stylelint.config.mjs",
     "test": "vitest",
     "typecheck": "nuxt typecheck"
   },
@@ -104,6 +104,7 @@
     "@iconify-json/vscode-icons": "catalog:",
     "@nodelib/fs.walk": "catalog:",
     "@nuxt/eslint": "catalog:",
+    "@nuxt/eslint-plugin": "^1.15.2",
     "@shikijs/langs-precompiled": "catalog:",
     "@shikijs/transformers": "catalog:",
     "@types/connect": "catalog:",

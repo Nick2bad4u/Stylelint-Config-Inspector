@@ -33,6 +33,13 @@ const predefinedColorMap = {
   'javascript': 50,
   'antfu': 170,
   'markdown': 270,
+  'stylelint': 270,
+  '@stylistic': 285,
+  'stylelint-order': 245,
+  'stylelint-scss': 300,
+  'stylelint-scales': 260,
+  'stylelint-a11y': 185,
+  'stylelint-config-tailwindcss': 205,
 } as Record<string, string | number>
 
 export function getHashColorFromString(

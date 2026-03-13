@@ -7,7 +7,13 @@ import { isFetching, payload } from '~/composables/payload'
 import { filtersRules as filters } from '~/composables/state'
 
 const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate)
-const diagnostics = computed(() => payload.value.diagnostics ?? [])
+const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
+const showTargetFile = computed(() => {
+  const target = payload.value.meta.targetFilePath
+  if (!target)
+    return false
+  return !target.endsWith(DEFAULT_TARGET_FILE)
+})
 
 const rules = computed(() => Object.values(payload.value.rules))
 const deprecatedUsing = computed(() => rules.value
@@ -27,11 +33,23 @@ function showDeprecated() {
 
 <template>
   <ConfigInspectorBadge text-3xl font-200 />
+  <div
+    border="~ violet/20 rounded-full"
+    mt2 inline-flex items-center gap-2
+    bg-violet:8 px3 py1 text-xs text-violet7 dark:text-violet3
+  >
+    <img src="/stylelint/stylelint-icon-black.svg" h-4.5 w-4.5 dark:brightness-185 dark:invert>
+    <span>
+      Built for the
+      <a href="https://stylelint.io" target="_blank" rel="noopener noreferrer" hover:underline>Stylelint ecosystem</a>
+      with best-effort metadata normalization.
+    </span>
+  </div>
   <div v-if="payload.meta.configPath" flex="~ gap-1 items-center" my1 text-sm>
     <span font-mono op35>{{ payload.meta.configPath }}</span>
   </div>
-  <div v-if="payload.meta.targetFilePath" flex="~ gap-1 items-center" my1 text-sm>
-    <span op50>Resolved for</span>
+  <div v-if="showTargetFile" flex="~ gap-1 items-center" my1 text-sm>
+    <span op50>Resolved using target file</span>
     <code font-mono op75>{{ payload.meta.targetFilePath }}</code>
   </div>
   <div flex="~ gap-1 items-center wrap" text-sm>
@@ -47,17 +65,6 @@ function showDeprecated() {
       <div i-svg-spinners-90-ring-with-bg flex-none text-sm />
       Fetching updates...
     </div>
-  </div>
-  <div v-if="diagnostics.length" flex="~ col gap-1" my2 text-sm>
-    <div flex="~ gap-2 items-center" text-amber6 dark:text-amber4>
-      <div i-ph-warning-circle-duotone flex-none />
-      <span>Inspector diagnostics ({{ diagnostics.length }})</span>
-    </div>
-    <ul ml6 list-disc text-amber7 op85 dark:text-amber3>
-      <li v-for="(note, idx) of diagnostics" :key="idx">
-        {{ note }}
-      </li>
-    </ul>
   </div>
   <div flex="~ gap-3 items-center wrap" py4>
     <NuxtLink
@@ -77,13 +84,21 @@ function showDeprecated() {
       Rules
     </NuxtLink>
     <NuxtLink
-      v-if="payload.filesResolved"
       to="/files"
       btn-action px3 py1 text-base
       active-class="btn-action-active"
     >
       <div i-ph-files-duotone flex-none />
       Files
+      <span text-xs op60>(experimental)</span>
+    </NuxtLink>
+    <NuxtLink
+      to="/dev"
+      btn-action px3 py1 text-base
+      active-class="btn-action-active"
+    >
+      <div i-ph-terminal-window-duotone flex-none />
+      Dev
     </NuxtLink>
     <button
       title="Toggle Dark Mode"
@@ -91,7 +106,7 @@ function showDeprecated() {
       @click="toggleDark()"
     />
     <NuxtLink
-      href="https://github.com/stylelint/config-inspector" target="_blank"
+      href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector" target="_blank"
       i-carbon-logo-github text-lg op50 hover:op75
     />
     <template v-if="deprecatedUsing.length">

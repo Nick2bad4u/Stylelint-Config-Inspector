@@ -12,17 +12,32 @@ withDefaults(
 </script>
 
 <template>
-  <div>
+  <div class="flex flex-col gap-1">
     <a
-      href="https://github.com/stylelint/config-inspector" target="_blank"
-      flex="inline gap-2 items-center" mr1
+      href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector" target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-3 border border-violet/25 rounded-2xl bg-violet/8 px-3 py-2 shadow-sm hover:border-violet/35 hover:bg-violet/12"
     >
-      <img src="/favicon.svg" inline-block h-1em> Stylelint Config Inspector
+      <span
+        class="flex items-center justify-center border border-violet/30 rounded-full bg-violet/16 p-2"
+      >
+        <img src="/stylelint/stylelint-icon-black.svg" class="inline-block h-1.15em w-1.15em dark:brightness-185 dark:invert">
+      </span>
+
+      <span class="flex flex-col gap-0.5">
+        <span class="flex items-center gap-2">
+          <img src="/stylelint/stylelint-text-black.svg" class="h-0.95em dark:brightness-185 dark:invert">
+          <span class="text-xs font-medium op70">Config Inspector</span>
+        </span>
+        <span class="text-xs font-medium op70">
+          Rule + config explorer
+        </span>
+      </span>
     </a>
     <a
       v-if="showVersion"
-      ml1 inline-block translate-y--5 text-0.6em font-200 font-mono op50
-      :href="`https://github.com/stylelint/config-inspector/releases/tag/v${version}`" target="_blank"
+      class="ml-2 inline-block text-0.6em font-200 font-mono op55"
+      :href="`https://github.com/Nick2bad4u/Stylelint-Config-Inspector/releases/tag/v${version}`" target="_blank" rel="noopener noreferrer"
     >
       v{{ version }}
     </a>

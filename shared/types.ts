@@ -82,13 +82,19 @@ export interface PayloadMeta {
   configPath: string
 }
 
+export type RuleDescriptionSource = 'meta' | 'message' | 'generated'
+export type RuleDocsUrlSource = 'meta' | 'inferred'
+
 export interface RuleInfo {
   name: string
   plugin: string
   docs?: {
     description?: string
+    descriptionSource?: RuleDescriptionSource
+    descriptionMissing?: boolean
     recommended?: boolean
     url?: string
+    urlSource?: RuleDocsUrlSource
   }
   schema?: unknown
   messages?: Record<string, string>
@@ -125,6 +131,7 @@ export interface RuleConfigState {
   name: string
   configIndex: number
   level: RuleLevel
+  primaryOption?: unknown
   options?: unknown[]
 }
 

@@ -1,4 +1,36 @@
-import type { RuleEntry } from './types'
+import type { RuleConfigState, RuleEntry } from './types'
+
+export function isRuleConfigured(states: RuleConfigState[] | undefined): boolean {
+  return (states?.length ?? 0) > 0
+}
+
+export function isRuleEnabled(states: RuleConfigState[] | undefined): boolean {
+  if (!states?.length)
+    return false
+
+  return states.some(state => state.level !== 'off')
+}
+
+function toRulePrimaryValue(level: RuleEntry | undefined): unknown {
+  return Array.isArray(level)
+    ? level[0]
+    : level
+}
+
+function isDisabledRuleValue(value: unknown): boolean {
+  return value === undefined
+    || value === null
+    || value === false
+    || value === 0
+    || value === 'off'
+}
+
+export function getRulePrimaryOption(level: RuleEntry | undefined): unknown {
+  const primary = toRulePrimaryValue(level)
+  return isDisabledRuleValue(primary)
+    ? undefined
+    : primary
+}
 
 export function getRuleLevel(level: RuleEntry | undefined) {
   const first = Array.isArray(level) ? level[0] : level
