@@ -63,6 +63,15 @@ describe('stylelint adapter', () => {
       'color-no-invalid-hex',
       'alpha-value-notation',
     ])
+    expect(result.payload.rules['alpha-value-notation']).toMatchObject({
+      name: 'alpha-value-notation',
+      plugin: 'stylelint',
+      fixable: true,
+      docs: {
+        description: expect.any(String),
+        url: expect.stringContaining('alpha-value-notation'),
+      },
+    })
     expect(result.payload.configs[0]?.rules).toEqual({
       'color-no-invalid-hex': [true],
       'alpha-value-notation': ['number', { severity: 'warning' }],
@@ -135,9 +144,13 @@ describe('stylelint adapter', () => {
     expect(result.payload.configs[0]?.customSyntax).toBe('postcss-scss')
     expect(Object.keys(result.payload.configs[0]?.plugins ?? {})).toEqual(['local'])
     expect(result.payload.configs[0]).not.toHaveProperty('pluginFunctions')
-    expect(result.payload.rules['color-no-invalid-hex']).toEqual({
+    expect(result.payload.rules['color-no-invalid-hex']).toMatchObject({
       name: 'color-no-invalid-hex',
       plugin: 'stylelint',
+      docs: {
+        description: expect.any(String),
+        url: expect.stringContaining('color-no-invalid-hex'),
+      },
     })
   })
 
@@ -166,8 +179,60 @@ describe('stylelint adapter', () => {
     })
 
     const matched = result.payload.files ?? []
+    expect(result.payload.configs).toHaveLength(2)
+    expect(result.payload.configs[1]).toMatchObject({
+      name: 'stylelint/resolved/override-1',
+      files: ['src/**/*.css'],
+      rules: {
+        'color-no-invalid-hex': true,
+      },
+    })
     expect(matched.some(file => file.filepath === 'src/demo.css')).toBe(true)
     expect(matched.some(file => file.filepath === 'src/ignored.ts')).toBe(false)
+  })
+
+  it('collects plugin rule metadata for configured plugin rules', async () => {
+    const cwd = await createTempProject(`
+      export default {
+        plugins: ["./demo-plugin.mjs"],
+        rules: {
+          "acme/demo-rule": true,
+        },
+      }
+    `, {
+      'demo-plugin.mjs': `
+        export default [
+          {
+            ruleName: 'acme/demo-rule',
+            rule: () => () => {},
+            meta: {
+              description: 'Demo plugin rule',
+              fixable: false,
+              deprecated: false,
+              url: 'https://example.test/acme/demo-rule',
+            },
+          },
+        ]
+      `,
+    })
+
+    const result = await readConfig({
+      cwd,
+      chdir: false,
+      globMatchedFiles: false,
+      targetFilePath: 'src/styles.css',
+    })
+
+    expect(result.payload.rules['acme/demo-rule']).toMatchObject({
+      name: 'acme/demo-rule',
+      plugin: 'acme',
+      fixable: false,
+      deprecated: false,
+      docs: {
+        description: 'Demo plugin rule',
+        url: 'https://example.test/acme/demo-rule',
+      },
+    })
   })
 
   it('matches style files for general configs without files globs', async () => {

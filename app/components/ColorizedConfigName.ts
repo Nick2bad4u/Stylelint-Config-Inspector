@@ -1,6 +1,8 @@
 import { computed, defineComponent, h } from 'vue'
 import { getPluginColor } from '../composables/color'
 
+const CONFIG_NAME_SPLIT_RE = /([:/])/g
+
 export default defineComponent({
   props: {
     name: {
@@ -11,7 +13,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const parts = computed(() => props.name?.split(/([:/])/g).filter(Boolean))
+    const parts = computed(() => props.name?.split(CONFIG_NAME_SPLIT_RE).filter(Boolean))
     return () => {
       if (parts.value) {
         return h('span', parts.value.map((part, i) => h(

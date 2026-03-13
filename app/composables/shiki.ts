@@ -4,6 +4,9 @@ import { createHighlighterCore } from 'shiki/core'
 import { computed, shallowRef } from 'vue'
 import { isDark } from './dark'
 
+const HTML_LT_RE = /</g
+const HTML_GT_RE = />/g
+
 export const shiki = shallowRef<HighlighterCore>()
 
 createHighlighterCore({
@@ -34,5 +37,5 @@ export function useHighlightedGlob(code: () => string) {
 }
 
 export function sanitizeHtml(html: string) {
-  return html.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return html.replace(HTML_LT_RE, '&lt;').replace(HTML_GT_RE, '&gt;')
 }

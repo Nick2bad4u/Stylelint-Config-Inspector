@@ -2,7 +2,9 @@ import type { Config as StylelintConfig } from 'stylelint'
 import type { FlatConfigItem, MatchedFile, Payload, RuleInfo, RulesRecord } from '../../shared/types'
 import type { InspectorAdapter, InspectorReadResult, ReadConfigOptions, ResolveConfigPathOptions, ResolvedConfigPath } from './contracts'
 import { readFile, stat } from 'node:fs/promises'
+import { isAbsolute } from 'node:path'
 import process from 'node:process'
+import { pathToFileURL } from 'node:url'
 import c from 'ansis'
 import { bundleRequire } from 'bundle-require'
 import { findUp } from 'find-up'
@@ -42,6 +44,28 @@ interface ResolveConfigOptionsSubset {
   config?: StylelintConfig
   configBasedir?: string
   customSyntax?: string
+}
+
+interface RuleMetaLike extends Record<string, unknown> {
+  url?: unknown
+  fixable?: unknown
+  deprecated?: unknown
+  description?: unknown
+}
+
+interface RuleFunctionLike {
+  (...args: unknown[]): unknown
+  ruleName?: unknown
+  meta?: unknown
+  messages?: unknown
+  primaryOptionArray?: unknown
+}
+
+interface RuleDefinitionLike {
+  ruleName: string
+  meta?: RuleMetaLike
+  messages?: Record<string, unknown>
+  primaryOptionArray?: unknown[]
 }
 
 const OMITTED_EXTRA_CONFIG_KEYS = new Set([
@@ -181,6 +205,287 @@ function getRulePlugin(ruleName: string): string {
     : 'stylelint'
 }
 
+function toUnknownArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value)
+    ? value
+    : undefined
+}
+
+function toUnknownRecord(value: unknown): Record<string, unknown> | undefined {
+  return isRecord(value)
+    ? value
+    : undefined
+}
+
+function toRuleMeta(value: unknown): RuleMetaLike | undefined {
+  return isRecord(value)
+    ? value
+    : undefined
+}
+
+function toRuleFunction(value: unknown): RuleFunctionLike | undefined {
+  return typeof value === 'function'
+    ? value as RuleFunctionLike
+    : undefined
+}
+
+function getRuleNameFromUnknown(value: unknown): string | undefined {
+  if (isRecord(value) && typeof value.ruleName === 'string')
+    return value.ruleName
+
+  if (typeof value === 'function' && typeof value.ruleName === 'string')
+    return value.ruleName
+
+  return undefined
+}
+
+function toRuleDefinition(value: unknown, fallbackRuleName?: string): RuleDefinitionLike | undefined {
+  const functionValue = toRuleFunction(value)
+  if (functionValue) {
+    const ruleName = typeof functionValue.ruleName === 'string'
+      ? functionValue.ruleName
+      : fallbackRuleName
+
+    if (!ruleName)
+      return undefined
+
+    return {
+      ruleName,
+      meta: toRuleMeta(functionValue.meta),
+      messages: toUnknownRecord(functionValue.messages),
+      primaryOptionArray: toUnknownArray(functionValue.primaryOptionArray),
+    }
+  }
+
+  if (!isRecord(value))
+    return undefined
+
+  const nestedRule = toRuleFunction(value.rule)
+  const ruleName = typeof value.ruleName === 'string'
+    ? value.ruleName
+    : (typeof nestedRule?.ruleName === 'string' ? nestedRule.ruleName : fallbackRuleName)
+
+  if (!ruleName)
+    return undefined
+
+  return {
+    ruleName,
+    meta: toRuleMeta(value.meta) ?? toRuleMeta(nestedRule?.meta),
+    messages: toUnknownRecord(value.messages) ?? toUnknownRecord(nestedRule?.messages),
+    primaryOptionArray: toUnknownArray(value.primaryOptionArray) ?? toUnknownArray(nestedRule?.primaryOptionArray),
+  }
+}
+
+function resolveMessageText(message: unknown): string | undefined {
+  if (typeof message === 'string')
+    return message
+
+  if (typeof message !== 'function')
+    return undefined
+
+  try {
+    const args = Array.from({ length: Math.max(message.length, 0) }).fill('…')
+    const value = message(...args)
+    return typeof value === 'string'
+      ? value
+      : undefined
+  }
+  catch {
+    return undefined
+  }
+}
+
+function normalizeRuleMessages(messages: Record<string, unknown> | undefined): Record<string, string> | undefined {
+  if (!messages)
+    return undefined
+
+  const entries = Object.entries(messages)
+    .map(([key, value]) => {
+      const text = resolveMessageText(value)
+      return text
+        ? [key, text] as const
+        : undefined
+    })
+    .filter((entry): entry is readonly [string, string] => entry !== undefined)
+
+  return entries.length
+    ? Object.fromEntries(entries)
+    : undefined
+}
+
+function humanizeRuleName(ruleName: string): string {
+  return ruleName
+    .replaceAll('/', ' ')
+    .replaceAll('-', ' ')
+}
+
+function getRuleDescription(
+  ruleName: string,
+  meta: RuleMetaLike | undefined,
+  messages: Record<string, string> | undefined,
+): string {
+  if (typeof meta?.description === 'string' && meta.description.trim().length > 0)
+    return meta.description
+
+  const firstMessage = messages
+    ? Object.values(messages).find(message => message.trim().length > 0)
+    : undefined
+
+  return firstMessage ?? humanizeRuleName(ruleName)
+}
+
+function normalizeRuleDeprecated(deprecated: unknown): RuleInfo['deprecated'] | undefined {
+  if (typeof deprecated === 'boolean')
+    return deprecated
+
+  if (isRecord(deprecated))
+    return deprecated as Exclude<RuleInfo['deprecated'], boolean | undefined>
+
+  return undefined
+}
+
+function normalizeRuleFixable(fixable: unknown): RuleInfo['fixable'] | undefined {
+  if (typeof fixable === 'boolean' || typeof fixable === 'string')
+    return fixable
+  return undefined
+}
+
+function buildRuleInfo(
+  name: string,
+  definition: RuleDefinitionLike | undefined,
+): RuleInfo {
+  const plugin = getRulePlugin(name)
+  const meta = definition?.meta
+  const messages = normalizeRuleMessages(definition?.messages)
+  const docsUrl = typeof meta?.url === 'string' && meta.url.length
+    ? meta.url
+    : undefined
+  const description = getRuleDescription(name, meta, messages)
+
+  const info: RuleInfo = {
+    name,
+    plugin,
+    docs: {
+      description,
+      ...(docsUrl ? { url: docsUrl } : {}),
+    },
+  }
+
+  if (messages)
+    info.messages = messages
+
+  const defaultOptions = definition?.primaryOptionArray
+  if (defaultOptions)
+    info.defaultOptions = defaultOptions
+
+  const fixable = normalizeRuleFixable(meta?.fixable)
+  if (fixable !== undefined)
+    info.fixable = fixable
+
+  const deprecated = normalizeRuleDeprecated(meta?.deprecated)
+  if (deprecated !== undefined)
+    info.deprecated = deprecated
+
+  return info
+}
+
+async function resolveCoreRuleDefinition(ruleName: string): Promise<RuleDefinitionLike | undefined> {
+  const rules = stylelint.rules as Record<string, unknown>
+  const ruleEntry = rules[ruleName]
+  if (!ruleEntry)
+    return undefined
+
+  const resolvedRule = await Promise.resolve(ruleEntry).catch(() => undefined)
+  return toRuleDefinition(resolvedRule, ruleName)
+}
+
+async function importPluginModule(pluginPath: string): Promise<unknown> {
+  const specifier = isAbsolute(pluginPath)
+    ? pathToFileURL(pluginPath).href
+    : pluginPath
+
+  const moduleValue = await import(specifier)
+  return moduleValue.default ?? moduleValue
+}
+
+function collectPluginRuleDefinitions(value: unknown): RuleDefinitionLike[] {
+  const queue: unknown[] = []
+  const seen = new Set<unknown>()
+
+  function enqueue(candidate: unknown) {
+    if (candidate === undefined || candidate === null)
+      return
+    if (seen.has(candidate))
+      return
+    seen.add(candidate)
+    queue.push(candidate)
+  }
+
+  enqueue(value)
+
+  const definitions = new Map<string, RuleDefinitionLike>()
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+    if (current === undefined)
+      continue
+
+    if (Array.isArray(current)) {
+      current.forEach(enqueue)
+      continue
+    }
+
+    const definition = toRuleDefinition(current)
+    if (definition)
+      definitions.set(definition.ruleName, definition)
+
+    if (!isRecord(current))
+      continue
+
+    if (isRecord(current.rules))
+      Object.values(current.rules).forEach(enqueue)
+
+    Object.values(current).forEach((entry) => {
+      if (getRuleNameFromUnknown(entry))
+        enqueue(entry)
+    })
+  }
+
+  return [...definitions.values()]
+}
+
+async function resolvePluginRuleDefinitions(plugins: unknown): Promise<Map<string, RuleDefinitionLike>> {
+  const definitions = new Map<string, RuleDefinitionLike>()
+
+  if (!Array.isArray(plugins))
+    return definitions
+
+  const loaded = await Promise.all(
+    plugins.map(async (pluginEntry) => {
+      try {
+        if (typeof pluginEntry === 'string')
+          return await importPluginModule(pluginEntry)
+
+        return pluginEntry
+      }
+      catch {
+        return undefined
+      }
+    }),
+  )
+
+  loaded.forEach((pluginModule) => {
+    if (pluginModule === undefined)
+      return
+
+    collectPluginRuleDefinitions(pluginModule).forEach((definition) => {
+      definitions.set(definition.ruleName, definition)
+    })
+  })
+
+  return definitions
+}
+
 function normalizeConfigItem(
   rawConfig: StylelintConfigLike,
   index: number,
@@ -234,15 +539,22 @@ function normalizeConfigItem(
   return config
 }
 
-function extractConfigs(resolvedConfig: StylelintConfigLike): FlatConfigItem[] {
-  const { overrides, ...rootConfig } = resolvedConfig
+function extractConfigs(
+  resolvedConfig: StylelintConfigLike,
+  sourceConfig?: StylelintConfigLike,
+): FlatConfigItem[] {
+  const { overrides: _resolvedOverrides, ...rootConfig } = resolvedConfig
 
   const configs: FlatConfigItem[] = [
     normalizeConfigItem(rootConfig, 0, 'stylelint/resolved/root'),
   ]
 
-  if (Array.isArray(overrides)) {
-    overrides.forEach((override, index) => {
+  const overrideSource = Array.isArray(sourceConfig?.overrides)
+    ? sourceConfig.overrides
+    : _resolvedOverrides
+
+  if (Array.isArray(overrideSource)) {
+    overrideSource.forEach((override, index) => {
       if (!isRecord(override))
         return
       configs.push(normalizeConfigItem(override, index + 1, `stylelint/resolved/override-${index + 1}`))
@@ -252,22 +564,33 @@ function extractConfigs(resolvedConfig: StylelintConfigLike): FlatConfigItem[] {
   return configs
 }
 
-function buildRuleCatalog(configs: FlatConfigItem[]): Record<string, RuleInfo> {
-  const ruleInfoMap = new Map<string, RuleInfo>()
+async function buildRuleCatalog(
+  configs: FlatConfigItem[],
+  resolvedConfig: StylelintConfigLike,
+): Promise<Record<string, RuleInfo>> {
+  const ruleNames = [...new Set(configs.flatMap(config => Object.keys(config.rules ?? {})))]
+  const pluginRuleDefinitions = await resolvePluginRuleDefinitions(resolvedConfig.plugins)
+  const coreRuleDefinitions = new Map<string, RuleDefinitionLike>()
 
-  configs.forEach((config) => {
-    Object.keys(config.rules ?? {}).forEach((name) => {
-      if (ruleInfoMap.has(name))
-        return
+  await Promise.all(
+    ruleNames
+      .filter(ruleName => getRulePlugin(ruleName) === 'stylelint')
+      .map(async (ruleName) => {
+        const definition = await resolveCoreRuleDefinition(ruleName)
+        if (definition)
+          coreRuleDefinitions.set(ruleName, definition)
+      }),
+  )
 
-      ruleInfoMap.set(name, {
-        name,
-        plugin: getRulePlugin(name),
-      })
-    })
+  const ruleInfoEntries = ruleNames.map((ruleName) => {
+    const definition = getRulePlugin(ruleName) === 'stylelint'
+      ? coreRuleDefinitions.get(ruleName)
+      : pluginRuleDefinitions.get(ruleName)
+
+    return [ruleName, buildRuleInfo(ruleName, definition)] as const
   })
 
-  return Object.fromEntries(ruleInfoMap.entries())
+  return Object.fromEntries(ruleInfoEntries)
 }
 
 function normalizeWorkspaceFilepath(path: string): string {
@@ -466,15 +789,26 @@ class StylelintInspectorAdapter implements InspectorAdapter {
     console.log(MARK_INFO, `Resolving Stylelint config for`, c.blue(targetFilepathRelative))
 
     const dependencies = new Set<string>()
+    const diagnostics: string[] = []
     let config: StylelintConfig | undefined
 
-    if (options.userConfigPath && configPath) {
-      const loaded = await loadConfigFromPath(configPath, basePath)
-      config = loaded.config
-      loaded.dependencies.forEach(dep => dependencies.add(dep))
-    }
-    else if (configPath) {
-      dependencies.add(configPath)
+    if (configPath) {
+      try {
+        const loaded = await loadConfigFromPath(configPath, basePath)
+        config = loaded.config
+
+        if (options.userConfigPath)
+          loaded.dependencies.forEach(dep => dependencies.add(dep))
+        else
+          dependencies.add(configPath)
+      }
+      catch (error) {
+        if (options.userConfigPath)
+          throw error
+
+        dependencies.add(configPath)
+        diagnostics.push('Could not parse discovered config directly; using resolved output only for config item extraction.')
+      }
     }
 
     const resolveOptions: ResolveConfigOptionsSubset = {
@@ -496,8 +830,6 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       if (!isNoConfigError(error))
         throw error
     }
-
-    const diagnostics: string[] = []
 
     if (options.userBasePath) {
       diagnostics.push(
@@ -527,8 +859,11 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       }
     }
 
-    const configs = extractConfigs(resolved as StylelintConfigLike)
-    const rules = buildRuleCatalog(configs)
+    const configs = extractConfigs(
+      resolved as StylelintConfigLike,
+      config as StylelintConfigLike | undefined,
+    )
+    const rules = await buildRuleCatalog(configs, resolved as StylelintConfigLike)
 
     let files: MatchedFile[] | undefined
     if (shouldGlobMatchedFiles) {

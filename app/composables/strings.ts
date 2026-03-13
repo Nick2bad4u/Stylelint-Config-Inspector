@@ -1,3 +1,7 @@
+const MUTED_ARRAY_MARKER_RE = /\[\s*'--',\s*(\S.+),\s*'--'\s*\],?/g
+const JSON_KEY_RE = /"(\w+)":/g
+const DOUBLE_QUOTE_RE = /"/g
+
 export function nth(n: number) {
   const nString = `${n}`
   if (nString.endsWith('1') && n !== 11)
@@ -21,11 +25,11 @@ export function stringifyOptions(object: any) {
    * notation transformer and have the `.line.muted` classes applied
    */
   return stringifyUnquoted(object)
-    .replace(/\[\s*'--',\s*(\S.+),\s*'--'\s*\],?/g, '$1, // [!code muted]')
+    .replace(MUTED_ARRAY_MARKER_RE, '$1, // [!code muted]')
 }
 
 export function stringifyUnquoted(obj: any) {
   return JSON.stringify(obj, null, 2)
-    .replace(/"(\w+)":/g, '$1:')
-    .replace(/"/g, '\'')
+    .replace(JSON_KEY_RE, '$1:')
+    .replace(DOUBLE_QUOTE_RE, '\'')
 }

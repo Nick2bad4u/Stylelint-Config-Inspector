@@ -391,7 +391,7 @@
 
 ---
 
-# Minimal MVP checklist
+## Minimal MVP checklist
 If you want the shortest version, this is the **must-have MVP** subset:
 
 - [ ] Fork repo and confirm baseline works
@@ -410,7 +410,7 @@ If you want the shortest version, this is the **must-have MVP** subset:
 
 ---
 
-# Suggested issue breakdown
+## Suggested issue breakdown
 A good project board could be:
 
 ## Epic 1 — Discovery
@@ -449,7 +449,7 @@ A good project board could be:
 
 ---
 
-# Strong definition of done
+## Strong definition of done
 You can say the project is “done” for MVP when:
 
 - [ ] A user can launch the app/CLI from the fork

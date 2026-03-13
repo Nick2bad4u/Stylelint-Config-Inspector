@@ -48,7 +48,6 @@
  *
  * @see {@link https://github.com/stylelint-types/stylelint-define-config | stylelint-define-config}
  */
-// eslint-disable-next-line import-x/no-named-as-default -- Rule wants packages not in dev, doesn't apply here
 import defineConfig from "stylelint-define-config";
 
 /**

@@ -17,7 +17,8 @@ export default defineNuxtConfig({
   experimental: {
     typedPages: true,
     clientNodeCompat: true,
-    payloadExtraction: true,
+    componentIslands: false,
+    payloadExtraction: 'client',
   },
 
   features: {
