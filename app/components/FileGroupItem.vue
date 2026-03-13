@@ -135,9 +135,7 @@ function goToConfig(idx: number) {
     <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py4>
       <div flex="~ gap-2 items-center">
         <div i-ph-stack-duotone flex-none />
-        <div>
-          Configs Specific to the Files ({{ group.configs.length }})
-        </div>
+        <div>Configs Specific to the Files ({{ group.configs.length }})</div>
       </div>
 
       <div flex="~ col gap-1" ml6 mt--2>
@@ -149,10 +147,7 @@ function goToConfig(idx: number) {
         >
           <VDropdown>
             <button badge text-start>
-              <ColorizedConfigName
-                :name="config.name"
-                :index="idx"
-              />
+              <ColorizedConfigName :name="config.name" :index="idx" />
             </button>
             <template #popper="{ shown }">
               <div v-if="shown" max-h="50vh" min-w-100>
@@ -176,21 +171,13 @@ function goToConfig(idx: number) {
                       op75
                     />
                     <div flex="~ col gap-2">
-                      <div op50>
-                        Applies to files matching
-                      </div>
-                      <div
-                        flex="~ gap-2 items-center wrap"
-                      >
+                      <div op50>Applies to files matching</div>
+                      <div flex="~ gap-2 items-center wrap">
                         <GlobItem
-                          v-for="(
-                            glob, idx2
-                          ) of config.files?.flat()"
+                          v-for="(glob, idx2) of config.files?.flat()"
                           :key="idx2"
                           :glob="glob"
-                          :active="
-                            group.globs.has(glob)
-                          "
+                          :active="group.globs.has(glob)"
                         />
                       </div>
                     </div>

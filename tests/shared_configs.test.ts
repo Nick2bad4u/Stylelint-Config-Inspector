@@ -8,11 +8,7 @@ describe('matchFile', () => {
         { index: 0, files: ['tests/folder/foo.test.ts'] },
         { index: 1, ignores },
       ]
-      return matchFile(
-        'tests/folder/foo.test.ts',
-        configs,
-        process.cwd(),
-      )
+      return matchFile('tests/folder/foo.test.ts', configs, process.cwd())
     }
     it('should match no configs', () => {
       const result = testGlobalIgnores(['tests/**'])

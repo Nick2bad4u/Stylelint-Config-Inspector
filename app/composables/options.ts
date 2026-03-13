@@ -21,43 +21,28 @@ function redundantOption(option: any) {
 }
 
 function deepCompareOption(option: any, defaultOption: any) {
-  if (defaultOption === void 0)
-    return option
-  if (typeof option !== typeof defaultOption)
-    return option
+  if (defaultOption === void 0) return option
+  if (typeof option !== typeof defaultOption) return option
 
-  if (option === defaultOption)
-    return redundantOption(option)
+  if (option === defaultOption) return redundantOption(option)
 
-  if (
-    typeof option === 'object'
-    && option !== null
-    && defaultOption !== null
-  ) {
+  if (typeof option === 'object' && option !== null && defaultOption !== null) {
     if (
       Array.isArray(option)
       && Array.isArray(defaultOption)
       && option.length === defaultOption.length
     ) {
-      if (option.length === 0)
-        return redundantOption(option)
+      if (option.length === 0) return redundantOption(option)
       return option.map((value: any, index: number): any[] =>
         deepCompareOption(value, defaultOption[index]),
       )
-    }
-    else if (!Array.isArray(option) && !Array.isArray(defaultOption)) {
+    } else if (!Array.isArray(option) && !Array.isArray(defaultOption)) {
       const optionKeys = Object.keys(option)
 
-      return optionKeys.reduce(
-        (comparedKeys: Record<string, any>, key) => {
-          comparedKeys[key] = deepCompareOption(
-            option[key],
-            defaultOption[key],
-          )
-          return comparedKeys
-        },
-        {},
-      )
+      return optionKeys.reduce((comparedKeys: Record<string, any>, key) => {
+        comparedKeys[key] = deepCompareOption(option[key], defaultOption[key])
+        return comparedKeys
+      }, {})
     }
   }
 

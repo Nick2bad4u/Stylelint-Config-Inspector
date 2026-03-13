@@ -22,9 +22,7 @@ afterEach(async () => {
 
 describe('ws error payload contract', () => {
   it('returns a valid payload shape when readConfig throws', async () => {
-    const cwd = await mkdtemp(
-      join(tmpdir(), 'stylelint-config-inspector-ws-'),
-    )
+    const cwd = await mkdtemp(join(tmpdir(), 'stylelint-config-inspector-ws-'))
     tempDirs.push(cwd)
 
     resolveConfigPathMock.mockResolvedValue({
@@ -58,13 +56,11 @@ describe('ws error payload contract', () => {
           note.includes('broken config'),
         ),
       ).toBe(true)
-    }
-    finally {
+    } finally {
       await server.watcher.close()
       await new Promise<void>((resolve, reject) => {
-        server.wss.close((error) => {
-          if (error)
-            reject(error)
+        server.wss.close(error => {
+          if (error) reject(error)
           else resolve()
         })
       })

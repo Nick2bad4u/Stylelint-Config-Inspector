@@ -10,8 +10,7 @@ const props = defineProps<{
 
 const icon = computed(() => {
   for (const rule of filepathIconsMap) {
-    if (rule.match.test(props.filepath))
-      return rule.icon
+    if (rule.match.test(props.filepath)) return rule.icon
   }
   return 'i-ph-file-duotone'
 })

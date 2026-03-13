@@ -53,15 +53,10 @@ function goto() {
 <template>
   <div min-w-100 p4 flex="~ col gap-2">
     <div flex="~ gap-1 items-center">
-      <RuleLevelIcon
-        :level="state.level"
-        :config-index="state.configIndex"
-      />
+      <RuleLevelIcon :level="state.level" :config-index="state.configIndex" />
       <span v-if="state.level === 'off'" ml1 op50>Turned </span>
       <span v-else ml1 op50>Set to </span>
-      <span font-mono :class="colors[state.level]">{{
-        state.level
-      }}</span>
+      <span font-mono :class="colors[state.level]">{{ state.level }}</span>
       <template v-if="!isLocal">
         <span op50>in</span>
         <button hover="!color-base" text-gray @click="goto()">
@@ -77,17 +72,13 @@ function goto() {
           <span op50> config item </span>
         </button>
       </template>
-      <div v-else op50>
-        in this config
-      </div>
+      <div v-else op50>in this config</div>
     </div>
     <div v-if="!isLocal" flex="~ gap-2">
       <template v-if="config.files">
         <div i-ph-file-magnifying-glass-duotone my1 flex-none op75 />
         <div flex="~ col gap-2">
-          <div op50>
-            Applies to files matching
-          </div>
+          <div op50>Applies to files matching</div>
           <div flex="~ gap-2 items-center wrap">
             <GlobItem
               v-for="(glob, idx) of config.files?.flat()"
@@ -99,9 +90,7 @@ function goto() {
       </template>
       <template v-else-if="config.rules">
         <div i-ph-files-duotone my1 flex-none op75 />
-        <div op50>
-          Applied generally for all files
-        </div>
+        <div op50>Applied generally for all files</div>
       </template>
     </div>
     <template v-if="hasStateOptions || defaultOptions?.length">
@@ -112,8 +101,7 @@ function goto() {
               v-if="hasStateOptions"
               btn-action
               :class="{
-                'btn-action-active':
-                  ruleOptions.viewType === 'state',
+                'btn-action-active': ruleOptions.viewType === 'state',
               }"
               @click="ruleOptions.viewType = 'state'"
             >
@@ -124,8 +112,7 @@ function goto() {
               v-if="hasDefaultOptions"
               btn-action
               :class="{
-                'btn-action-active':
-                  ruleOptions.viewType === 'default',
+                'btn-action-active': ruleOptions.viewType === 'default',
               }"
               @click="ruleOptions.viewType = 'default'"
             >
@@ -184,8 +171,8 @@ function goto() {
       </template>
       <template v-if="ruleOptions.viewType === 'default'">
         <div v-if="!hasStateOptions" op50>
-          No explicit options are configured in this state; showing
-          Stylelint defaults.
+          No explicit options are configured in this state; showing Stylelint
+          defaults.
         </div>
         <Shiki
           v-for="(options, idx) of defaultOptions"
@@ -201,13 +188,12 @@ function goto() {
     </template>
     <template
       v-if="
-        ruleOptions.viewType === 'state'
-          && comparedOptions.hasRedundantOptions
+        ruleOptions.viewType === 'state' && comparedOptions.hasRedundantOptions
       "
     >
       <div op50>
-        Options <span italic op75>italicized</span> match the default
-        for the rule
+        Options <span italic op75>italicized</span> match the default for the
+        rule
       </div>
     </template>
   </div>

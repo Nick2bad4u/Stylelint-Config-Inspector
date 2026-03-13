@@ -66,19 +66,15 @@ watchEffect(() => {
       configs = [...deduplicatedConfigIndexes]
         .toSorted((a, b) => a - b)
         .map(idx => payload.value.configs[idx]!)
-    }
-    else {
+    } else {
       configs = []
     }
-  }
-  else {
+  } else {
     fileMatchResult.value = null
   }
 
   if (filters.rule) {
-    configs = configs.filter(
-      config => filters.rule! in (config.rules || {}),
-    )
+    configs = configs.filter(config => filters.rule! in (config.rules || {}))
   }
 
   filteredConfigs.value = configs
@@ -99,10 +95,9 @@ const autoCompleteIndex = ref(0)
 const autoCompleteOpen = ref(false)
 
 function autoCompleteConfirm(idx = autoCompleteIndex.value) {
-  if (!autoCompleteOpen.value)
-    return
-  input.value = filters.filepath
-    = autoCompleteFiles.value[idx]?.item || filters.filepath
+  if (!autoCompleteOpen.value) return
+  input.value = filters.filepath =
+    autoCompleteFiles.value[idx]?.item || filters.filepath
   autoCompleteOpen.value = false
 }
 
@@ -113,8 +108,7 @@ function autoCompleteBlur() {
 }
 
 function autoCompleteMove(delta: number) {
-  if (!autoCompleteOpen.value)
-    return
+  if (!autoCompleteOpen.value) return
   autoCompleteIndex.value += delta
   if (autoCompleteIndex.value < 0)
     autoCompleteIndex.value += autoCompleteFiles.value.length
@@ -123,10 +117,7 @@ function autoCompleteMove(delta: number) {
 }
 
 const mergedRules = computed(() => {
-  if (
-    !filters.filepath
-    || stateStorage.value.viewFileMatchType !== 'merged'
-  ) {
+  if (!filters.filepath || stateStorage.value.viewFileMatchType !== 'merged') {
     return {
       all: {},
       common: {},
@@ -139,12 +130,10 @@ const mergedRules = computed(() => {
   const common: RulesRecord = {}
   const specific: RulesRecord = {}
 
-  filteredConfigs.value.forEach((config) => {
-    if (!config.rules)
-      return
+  filteredConfigs.value.forEach(config => {
+    if (!config.rules) return
     Object.assign(all, config.rules)
-    if (config.files)
-      Object.assign(specific, config.rules)
+    if (config.files) Object.assign(specific, config.rules)
     else Object.assign(common, config.rules)
   })
   const specificDisabled = Object.fromEntries(
@@ -158,8 +147,7 @@ const mergedRules = computed(() => {
     ),
   )
   for (const key in all) {
-    if (getRuleLevel(all[key]) === 'off')
-      delete all[key]
+    if (getRuleLevel(all[key]) === 'off') delete all[key]
   }
   return {
     all,
@@ -176,20 +164,14 @@ const HighlightMatch = defineComponent({
   },
   setup(props) {
     return () =>
-      props.matches?.map((match) => {
+      props.matches?.map(match => {
         let start = 0
         const content = match.value || ''
         const array: VNode[] = []
 
         for (const [from, to] of match.indices) {
           if (start < from) {
-            array.push(
-              h(
-                'span',
-                { class: 'op50' },
-                content.slice(start, from),
-              ),
-            )
+            array.push(h('span', { class: 'op50' }, content.slice(start, from)))
           }
           array.push(
             h(
@@ -201,9 +183,7 @@ const HighlightMatch = defineComponent({
           start = to + 1
         }
         if (start < content.length) {
-          array.push(
-            h('span', { class: 'op50' }, content.slice(start)),
-          )
+          array.push(h('span', { class: 'op50' }, content.slice(start)))
         }
         return array
       })
@@ -222,8 +202,7 @@ debouncedWatch(
 watch(
   () => filters.filepath,
   () => {
-    if (filters.filepath !== input.value)
-      input.value = filters.filepath
+    if (filters.filepath !== input.value) input.value = filters.filepath
   },
   { flush: 'sync' },
 )
@@ -238,9 +217,7 @@ onMounted(async () => {
       (_, idx) => idx === index,
     )
     await nextTick()
-    configEls
-      .get(index)
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    configEls.get(index)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 })
 </script>
@@ -267,7 +244,7 @@ onMounted(async () => {
           @keydown.down.prevent="autoCompleteMove(1)"
           @keydown.up.prevent="autoCompleteMove(-1)"
           @keydown.enter.prevent="autoCompleteConfirm()"
-        >
+        />
         <div
           absolute
           bottom-0
@@ -333,25 +310,19 @@ onMounted(async () => {
             <template v-if="!filteredConfigs.length">
               <span op50>is not included or has been ignored</span>
             </template>
-            <template
-              v-else-if="
-                stateStorage.viewFileMatchType === 'configs'
-              "
-            >
+            <template v-else-if="stateStorage.viewFileMatchType === 'configs'">
               <span op50>matched with</span>
-              <span>{{ filteredConfigs.length }} /
-                {{ payload.configs.length }}</span>
+              <span
+                >{{ filteredConfigs.length }} /
+                {{ payload.configs.length }}</span
+              >
               <span op50>config items</span>
             </template>
             <template v-else>
               <span op50>matched with total </span>
-              <span>{{
-                Object.keys(mergedRules.all).length
-              }}</span>
+              <span>{{ Object.keys(mergedRules.all).length }}</span>
               <span op50>rules, </span>
-              <span>{{
-                Object.keys(mergedRules.specific).length
-              }}</span>
+              <span>{{ Object.keys(mergedRules.specific).length }}</span>
               <span op50>of them are specific to the file</span>
             </template>
             <button
@@ -360,8 +331,8 @@ onMounted(async () => {
               op25
               hover:op100
               @click="
-                filters.filepath = '';
-                input = '';
+                filters.filepath = ''
+                input = ''
               "
             />
           </div>
@@ -400,8 +371,8 @@ onMounted(async () => {
               btn-action
               border-none
               @click="
-                stateStorage.viewFileMatchType
-                  = stateStorage.viewFileMatchType === 'configs'
+                stateStorage.viewFileMatchType =
+                  stateStorage.viewFileMatchType === 'configs'
                     ? 'merged'
                     : 'configs'
               "
@@ -419,8 +390,8 @@ onMounted(async () => {
               btn-action
               border-none
               @click="
-                stateStorage.viewFileMatchType
-                  = stateStorage.viewFileMatchType === 'configs'
+                stateStorage.viewFileMatchType =
+                  stateStorage.viewFileMatchType === 'configs'
                     ? 'merged'
                     : 'configs'
               "
@@ -433,8 +404,7 @@ onMounted(async () => {
 
         <label
           v-if="
-            filters.filepath
-              && stateStorage.viewFileMatchType === 'configs'
+            filters.filepath && stateStorage.viewFileMatchType === 'configs'
           "
           flex="~ gap-2 items-center"
           ml2
@@ -444,26 +414,18 @@ onMounted(async () => {
             :checked="stateStorage.showSpecificOnly"
             type="checkbox"
             @change="
-              stateStorage.showSpecificOnly = !!(
-                $event.target as any
-              ).checked
+              stateStorage.showSpecificOnly = !!($event.target as any).checked
             "
-          >
+          />
           <span op50>Show Specific Rules Only</span>
         </label>
         <div flex-auto />
-        <button btn-action px3 @click="expandAll">
-          Expand All
-        </button>
-        <button btn-action px3 @click="collapseAll">
-          Collapse All
-        </button>
+        <button btn-action px3 @click="expandAll">Expand All</button>
+        <button btn-action px3 @click="collapseAll">Collapse All</button>
       </div>
 
       <template v-if="!filteredConfigs.length">
-        <div mt5 italic op50>
-          No matched config items.
-        </div>
+        <div mt5 italic op50>No matched config items.</div>
         <template v-if="fileMatchResult?.globs.length">
           <div>Ignored by globs:</div>
           <div flex="~ gap-2 items-center wrap">
@@ -479,16 +441,9 @@ onMounted(async () => {
       <template v-else>
         <!-- Merged Rules -->
         <template
-          v-if="
-            filters.filepath
-              && stateStorage.viewFileMatchType === 'merged'
-          "
+          v-if="filters.filepath && stateStorage.viewFileMatchType === 'merged'"
         >
-          <details
-            class="flat-config-item"
-            border="~ base rounded-lg"
-            relative
-          >
+          <details class="flat-config-item" border="~ base rounded-lg" relative>
             <summary block>
               <div
                 flex="~ gap-2 items-start"
@@ -543,35 +498,21 @@ onMounted(async () => {
                 rules)
               </div>
             </summary>
-            <template
-              v-if="
-                Object.keys(mergedRules.specificDisabled).length
-              "
-            >
+            <template v-if="Object.keys(mergedRules.specificDisabled).length">
               <div px4 pt4>
                 Disables ({{
-                  Object.keys(mergedRules.specificDisabled)
-                    .length
+                  Object.keys(mergedRules.specificDisabled).length
                 }})
               </div>
               <RuleList
                 m4
-                :get-bind="
-                  (name: string) => ({ class: 'op50' })
-                "
+                :get-bind="(name: string) => ({ class: 'op50' })"
                 :rules="mergedRules.specificDisabled"
               />
             </template>
-            <template
-              v-if="
-                Object.keys(mergedRules.specificEnabled).length
-              "
-            >
+            <template v-if="Object.keys(mergedRules.specificEnabled).length">
               <div px4 pt4>
-                Enables ({{
-                  Object.keys(mergedRules.specificEnabled)
-                    .length
-                }})
+                Enables ({{ Object.keys(mergedRules.specificEnabled).length }})
               </div>
               <RuleList m4 :rules="mergedRules.specificEnabled" />
             </template>
@@ -580,23 +521,17 @@ onMounted(async () => {
 
         <!-- Config Items -->
         <template v-else>
-          <template
-            v-for="(config, idx) in payload.configs"
-            :key="idx"
-          >
+          <template v-for="(config, idx) in payload.configs" :key="idx">
             <ConfigItem
               v-show="
                 filteredConfigs.includes(config)
-                  && (!filters.filepath
-                    || !stateStorage.showSpecificOnly
-                    || config.files)
+                && (!filters.filepath
+                  || !stateStorage.showSpecificOnly
+                  || config.files)
               "
               :ref="
-                (el) => {
-                  configEls.set(
-                    idx,
-                    (el as ComponentPublicInstance)?.$el,
-                  );
+                el => {
+                  configEls.set(idx, (el as ComponentPublicInstance)?.$el)
                 }
               "
               v-model:open="configsOpenState[idx]"
@@ -605,7 +540,7 @@ onMounted(async () => {
               :filters="filters"
               :active="!!(filters.filepath && config.files)"
               :matched-globs="fileMatchResult?.globs"
-              @badge-click="(e) => (filters.rule = e)"
+              @badge-click="e => (filters.rule = e)"
             />
           </template>
         </template>

@@ -45,9 +45,7 @@ describe('rule state semantics', () => {
     expect(getRulePrimaryOption(['always', { severity: 'warning' }])).toBe(
       'always',
     )
-    expect(
-      getRulePrimaryOption([null, { except: ['foo'] }]),
-    ).toBeUndefined()
+    expect(getRulePrimaryOption([null, { except: ['foo'] }])).toBeUndefined()
     expect(getRulePrimaryOption(null)).toBeUndefined()
   })
 })

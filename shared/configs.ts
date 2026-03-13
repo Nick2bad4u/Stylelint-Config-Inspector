@@ -7,9 +7,7 @@ const minimatchOpts: MinimatchOptions = { dot: true }
 const _matchInstances = new Map<string, Minimatch>()
 
 function minimatch(file: string, pattern: string) {
-  const normalizedPattern = pattern.startsWith('!')
-    ? pattern.slice(1)
-    : pattern
+  const normalizedPattern = pattern.startsWith('!') ? pattern.slice(1) : pattern
 
   let m = _matchInstances.get(normalizedPattern)
   if (!m) {
@@ -25,8 +23,7 @@ export function getMatchedGlobs(file: string, globs: string[]) {
 
 function getParentDirectories(filepath: string): string[] {
   const parts = filepath.split('/').filter(Boolean)
-  if (parts.length <= 1)
-    return []
+  if (parts.length <= 1) return []
 
   const directories: string[] = []
   for (let i = 1; i < parts.length; i += 1)
@@ -49,10 +46,9 @@ function isIgnoredByGlobalIgnoreGlobs(
     const isUnignore = glob.startsWith('!')
     const nextIgnored = !isUnignore
 
-    if (minimatch(filepath, glob))
-      isFileIgnored = nextIgnored
+    if (minimatch(filepath, glob)) isFileIgnored = nextIgnored
 
-    parentDirectories.forEach((directory) => {
+    parentDirectories.forEach(directory => {
       if (minimatch(directory, glob))
         ignoredDirectories.set(directory, nextIgnored)
     })
@@ -105,11 +101,9 @@ export function matchFile(
     globalIgnoreGlobs,
   )
 
-  configs.forEach((config) => {
+  configs.forEach(config => {
     if (isIgnoreOnlyConfig(config)) {
-      result.globs.push(
-        ...getMatchedGlobs(filepath, config.ignores ?? []),
-      )
+      result.globs.push(...getMatchedGlobs(filepath, config.ignores ?? []))
       return
     }
 
@@ -123,8 +117,7 @@ export function matchFile(
     const hasNoFilesConstraint = !config.files?.length
     const matchesByFiles = hasNoFilesConstraint || positive.length > 0
 
-    const isMatched
-      = !isGloballyIgnored && matchesByFiles && !isIgnoredByConfig
+    const isMatched = !isGloballyIgnored && matchesByFiles && !isIgnoredByConfig
 
     if (isMatched) {
       result.configs.push(config.index)

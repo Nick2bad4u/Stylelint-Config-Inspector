@@ -35,8 +35,8 @@ const META_FIELDS = new Set(['name'])
  * @type {Set<string>}
  */
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
-const STYLELINT_OVERRIDE_NAME_RE
-  = /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
+const STYLELINT_OVERRIDE_NAME_RE =
+  /^stylelint\/resolved\/override-(\d+)(?:\s+\(.+\))?$/
 const OVERRIDE_GLOB_PREVIEW_MAX_LENGTH = 24
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
@@ -64,8 +64,7 @@ const knownRulePlugins = computed(
 )
 const configRulePlugins = computed(() => {
   const rules = props.config.rules
-  if (!rules)
-    return new Set<string>()
+  if (!rules) return new Set<string>()
 
   return new Set(
     Object.keys(rules)
@@ -77,8 +76,7 @@ const configRulePlugins = computed(() => {
 
 function toPluginFilterCandidates(name: string): string[] {
   const trimmed = name.trim()
-  if (!trimmed)
-    return []
+  if (!trimmed) return []
 
   const candidates = new Set<string>([trimmed])
   const scopedMatch = SCOPED_STYLELINT_PLUGIN_RE.exec(trimmed)
@@ -86,24 +84,18 @@ function toPluginFilterCandidates(name: string): string[] {
     const scope = scopedMatch[1]
     const suffix = scopedMatch[2]
 
-    if (scope)
-      candidates.add(scope)
-    if (scope && suffix)
-      candidates.add(`${scope}/${suffix}`)
-    if (suffix)
-      candidates.add(suffix)
+    if (scope) candidates.add(scope)
+    if (scope && suffix) candidates.add(`${scope}/${suffix}`)
+    if (suffix) candidates.add(suffix)
   }
 
   const scopedPackageMatch = SCOPED_STYLELINT_PACKAGE_RE.exec(trimmed)
   if (scopedPackageMatch) {
     const scope = scopedPackageMatch[1]
     const suffix = scopedPackageMatch[2]
-    if (scope)
-      candidates.add(scope)
-    if (scope && suffix)
-      candidates.add(`${scope}/${suffix}`)
-    if (suffix)
-      candidates.add(suffix)
+    if (scope) candidates.add(scope)
+    if (scope && suffix) candidates.add(`${scope}/${suffix}`)
+    if (suffix) candidates.add(suffix)
   }
 
   if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
@@ -116,14 +108,11 @@ function toPluginFilterCandidates(name: string): string[] {
   if (tail) {
     candidates.add(tail)
     const tailWithoutExt = tail.replace(FILE_EXTENSION_SUFFIX_RE, '')
-    if (tailWithoutExt)
-      candidates.add(tailWithoutExt)
+    if (tailWithoutExt) candidates.add(tailWithoutExt)
     if (STYLELINT_PLUGIN_PREFIX_RE.test(tail))
       candidates.add(tail.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
     if (STYLELINT_PLUGIN_PREFIX_RE.test(tailWithoutExt)) {
-      candidates.add(
-        tailWithoutExt.replace(STYLELINT_PLUGIN_PREFIX_RE, ''),
-      )
+      candidates.add(tailWithoutExt.replace(STYLELINT_PLUGIN_PREFIX_RE, ''))
     }
     if (STYLELINT_PACKAGE_PREFIX_RE.test(tail) && tail !== 'stylelint')
       candidates.add(tail.replace(STYLELINT_PACKAGE_PREFIX_RE, ''))
@@ -131,9 +120,7 @@ function toPluginFilterCandidates(name: string): string[] {
       STYLELINT_PACKAGE_PREFIX_RE.test(tailWithoutExt)
       && tailWithoutExt !== 'stylelint'
     ) {
-      candidates.add(
-        tailWithoutExt.replace(STYLELINT_PACKAGE_PREFIX_RE, ''),
-      )
+      candidates.add(tailWithoutExt.replace(STYLELINT_PACKAGE_PREFIX_RE, ''))
     }
   }
 
@@ -145,8 +132,7 @@ function resolvePluginFilter(name: string): string {
   const candidates = toPluginFilterCandidates(name)
 
   for (const candidate of candidates) {
-    if (availablePlugins.has(candidate))
-      return candidate
+    if (availablePlugins.has(candidate)) return candidate
   }
 
   for (const candidate of candidates) {
@@ -156,8 +142,7 @@ function resolvePluginFilter(name: string): string {
         || candidate.endsWith(`/${configPlugin}`)
         || candidate.endsWith(`-${configPlugin}`)
       ) {
-        if (availablePlugins.has(configPlugin))
-          return configPlugin
+        if (availablePlugins.has(configPlugin)) return configPlugin
       }
     }
   }
@@ -177,8 +162,7 @@ function gotoPlugin(name: string) {
 
 const affectedFilesCount = computed(() => {
   const configToFiles = payload.value.filesResolved?.configToFiles
-  if (!configToFiles)
-    return props.config.files?.length || 0
+  if (!configToFiles) return props.config.files?.length || 0
 
   return configToFiles.get(props.config.index)?.size ?? 0
 })
@@ -186,15 +170,13 @@ const affectedFilesCount = computed(() => {
 function summarizeOverrideFiles(
   files: string[] | undefined,
 ): string | undefined {
-  if (!files?.length)
-    return undefined
+  if (!files?.length) return undefined
 
   const [first] = files
-  if (!first)
-    return undefined
+  if (!first) return undefined
 
-  const head
-    = first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
+  const head =
+    first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
       ? `${first.slice(0, OVERRIDE_GLOB_PREVIEW_MAX_LENGTH)}…`
       : first
 
@@ -213,9 +195,7 @@ const extraConfigs = computed(() => {
     'index',
   ]
   return Object.fromEntries(
-    Object.entries(props.config).filter(
-      ([key]) => !ignoredKeys.includes(key),
-    ),
+    Object.entries(props.config).filter(([key]) => !ignoredKeys.includes(key)),
   )
 })
 
@@ -293,24 +273,13 @@ const sourceBadge = computed(() => {
           op50
           transition
         />
-        <div
-          flex
-          flex-auto
-          flex-col
-          flex-wrap
-          gap-3
-          md:flex-row
-          md:justify-end
-        >
+        <div flex flex-auto flex-col flex-wrap gap-3 md:flex-row md:justify-end>
           <span
             :class="config.name ? '' : 'op50 italic'"
             flex="~ gap-2 items-center"
             flex-1
           >
-            <ColorizedConfigName
-              v-if="config.name"
-              :name="config.name"
-            />
+            <ColorizedConfigName v-if="config.name" :name="config.name" />
             <span v-else>anonymous #{{ index + 1 }}</span>
             <code
               v-if="sourceBadge"
@@ -318,10 +287,7 @@ const sourceBadge = computed(() => {
               px2
               py0.2
               text-xs
-              :class="[
-                sourceBadge.colorClass,
-                sourceBadge.bgClass,
-              ]"
+              :class="[sourceBadge.colorClass, sourceBadge.bgClass]"
             >
               {{ sourceBadge.text }}
             </code>
@@ -409,9 +375,7 @@ const sourceBadge = computed(() => {
       <div v-if="config.plugins" flex="~ gap-2 items-start">
         <div i-ph-plug-duotone my1 flex-none />
         <div flex="~ col gap-2">
-          <div>
-            Plugins ({{ Object.keys(config.plugins).length }})
-          </div>
+          <div>Plugins ({{ Object.keys(config.plugins).length }})</div>
           <div flex="~ gap-2 items-center wrap">
             <button
               v-for="(name, idx) of Object.keys(config.plugins)"
@@ -477,7 +441,7 @@ const sourceBadge = computed(() => {
           <div
             v-if="
               Object.keys(config).some(
-                (key) =>
+                key =>
                   key !== 'ignores'
                   && !CONFIG_INSPECTOR_FIELDS.has(key)
                   && !META_FIELDS.has(key),
@@ -486,9 +450,7 @@ const sourceBadge = computed(() => {
           >
             Ignore files globally
           </div>
-          <div v-else>
-            Ignore
-          </div>
+          <div v-else>Ignore</div>
           <div flex="~ gap-2 items-center wrap">
             <GlobItem
               v-for="(glob, idx) of config.ignores"
@@ -508,7 +470,7 @@ const sourceBadge = computed(() => {
           py2
           :class="isGridView ? 'pl6' : ''"
           :rules="config.rules"
-          :filter="(name) => !filters?.rule || filters.rule === name"
+          :filter="name => !filters?.rule || filters.rule === name"
           :get-bind="
             (name: string) => ({
               class:
@@ -543,16 +505,9 @@ const sourceBadge = computed(() => {
           </template>
         </RuleList>
         <div>
-          <button
-            v-if="filters?.rule"
-            ml8
-            op50
-            @click="emit('badgeClick', '')"
-          >
+          <button v-if="filters?.rule" ml8 op50 @click="emit('badgeClick', '')">
             ...{{
-              Object.keys(config.rules).filter(
-                (r) => r !== filters?.rule,
-              ).length
+              Object.keys(config.rules).filter(r => r !== filters?.rule).length
             }}
             others rules are hidden
           </button>
@@ -564,10 +519,7 @@ const sourceBadge = computed(() => {
         <div flex="~ col gap-2" w-full>
           <div>Additional configurations</div>
           <template v-for="(v, k) in extraConfigs" :key="k">
-            <div
-              border="~ base rounded-xl"
-              bg="white/2 dark:black/8"
-            >
+            <div border="~ base rounded-xl" bg="white/2 dark:black/8">
               <div border="b base" p2 px3 text-sm op65>
                 {{ k }}
               </div>

@@ -23,8 +23,8 @@ const hasGeneratedDescriptions = computed(() =>
       || !!rule.docs?.descriptionMissing,
   ),
 )
-const descriptionsNoticeText
-  = 'Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.'
+const descriptionsNoticeText =
+  'Descriptions are best-effort: Stylelint and many plugins do not ship consistent rule description metadata. Chat icon = message-derived, asterisk = generated fallback.'
 
 function hasAnyRuleState(ruleName: string): boolean {
   return (payload.value.ruleToState.get(ruleName)?.length ?? 0) > 0
@@ -39,8 +39,7 @@ function hasEnabledRuleState(ruleName: string): boolean {
 }
 
 function getRuleRowClass(ruleName: string): string {
-  if (!hasAnyRuleState(ruleName) && filters.state !== 'unused')
-    return 'op42'
+  if (!hasAnyRuleState(ruleName) && filters.state !== 'unused') return 'op42'
 
   if (hasAnyRuleState(ruleName) && !hasEnabledRuleState(ruleName))
     return 'rule-muted-off'
@@ -62,32 +61,23 @@ const conditionalFiltered = computed(() => {
   let conditional = rules.value
 
   if (filters.plugin) {
-    conditional = conditional.filter(
-      rule => rule.plugin === filters.plugin,
-    )
+    conditional = conditional.filter(rule => rule.plugin === filters.plugin)
   }
 
   if (filters.fixable != null) {
-    conditional = conditional.filter(
-      rule => !!rule.fixable === filters.fixable,
-    )
+    conditional = conditional.filter(rule => !!rule.fixable === filters.fixable)
   }
 
   switch (filters.state) {
     case 'using':
-      conditional = conditional.filter(rule =>
-        isConfiguredRule(rule.name),
-      )
+      conditional = conditional.filter(rule => isConfiguredRule(rule.name))
       break
     case 'unused':
-      conditional = conditional.filter(
-        rule => !isConfiguredRule(rule.name),
-      )
+      conditional = conditional.filter(rule => !isConfiguredRule(rule.name))
       break
     case 'overloads':
       conditional = conditional.filter(
-        rule =>
-          (payload.value.ruleToState.get(rule.name)?.length || 0) > 1,
+        rule => (payload.value.ruleToState.get(rule.name)?.length || 0) > 1,
       )
       break
     case 'error':
@@ -99,23 +89,18 @@ const conditionalFiltered = computed(() => {
       break
     case 'warn':
       conditional = conditional.filter(rule =>
-        payload.value.ruleToState
-          .get(rule.name)
-          ?.some(i => i.level === 'warn'),
+        payload.value.ruleToState.get(rule.name)?.some(i => i.level === 'warn'),
       )
       break
     case 'off':
       conditional = conditional.filter(rule =>
-        payload.value.ruleToState
-          .get(rule.name)
-          ?.some(i => i.level === 'off'),
+        payload.value.ruleToState.get(rule.name)?.some(i => i.level === 'off'),
       )
       break
     case 'off-only':
-      conditional = conditional.filter((rule) => {
+      conditional = conditional.filter(rule => {
         const states = payload.value.ruleToState.get(rule.name)
-        if (!states?.length)
-          return false
+        if (!states?.length) return false
         return states.every(i => i.level === 'off')
       })
       break
@@ -123,9 +108,7 @@ const conditionalFiltered = computed(() => {
 
   switch (filters.status) {
     case 'active':
-      conditional = conditional.filter(rule =>
-        hasEnabledRuleState(rule.name),
-      )
+      conditional = conditional.filter(rule => hasEnabledRuleState(rule.name))
       break
     case 'recommended':
       conditional = conditional.filter(rule => rule.docs?.recommended)
@@ -162,7 +145,7 @@ if (
 
 watch(
   () => filters.status,
-  (status) => {
+  status => {
     if (status === 'recommended' && filters.state === 'using')
       filters.state = ''
   },
@@ -170,17 +153,15 @@ watch(
 
 watch(
   () => filters.state,
-  (state) => {
-    if (state === 'unused' && filters.status === 'active')
-      filters.status = ''
+  state => {
+    if (state === 'unused' && filters.status === 'active') filters.status = ''
   },
 )
 
 debouncedWatch(
   () => [filters.search, conditionalFiltered.value],
   () => {
-    if (!filters.search)
-      return (filtered.value = conditionalFiltered.value)
+    if (!filters.search) return (filtered.value = conditionalFiltered.value)
     filtered.value = fuse.value.search(filters.search).map(i => i.item)
   },
   { debounce: 200 },
@@ -218,7 +199,7 @@ function resetFilters() {
           py2
           pl10
           outline-none
-        >
+        />
         <div
           absolute
           bottom-0
@@ -232,9 +213,7 @@ function resetFilters() {
         </div>
       </div>
       <div grid="~ cols-[max-content_1fr] gap-2" my2 items-center>
-        <div text-right text-sm op50>
-          Plugins
-        </div>
+        <div text-right text-sm op50>Plugins</div>
         <OptionSelectGroup
           v-model="filters.plugin"
           :options="['', ...pluginNames]"
@@ -242,7 +221,7 @@ function resetFilters() {
           :classes="['', ...pluginNames.map(() => 'op85!')]"
           :props="[
             {},
-            ...pluginNames.map((i) => ({
+            ...pluginNames.map(i => ({
               class: 'font-mono saturate-100! transition-colors',
               style: {
                 color: getPluginColor(i),
@@ -258,9 +237,7 @@ function resetFilters() {
             })),
           ]"
         />
-        <div text-right text-sm op50>
-          Usage
-        </div>
+        <div text-right text-sm op50>Usage</div>
         <OptionSelectGroup
           v-model="filters.state"
           :options="[
@@ -288,24 +265,18 @@ function resetFilters() {
             <div class="flex items-center">
               <div ml--1 mr-1 flex items-center>
                 <RuleLevelIcon
-                  v-if="
-                    value === 'error'
-                      || value === 'overloads'
-                  "
+                  v-if="value === 'error' || value === 'overloads'"
                   level="error"
                 />
                 <RuleLevelIcon
-                  v-if="
-                    value === 'warn'
-                      || value === 'overloads'
-                  "
+                  v-if="value === 'warn' || value === 'overloads'"
                   level="warn"
                 />
                 <RuleLevelIcon
                   v-if="
                     value === 'off'
-                      || value === 'off-only'
-                      || value === 'overloads'
+                    || value === 'off-only'
+                    || value === 'overloads'
                   "
                   level="off"
                 />
@@ -314,25 +285,11 @@ function resetFilters() {
             </div>
           </template>
         </OptionSelectGroup>
-        <div text-right text-sm op50>
-          State
-        </div>
+        <div text-right text-sm op50>State</div>
         <OptionSelectGroup
           v-model="filters.status"
-          :options="[
-            '',
-            'active',
-            'recommended',
-            'fixable',
-            'deprecated',
-          ]"
-          :titles="[
-            'All',
-            'Active',
-            'Recommended',
-            'Fixable',
-            'Deprecated',
-          ]"
+          :options="['', 'active', 'recommended', 'fixable', 'deprecated']"
+          :titles="['All', 'Active', 'Recommended', 'Fixable', 'Deprecated']"
         >
           <template #default="{ value, title }">
             <div flex items-center gap-1>
@@ -372,8 +329,7 @@ function resetFilters() {
         >
           <div i-ph-list-checks-duotone />
           <span>{{ filtered.length }}</span>
-          <span op75>rules
-            {{ isDefaultFilters ? "in use" : "filtered" }}</span>
+          <span op75>rules {{ isDefaultFilters ? 'in use' : 'filtered' }}</span>
           <span text-sm op50>out of {{ rules.length }} rules</span>
         </div>
         <div

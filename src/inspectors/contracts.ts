@@ -30,7 +30,7 @@ export interface ReadConfigOptions extends ResolveConfigPathOptions {
   /**
    * Target file path used to resolve the effective config.
    *
-   * @default "stylelint-inspector-target.css"
+   * @default 'stylelint-inspector-target.css'
    */
   targetFilePath?: string
   /**

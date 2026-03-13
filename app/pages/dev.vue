@@ -44,11 +44,7 @@ const metadataHealth = computed(() => {
 <template>
   <div py4 flex="~ col gap-4">
     <section border="~ purple/20 rounded-xl" bg-purple:6 p4>
-      <div
-        flex="~ items-center gap-2 wrap"
-        text-violet8
-        dark:text-violet3
-      >
+      <div flex="~ items-center gap-2 wrap" text-violet8 dark:text-violet3>
         <div i-ph-flask-duotone flex-none />
         <span font-medium>Metadata health</span>
       </div>
@@ -83,9 +79,7 @@ const metadataHealth = computed(() => {
             metadataHealth.missingDocsUrlsPct
           }}%)
         </div>
-        <div>
-          Inferred docs URLs: {{ metadataHealth.inferredDocsUrls }}
-        </div>
+        <div>Inferred docs URLs: {{ metadataHealth.inferredDocsUrls }}</div>
         <div>
           Placeholder descriptions:
           {{ metadataHealth.placeholderDescriptions }} ({{
@@ -98,7 +92,9 @@ const metadataHealth = computed(() => {
     <section border="~ amber/25 rounded-xl" bg-amber:6 p4>
       <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
         <div i-ph-warning-circle-duotone flex-none />
-        <span font-medium>Inspector diagnostics ({{ diagnostics.length }})</span>
+        <span font-medium
+          >Inspector diagnostics ({{ diagnostics.length }})</span
+        >
       </div>
       <div v-if="diagnostics.length" mt2>
         <ul ml5 list-disc text-amber7 op90 dark:text-amber3>
@@ -107,9 +103,7 @@ const metadataHealth = computed(() => {
           </li>
         </ul>
       </div>
-      <div v-else mt2 text-sm op70>
-        No diagnostics emitted.
-      </div>
+      <div v-else mt2 text-sm op70>No diagnostics emitted.</div>
     </section>
   </div>
 </template>

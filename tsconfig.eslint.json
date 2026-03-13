@@ -1,43 +1,43 @@
 {
-    "$schema": "https://www.schemastore.org/tsconfig.json",
-    "extends": "./tsconfig.json",
-    "compilerOptions": {
-        "incremental": true,
-        "tsBuildInfoFile": "./.cache/tsbuildinfo/tsconfig.eslint.tsbuildinfo",
-        "allowJs": true,
-        "checkJs": true,
-        "noCheck": false,
-        "noEmit": true,
-        "isolatedDeclarations": false,
-        "erasableSyntaxOnly": true
-    },
-    "include": [
-        ".remarkrc.mjs",
-        "*.mjs",
-        "benchmarks/**/*.ts",
-        "benchmarks/**/*.mjs",
-        "knip.config.ts",
-        "src/**/*.ts",
-        "src/**/*.mjs",
-        "scripts/**/*.ts",
-        "scripts/**/*.mjs",
-        "test/**/*.d.ts",
-        "test/**/*.ts",
-        "test/**/*.mjs",
-        "prettier.config.ts",
-        "vitest.stryker.config.ts",
-        "vite.config.ts",
-        "docs/**/*.mjs",
-        "docs/**/*.mts",
-        "docs/**/*.ts",
-        "docs/**/*.tsx"
-    ],
-    "exclude": [
-        ".cache/**",
-        "coverage/**",
-        "dist/**",
-        "eslint.config.bundled_*.mjs",
-        "node_modules/**",
-        "test/fixtures/**"
-    ]
+  "$schema": "https://www.schemastore.org/tsconfig.json",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": "./.cache/tsbuildinfo/tsconfig.eslint.tsbuildinfo",
+    "allowJs": true,
+    "checkJs": true,
+    "noCheck": false,
+    "noEmit": true,
+    "isolatedDeclarations": false,
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    ".remarkrc.mjs",
+    "*.mjs",
+    "benchmarks/**/*.ts",
+    "benchmarks/**/*.mjs",
+    "knip.config.ts",
+    "src/**/*.ts",
+    "src/**/*.mjs",
+    "scripts/**/*.ts",
+    "scripts/**/*.mjs",
+    "test/**/*.d.ts",
+    "test/**/*.ts",
+    "test/**/*.mjs",
+    "prettier.config.ts",
+    "vitest.stryker.config.ts",
+    "vite.config.ts",
+    "docs/**/*.mjs",
+    "docs/**/*.mts",
+    "docs/**/*.ts",
+    "docs/**/*.tsx"
+  ],
+  "exclude": [
+    ".cache/**",
+    "coverage/**",
+    "dist/**",
+    "eslint.config.bundled_*.mjs",
+    "node_modules/**",
+    "test/fixtures/**"
+  ]
 }

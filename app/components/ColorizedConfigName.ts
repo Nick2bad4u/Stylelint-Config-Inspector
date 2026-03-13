@@ -32,16 +32,11 @@ export default defineComponent({
             ),
           ),
         )
-      }
-      else {
+      } else {
         return h('span', [
           h('span', { class: 'op50 italic' }, 'anonymous'),
           props.index != null
-            ? h(
-                'span',
-                { class: 'op50 text-sm' },
-                ` #${props.index + 1}`,
-              )
+            ? h('span', { class: 'op50 text-sm' }, ` #${props.index + 1}`)
             : null,
         ])
       }

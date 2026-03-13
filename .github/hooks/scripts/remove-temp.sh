@@ -8,11 +8,11 @@ VERBOSE=0
 WHAT_IF=0
 
 for arg in "$@"; do
-    case "$arg" in
-        -v | --verbose) VERBOSE=1 ;;
-        -n | --what-if | --dry-run) WHAT_IF=1 ;;
-        -h | --help)
-            cat << 'EOF'
+  case "$arg" in
+    -v | --verbose) VERBOSE=1 ;;
+    -n | --what-if | --dry-run) WHAT_IF=1 ;;
+    -h | --help)
+      cat << 'EOF'
 Usage: remove-temp.sh [--verbose] [--what-if]
 
 Options:
@@ -20,42 +20,42 @@ Options:
 	-n, --what-if    Show what would be removed without deleting
 	-h, --help       Show this help message
 EOF
-            exit 0
-            ;;
-        *)
-            echo "Unknown option: $arg" >&2
-            exit 1
-            ;;
-    esac
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg" >&2
+      exit 1
+      ;;
+  esac
 done
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 TEMP_PATH="$(cd -- "$SCRIPT_DIR/../../../temp" 2> /dev/null && pwd -P || true)"
 
 if [[ -n "${TEMP_PATH}" && -d "${TEMP_PATH}" ]]; then
-    ((VERBOSE)) && echo "Removing contents of: ${TEMP_PATH}"
+  ((VERBOSE)) && echo "Removing contents of: ${TEMP_PATH}"
 
-    shopt -s dotglob nullglob
-    items=("${TEMP_PATH}"/*)
-    shopt -u dotglob nullglob
+  shopt -s dotglob nullglob
+  items=("${TEMP_PATH}"/*)
+  shopt -u dotglob nullglob
 
-    if (((${#items[@]} > 0))); then
-        if ((WHAT_IF)); then
-            for item in "${items[@]}"; do
-                echo "Would remove: ${item}"
-            done
-            echo "[SUCCESS] Dry run completed. No files were deleted."
-        else
-            rm -rf -- "${items[@]}"
-            if [[ $? -eq 0 ]]; then
-                echo "[SUCCESS] Temp directory cleaned successfully."
-            else
-                echo "[FAIL] Failed to clean temp directory."
-            fi
-        fi
+  if (((${#items[@]} > 0))); then
+    if ((WHAT_IF)); then
+      for item in "${items[@]}"; do
+        echo "Would remove: ${item}"
+      done
+      echo "[SUCCESS] Dry run completed. No files were deleted."
     else
-        echo "[SUCCESS] Temp directory already empty."
+      rm -rf -- "${items[@]}"
+      if [[ $? -eq 0 ]]; then
+        echo "[SUCCESS] Temp directory cleaned successfully."
+      else
+        echo "[FAIL] Failed to clean temp directory."
+      fi
     fi
+  else
+    echo "[SUCCESS] Temp directory already empty."
+  fi
 else
-    echo "[FAIL] Temp directory not found, nothing to clean: ${SCRIPT_DIR}/../../../temp"
+  echo "[FAIL] Temp directory not found, nothing to clean: ${SCRIPT_DIR}/../../../temp"
 fi

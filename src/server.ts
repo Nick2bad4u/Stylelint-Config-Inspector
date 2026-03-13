@@ -28,14 +28,13 @@ export async function createHostServer(options: CreateWsServerOptions) {
 
   const resolveDistFilePath = (
     id: string,
-  ): { relative: string, absolute: string } | undefined => {
+  ): { relative: string; absolute: string } | undefined => {
     const cleanId = id
       .split('?')[0]
       ?.split('#')[0]
       ?.replace(LEADING_SLASHES_RE, '')
 
-    if (!cleanId)
-      return
+    if (!cleanId) return
 
     return {
       relative: cleanId,
@@ -44,11 +43,9 @@ export async function createHostServer(options: CreateWsServerOptions) {
   }
 
   const shouldServeIndexFallback = (path: string): boolean => {
-    if (path === '/')
-      return true
+    if (path === '/') return true
 
-    if (path.startsWith('/_nuxt/') || path.startsWith('/api/'))
-      return false
+    if (path.startsWith('/_nuxt/') || path.startsWith('/api/')) return false
 
     return extname(path) === ''
   }
@@ -59,41 +56,32 @@ export async function createHostServer(options: CreateWsServerOptions) {
   )
 
   app.use(
-    eventHandler(async (event) => {
+    eventHandler(async event => {
       const indexHtml = await readCachedFile(join(distDir, 'index.html'))
 
       if (event.path === '/' && indexHtml) {
-        setResponseHeader(
-          event,
-          'Content-Type',
-          'text/html; charset=UTF-8',
-        )
+        setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
         return indexHtml
       }
 
       const result = await serveStatic(event, {
         fallthrough: true,
-        getContents: (id) => {
-          if (!id)
-            return undefined
+        getContents: id => {
+          if (!id) return undefined
 
           const resolved = resolveDistFilePath(id)
-          if (!resolved)
-            return undefined
+          if (!resolved) return undefined
 
           return readCachedFile(resolved.absolute)
         },
-        getMeta: async (id) => {
-          if (!id)
-            return
+        getMeta: async id => {
+          if (!id) return
 
           const resolved = resolveDistFilePath(id)
-          if (!resolved)
-            return
+          if (!resolved) return
 
           const stats = await stat(resolved.absolute).catch(() => {})
-          if (!stats || !stats.isFile())
-            return
+          if (!stats || !stats.isFile()) return
 
           return {
             type: lookup(resolved.relative),
@@ -105,11 +93,7 @@ export async function createHostServer(options: CreateWsServerOptions) {
 
       if (!result && shouldServeIndexFallback(event.path)) {
         if (indexHtml) {
-          setResponseHeader(
-            event,
-            'Content-Type',
-            'text/html; charset=UTF-8',
-          )
+          setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
         }
         return indexHtml
       }

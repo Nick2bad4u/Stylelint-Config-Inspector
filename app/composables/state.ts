@@ -15,14 +15,14 @@ export const filtersRules = reactive({
   plugin: '',
   search: '',
   state: 'using' as
-  | 'using'
-  | 'unused'
-  | 'overloads'
-  | 'error'
-  | 'warn'
-  | 'off'
-  | 'off-only'
-  | '',
+    | 'using'
+    | 'unused'
+    | 'overloads'
+    | 'error'
+    | 'warn'
+    | 'off'
+    | 'off-only'
+    | '',
   status: '' as 'deprecated' | 'active' | 'recommended' | 'fixable' | '',
   fixable: null as boolean | null,
 })

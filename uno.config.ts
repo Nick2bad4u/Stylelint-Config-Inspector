@@ -26,11 +26,11 @@ export default defineConfig({
     'bg-active': 'bg-primary-400:10',
 
     'btn-action':
-            'border border-base rounded flex gap-2 items-center px2 py1 op75 hover:op100 hover:bg-hover',
+      'border border-base rounded flex gap-2 items-center px2 py1 op75 hover:op100 hover:bg-hover',
     'btn-action-sm': 'btn-action text-sm',
     'btn-action-active': 'color-active border-active! bg-active op100!',
 
-    'badge': 'border border-base rounded flex items-center px2',
+    badge: 'border border-base rounded flex items-center px2',
     'badge-active': 'badge border-amber:50 text-amber bg-amber:5',
     'btn-badge': 'badge hover:bg-active',
   },

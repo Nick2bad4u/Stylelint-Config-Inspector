@@ -9,15 +9,13 @@ const { deprecated, invalid } = defineProps<{
 }>()
 
 const deprecatedInfo = computed(() => {
-  if (!deprecated || typeof deprecated === 'boolean')
-    return
+  if (!deprecated || typeof deprecated === 'boolean') return
 
   return deprecated
 })
 
 const versionInfo = computed(() => {
-  if (!deprecatedInfo.value)
-    return
+  if (!deprecatedInfo.value) return
 
   let res = ''
 
@@ -25,8 +23,7 @@ const versionInfo = computed(() => {
     res += `was deprecated in v${deprecatedInfo.value.deprecatedSince}`
 
   if (deprecatedInfo.value.availableUntil) {
-    if (res)
-      res += ', and '
+    if (res) res += ', and '
 
     res += `will be removed in v${deprecatedInfo.value.availableUntil}`
   }
@@ -43,33 +40,20 @@ function getLinkClass(url: string | undefined) {
 
 <template>
   <VDropdown inline-block :disabled="!deprecatedInfo">
-    <div
-      border="~ red/25 rounded"
-      select-none
-      bg-red:5
-      px1
-      text-xs
-      text-red
-    >
-      {{ invalid ? "INVALID" : "DEPRECATED" }}
+    <div border="~ red/25 rounded" select-none bg-red:5 px1 text-xs text-red>
+      {{ invalid ? 'INVALID' : 'DEPRECATED' }}
     </div>
     <template #popper="{ shown }">
       <div v-if="shown && deprecatedInfo" p-2 text-sm op75>
         <p v-if="deprecatedInfo.message" mb1 flex="~ gap-1" text-red>
-          <span i-ph-warning-duotone inline-block />{{
-            deprecatedInfo.message
-          }}
+          <span i-ph-warning-duotone inline-block />{{ deprecatedInfo.message }}
         </p>
         <p v-if="versionInfo">
           {{ versionInfo }}
         </p>
         <p v-if="deprecatedInfo.replacedBy?.length">
           Please use the
-          <template
-            v-for="(
-              { rule, plugin }, i
-            ) in deprecatedInfo.replacedBy"
-          >
+          <template v-for="({ rule, plugin }, i) in deprecatedInfo.replacedBy">
             <NuxtLink
               v-if="rule"
               :key="rule.name"
@@ -88,13 +72,13 @@ function getLinkClass(url: string | undefined) {
                 target="_blank"
               >
                 {{ plugin.name ?? plugin.url }}
-              </NuxtLink>
-            </template>{{
+              </NuxtLink> </template
+            >{{
               i === deprecatedInfo.replacedBy.length - 1
-                ? "."
+                ? '.'
                 : i === 0
-                  ? ""
-                  : ", "
+                  ? ''
+                  : ', '
             }}
           </template>
         </p>

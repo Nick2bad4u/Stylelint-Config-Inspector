@@ -19,10 +19,11 @@ const RE_ABSOLUTE_ASSET_ATTR = /\s(href|src)="\//g
 
 const cli = cac('stylelint-config-inspector')
 
-cli.command(
-  'build',
-  'Build inspector with current config file for static hosting',
-)
+cli
+  .command(
+    'build',
+    'Build inspector with current config file for static hosting',
+  )
   .option('--config <configFile>', 'Config file path')
   .option('--files', 'Include matched file paths in payload', {
     default: true,
@@ -37,26 +38,26 @@ cli.command(
     '--basePath <basePath>',
     'Base directory for globs to resolve. Default to directory of config file if not provided',
   )
-// Build specific options
+  // Build specific options
   .option('--base <baseURL>', 'Base URL for deployment', { default: '/' })
   .option('--outDir <dir>', 'Output directory', {
     default: '.stylelint-config-inspector',
   })
-// Action
-  .action(async (options) => {
+  // Action
+  .action(async options => {
     console.log(MARK_INFO, 'Building static Stylelint config inspector...')
 
     if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config
-        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+      options.config ||=
+        process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
     }
     if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath
-        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+      options.basePath ||=
+        process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
     }
     if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target
-        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
+      options.target ||=
+        process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
     }
 
     options.target ||= options.file
@@ -73,8 +74,7 @@ cli.command(
         globMatchedFiles: options.files,
         targetFilePath: options.target,
       })
-    }
-    catch (error) {
+    } catch (error) {
       if (error instanceof ConfigInspectorError) {
         error.prettyPrint()
         process.exit(1)
@@ -83,14 +83,11 @@ cli.command(
     }
 
     let baseURL = options.base
-    if (!baseURL.endsWith('/'))
-      baseURL += '/'
-    if (!baseURL.startsWith('/'))
-      baseURL = `/${baseURL}`
+    if (!baseURL.endsWith('/')) baseURL += '/'
+    if (!baseURL.startsWith('/')) baseURL = `/${baseURL}`
     baseURL = baseURL.replace(RE_CONSECUTIVE_SLASHES, '/')
 
-    if (existsSync(outDir))
-      await fs.rm(outDir, { recursive: true })
+    if (existsSync(outDir)) await fs.rm(outDir, { recursive: true })
     await fs.mkdir(outDir, { recursive: true })
     await fs.cp(distDir, outDir, { recursive: true })
     const htmlFiles = await glob('**/*.html', {
@@ -101,12 +98,8 @@ cli.command(
     // Rewrite HTML files with base URL
     if (baseURL !== '/') {
       for (const file of htmlFiles) {
-        if (!file)
-          continue
-        const content = await fs.readFile(
-          resolve(distDir, file),
-          'utf-8',
-        )
+        if (!file) continue
+        const content = await fs.readFile(resolve(distDir, file), 'utf-8')
         const newContent = content
           .replaceAll(RE_ABSOLUTE_ASSET_ATTR, ` $1="${baseURL}`)
           .replaceAll('baseURL:"/"', `baseURL:"${baseURL}"`)
@@ -130,7 +123,8 @@ cli.command(
     )
   })
 
-cli.command('', 'Start dev inspector')
+cli
+  .command('', 'Start dev inspector')
   .option('--config <configFile>', 'Config file path')
   .option('--files', 'Include matched file paths in payload', {
     default: true,
@@ -145,14 +139,14 @@ cli.command('', 'Start dev inspector')
     '--basePath <basePath>',
     'Base directory for globs to resolve. Default to directory of config file if not provided',
   )
-// Dev specific options
+  // Dev specific options
   .option('--host <host>', 'Host', {
     default: process.env.HOST || '127.0.0.1',
   })
   .option('--port <port>', 'Port', { default: process.env.PORT || 7777 })
   .option('--open', 'Open browser', { default: true })
-// Action
-  .action(async (options) => {
+  // Action
+  .action(async options => {
     const host = options.host
     const port = await getPort({
       port: options.port,
@@ -161,16 +155,16 @@ cli.command('', 'Start dev inspector')
     })
 
     if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config
-        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
+      options.config ||=
+        process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
     }
     if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath
-        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
+      options.basePath ||=
+        process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
     }
     if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target
-        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
+      options.target ||=
+        process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
     }
 
     options.target ||= options.file

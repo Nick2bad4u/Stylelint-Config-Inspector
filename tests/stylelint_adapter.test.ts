@@ -8,7 +8,7 @@ const tempDirs: string[] = []
 
 afterEach(async () => {
   await Promise.all(
-    tempDirs.map(async (dir) => {
+    tempDirs.map(async dir => {
       await rm(dir, { recursive: true, force: true })
     }),
   )
@@ -22,11 +22,7 @@ async function createTempProject(
   tempDirs.push(dir)
 
   if (configContent) {
-    await writeFile(
-      join(dir, 'stylelint.config.mjs'),
-      configContent,
-      'utf-8',
-    )
+    await writeFile(join(dir, 'stylelint.config.mjs'), configContent, 'utf-8')
   }
 
   if (extraFiles) {
@@ -63,12 +59,8 @@ describe('stylelint adapter', () => {
     expect(result.payload.meta.engine).toBe('stylelint')
     expect(result.payload.meta.configNotFound).toBeUndefined()
     expect(result.payload.meta.targetFilePath).toBe('src/styles.css')
-    expect(Object.keys(result.payload.rules)).toContain(
-      'color-no-invalid-hex',
-    )
-    expect(Object.keys(result.payload.rules)).toContain(
-      'alpha-value-notation',
-    )
+    expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
+    expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
     expect(result.payload.rules['alpha-value-notation']).toMatchObject({
       name: 'alpha-value-notation',
       plugin: 'stylelint',
@@ -201,12 +193,8 @@ describe('stylelint adapter', () => {
         'color-no-invalid-hex': true,
       },
     })
-    expect(matched.some(file => file.filepath === 'src/demo.css')).toBe(
-      true,
-    )
-    expect(matched.some(file => file.filepath === 'src/ignored.ts')).toBe(
-      false,
-    )
+    expect(matched.some(file => file.filepath === 'src/demo.css')).toBe(true)
+    expect(matched.some(file => file.filepath === 'src/ignored.ts')).toBe(false)
   })
 
   it('collects plugin rule metadata for configured plugin rules', async () => {
@@ -353,14 +341,14 @@ describe('stylelint adapter', () => {
       plugin: 'defensive-css',
       docs: {
         description:
-                    'Expected background-repeat to be declared when using background-image',
+          'Expected background-repeat to be declared when using background-image',
         descriptionSource: 'message',
         url: 'https://github.com/yuschick/stylelint-plugin-defensive-css',
         urlSource: 'meta',
       },
       messages: {
         rejected:
-                    'Expected background-repeat to be declared when using background-image',
+          'Expected background-repeat to be declared when using background-image',
       },
     })
   })
@@ -400,9 +388,9 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(
-      result.payload.rules['acme/templated-rule']?.docs?.description,
-    ).toBe('Unexpected token "<value>" for acme/templated-rule')
+    expect(result.payload.rules['acme/templated-rule']?.docs?.description).toBe(
+      'Unexpected token "<value>" for acme/templated-rule',
+    )
     expect(
       result.payload.rules['acme/templated-rule']?.messages?.rejected,
     ).toBe('Unexpected token "<value>" for acme/templated-rule')
@@ -458,18 +446,16 @@ describe('stylelint adapter', () => {
       }
     `,
       {
-        'node_modules/stylelint-no-url-plugin/package.json':
-                    JSON.stringify(
-                      {
-                        name: 'stylelint-no-url-plugin',
-                        type: 'module',
-                        main: './index.mjs',
-                        homepage:
-                                'https://example.test/stylelint-no-url-plugin',
-                      },
-                      null,
-                      2,
-                    ),
+        'node_modules/stylelint-no-url-plugin/package.json': JSON.stringify(
+          {
+            name: 'stylelint-no-url-plugin',
+            type: 'module',
+            main: './index.mjs',
+            homepage: 'https://example.test/stylelint-no-url-plugin',
+          },
+          null,
+          2,
+        ),
         'node_modules/stylelint-no-url-plugin/index.mjs': `
         export default [
           {
@@ -579,9 +565,7 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(
-      result.payload.rules['acme/recommended-unused-rule'],
-    ).toMatchObject({
+    expect(result.payload.rules['acme/recommended-unused-rule']).toMatchObject({
       plugin: 'acme',
       docs: {
         description: 'recommended unused rule',
@@ -622,9 +606,9 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/styles.css',
     })
 
-    expect(
-      result.payload.rules['scales/alpha-values']?.docs?.description,
-    ).toBe('alpha values')
+    expect(result.payload.rules['scales/alpha-values']?.docs?.description).toBe(
+      'alpha values',
+    )
   })
 
   it('strips scoped plugin prefixes from plugin rule descriptions', async () => {
@@ -660,8 +644,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(
-      result.payload.rules['@stylistic/at-rule-name-case']?.docs
-        ?.description,
+      result.payload.rules['@stylistic/at-rule-name-case']?.docs?.description,
     ).toBe('at rule name case')
   })
 
@@ -688,12 +671,10 @@ describe('stylelint adapter', () => {
     })
 
     const matched = result.payload.files ?? []
-    expect(
-      matched.some(file => file.filepath === 'src/general.css'),
-    ).toBe(true)
-    expect(
-      matched.some(file => file.filepath === 'src/not-style.ts'),
-    ).toBe(false)
+    expect(matched.some(file => file.filepath === 'src/general.css')).toBe(true)
+    expect(matched.some(file => file.filepath === 'src/not-style.ts')).toBe(
+      false,
+    )
     expect(
       result.payload.diagnostics?.some(note =>
         note.includes('No explicit `files` globs'),
@@ -732,12 +713,8 @@ describe('stylelint adapter', () => {
     })
 
     const matched = result.payload.files ?? []
-    expect(matched.some(file => file.filepath === 'src/app.ts')).toBe(
-      true,
-    )
-    expect(matched.some(file => file.filepath === 'src/styles.css')).toBe(
-      true,
-    )
+    expect(matched.some(file => file.filepath === 'src/app.ts')).toBe(true)
+    expect(matched.some(file => file.filepath === 'src/styles.css')).toBe(true)
     expect(
       result.payload.diagnostics?.some(note =>
         note.includes('General config items were detected'),
@@ -766,12 +743,8 @@ describe('stylelint adapter', () => {
       targetFilePath: 'src/app.css',
     })
 
-    expect(result.payload.meta.configPath).toBe(
-      'configs/stylelint.config.mjs',
-    )
-    expect(result.payload.meta.basePath.endsWith('/packages/web')).toBe(
-      true,
-    )
+    expect(result.payload.meta.configPath).toBe('configs/stylelint.config.mjs')
+    expect(result.payload.meta.basePath.endsWith('/packages/web')).toBe(true)
     expect(result.payload.meta.targetFilePath).toBe('src/app.css')
     expect(
       result.payload.diagnostics?.some(note =>
@@ -807,8 +780,8 @@ describe('stylelint adapter', () => {
   })
 
   it('populates recommended metadata for core rules when recommended config package is available', async () => {
-    const recommendedConfig
-      = await import('stylelint-config-recommended').catch(() => undefined)
+    const recommendedConfig =
+      await import('stylelint-config-recommended').catch(() => undefined)
 
     const cwd = await createTempProject(`
       export default {
@@ -831,8 +804,7 @@ describe('stylelint adapter', () => {
 
     if (recommendedConfig) {
       expect(recommendedCount).toBeGreaterThan(0)
-    }
-    else {
+    } else {
       expect(recommendedCount).toBe(0)
     }
   })

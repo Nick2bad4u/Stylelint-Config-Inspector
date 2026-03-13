@@ -24,7 +24,7 @@ export async function createWsServer(options: CreateWsServerOptions) {
   })
   const wsClients = new Set<WebSocket>()
 
-  wss.on('connection', (ws) => {
+  wss.on('connection', ws => {
     wsClients.add(ws)
     console.log(MARK_CHECK, 'Websocket client connected')
     ws.on('close', () => wsClients.delete(ws))
@@ -33,13 +33,11 @@ export async function createWsServer(options: CreateWsServerOptions) {
   let resolvedConfigPath: Awaited<ReturnType<typeof resolveConfigPath>>
   try {
     resolvedConfigPath = await resolveConfigPath(options)
-  }
-  catch (e) {
+  } catch (e) {
     if (e instanceof ConfigInspectorError) {
       e.prettyPrint()
       process.exit(1)
-    }
-    else {
+    } else {
       throw e
     }
   }
@@ -52,8 +50,7 @@ export async function createWsServer(options: CreateWsServerOptions) {
   }
 
   function createErrorPayload(error: unknown): Payload {
-    const diagnostic
-      = error instanceof Error ? error.message : String(error)
+    const diagnostic = error instanceof Error ? error.message : String(error)
 
     return {
       configs: [],
@@ -77,11 +74,11 @@ export async function createWsServer(options: CreateWsServerOptions) {
     cwd: basePath,
   })
 
-  watcher.on('change', (path) => {
+  watcher.on('change', path => {
     payload = undefined
     console.log()
     console.log(MARK_CHECK, 'Config change detected', path)
-    wsClients.forEach((ws) => {
+    wsClients.forEach(ws => {
       ws.send(
         JSON.stringify({
           type: 'config-change',
@@ -94,7 +91,7 @@ export async function createWsServer(options: CreateWsServerOptions) {
   async function getData() {
     try {
       if (!payload) {
-        return await readConfig(options).then((res) => {
+        return await readConfig(options).then(res => {
           const _payload = (payload = res.payload)
           _payload.meta.wsPort = port
           watcher.add(res.dependencies)
@@ -102,13 +99,11 @@ export async function createWsServer(options: CreateWsServerOptions) {
         })
       }
       return payload
-    }
-    catch (e) {
+    } catch (e) {
       console.error(readErrorWarning)
       if (e instanceof ConfigInspectorError) {
         e.prettyPrint()
-      }
-      else {
+      } else {
         console.error(e)
       }
       return createErrorPayload(e)

@@ -102,21 +102,21 @@ export interface RuleInfo {
   deprecated?:
     | boolean
     | {
-      message?: string
-      deprecatedSince?: string
-      availableUntil?: string
-      url?: string
-      replacedBy?: Array<{
-        rule?: {
-          name?: string
-          url?: string
-        }
-        plugin?: {
-          name?: string
-          url?: string
-        }
-      }>
-    }
+        message?: string
+        deprecatedSince?: string
+        availableUntil?: string
+        url?: string
+        replacedBy?: Array<{
+          rule?: {
+            name?: string
+            url?: string
+          }
+          plugin?: {
+            name?: string
+            url?: string
+          }
+        }>
+      }
   /**
    * The rule may be removed
    */

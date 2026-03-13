@@ -11,8 +11,7 @@ const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate)
 const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
 const showTargetFile = computed(() => {
   const target = payload.value.meta.targetFilePath
-  if (!target)
-    return false
+  if (!target) return false
   return !target.endsWith(DEFAULT_TARGET_FILE)
 })
 
@@ -21,9 +20,7 @@ const deprecatedUsing = computed(() =>
   rules.value.filter(
     rule =>
       rule.deprecated
-      && payload.value.ruleToState
-        .get(rule.name)
-        ?.some(i => i.level !== 'off'),
+      && payload.value.ruleToState.get(rule.name)?.some(i => i.level !== 'off'),
   ),
 )
 
@@ -34,8 +31,7 @@ function showDeprecated() {
   filters.state = 'using'
   filters.search = ''
 
-  if (router.currentRoute.value.path !== '/rules')
-    router.push('/rules')
+  if (router.currentRoute.value.path !== '/rules') router.push('/rules')
 }
 </script>
 
@@ -70,7 +66,7 @@ function showDeprecated() {
             w-4.5
             dark:brightness-185
             dark:invert
-          >
+          />
           <span>
             Built for the
             <a
@@ -78,19 +74,15 @@ function showDeprecated() {
               target="_blank"
               rel="noopener noreferrer"
               hover:underline
-            >Stylelint ecosystem</a>
+              >Stylelint ecosystem</a
+            >
             with best-effort metadata normalization.
           </span>
         </div>
       </div>
     </div>
 
-    <div
-      v-if="payload.meta.configPath"
-      flex="~ gap-1 items-center"
-      my1
-      text-sm
-    >
+    <div v-if="payload.meta.configPath" flex="~ gap-1 items-center" my1 text-sm>
       <span font-mono op35>{{ payload.meta.configPath }}</span>
     </div>
     <div v-if="showTargetFile" flex="~ gap-1 items-center" my1 text-sm>

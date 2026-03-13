@@ -24,8 +24,8 @@ const emit = defineEmits<{
   stateClick: [RuleLevel]
 }>()
 
-const PLACEHOLDER_CONTEXT_RE
-  = /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/
+const PLACEHOLDER_CONTEXT_RE =
+  /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/
 
 function redundantOptions(options: any) {
   const { hasRedundantOptions } = deepCompareOptions(
@@ -38,14 +38,12 @@ function redundantOptions(options: any) {
 const { copy } = useClipboard()
 
 function capitalize(str?: string) {
-  if (!str)
-    return str
+  if (!str) return str
   return str[0]!.toUpperCase() + str.slice(1)
 }
 
 function stringifyInline(value: unknown): string {
-  if (typeof value === 'string')
-    return value
+  if (typeof value === 'string') return value
 
   const serialized = JSON.stringify(value)
   return serialized === undefined ? String(value) : serialized
@@ -69,15 +67,12 @@ function applyPlaceholderGuesses(
   description: string,
   configuredValue: unknown,
 ): string {
-  if (!description.includes('<value>'))
-    return description
+  if (!description.includes('<value>')) return description
 
-  if (!isScalarDisplayValue(configuredValue))
-    return description
+  if (!isScalarDisplayValue(configuredValue)) return description
 
   const renderValue = stringifyInline(configuredValue)
-  if (!renderValue.length)
-    return description
+  if (!renderValue.length) return description
 
   const placeholder = '<value>'
   const indices: number[] = []
@@ -87,8 +82,7 @@ function applyPlaceholderGuesses(
     start = description.indexOf(placeholder, start + placeholder.length)
   }
 
-  if (!indices.length)
-    return description
+  if (!indices.length) return description
 
   if (indices.length === 1) {
     if (!shouldReplacePlaceholderByContext(description, indices[0]!))
@@ -104,8 +98,7 @@ function applyPlaceholderGuesses(
     if (shouldReplacePlaceholderByContext(description, index)) {
       parts.push(renderValue)
       replaced = true
-    }
-    else {
+    } else {
       parts.push(placeholder)
     }
     cursor = index + placeholder.length
@@ -117,22 +110,17 @@ function applyPlaceholderGuesses(
 
 const effectiveState = computed(() => {
   const states = props.ruleStates
-  if (!states?.length)
-    return undefined
+  if (!states?.length) return undefined
 
   return (
-    states.toReversed().find(state => state.level !== 'off')
-    ?? states.at(-1)
+    states.toReversed().find(state => state.level !== 'off') ?? states.at(-1)
   )
 })
 
 const localConfiguredValue = computed(() => {
-  if (props.value === undefined)
-    return undefined
+  if (props.value === undefined) return undefined
 
-  return (
-    getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
-  )
+  return getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
 })
 
 const effectiveConfiguredValue = computed(() => {
@@ -140,22 +128,19 @@ const effectiveConfiguredValue = computed(() => {
     return localConfiguredValue.value
 
   const state = effectiveState.value
-  if (!state)
-    return undefined
+  if (!state) return undefined
 
   return state.primaryOption ?? state.options?.[0]
 })
 
 const resolvedDescription = computed(() => {
-  if (props.rule.invalid)
-    return 'Invalid rule has no description'
+  if (props.rule.invalid) return 'Invalid rule has no description'
 
   const rawDescription = props.rule.docs?.description
-  const baseDescription
-    = capitalize(rawDescription) ?? 'No description available'
+  const baseDescription =
+    capitalize(rawDescription) ?? 'No description available'
   const configuredValue = effectiveConfiguredValue.value
-  if (configuredValue === undefined)
-    return baseDescription
+  if (configuredValue === undefined) return baseDescription
 
   return applyPlaceholderGuesses(baseDescription, configuredValue)
 })
@@ -189,9 +174,7 @@ const docsTooltip = computed(() => {
         <RuleLevelIcon
           :level="s.level"
           :config-index="s.configIndex"
-          :has-options="
-            s.primaryOption !== undefined || !!s.options?.length
-          "
+          :has-options="s.primaryOption !== undefined || !!s.options?.length"
           :has-redundant-options="redundantOptions(s.options)"
         />
         <template #popper="{ shown }">
@@ -203,16 +186,13 @@ const docsTooltip = computed(() => {
 
   <div
     v-if="value !== undefined"
-    :class="[
-      props.class,
-      gridView ? 'absolute top-2 right-2 flex-col' : '',
-    ]"
+    :class="[props.class, gridView ? 'absolute top-2 right-2 flex-col' : '']"
   >
     <RuleLevelIcon
       :level="getRuleLevel(value)"
       :has-options="
         getRulePrimaryOption(value) !== undefined
-          || !!getRuleOptions(value)?.length
+        || !!getRuleOptions(value)?.length
       "
       :has-redundant-options="redundantOptions(getRuleOptions(value))"
     />
@@ -246,17 +226,9 @@ const docsTooltip = computed(() => {
             >
               <div i-ph-book-duotone />
               Docs
-              <div
-                v-if="isInferredDocsUrl"
-                i-ph-magic-wand-duotone
-                op60
-              />
+              <div v-if="isInferredDocsUrl" i-ph-magic-wand-duotone op60 />
             </NuxtLink>
-            <button
-              btn-action-sm
-              title="Copy"
-              @click="copy(rule.name)"
-            >
+            <button btn-action-sm title="Copy" @click="copy(rule.name)">
               <div i-ph-copy-duotone />
               Copy name
             </button>
@@ -347,10 +319,10 @@ const docsTooltip = computed(() => {
   <div
     v-if="
       gridView
-        && (rule.invalid
-          || rule.deprecated
-          || rule.fixable
-          || rule.docs?.recommended)
+      && (rule.invalid
+        || rule.deprecated
+        || rule.fixable
+        || rule.docs?.recommended)
     "
     flex
     flex-auto

@@ -7,8 +7,7 @@ export function isRuleConfigured(
 }
 
 export function isRuleEnabled(states: RuleConfigState[] | undefined): boolean {
-  if (!states?.length)
-    return false
+  if (!states?.length) return false
 
   return states.some(state => state.level !== 'off')
 }
@@ -35,12 +34,10 @@ export function getRulePrimaryOption(level: RuleEntry | undefined): unknown {
 export function getRuleLevel(level: RuleEntry | undefined) {
   const first = Array.isArray(level) ? level[0] : level
 
-  if (first === undefined)
-    return 'off'
+  if (first === undefined) return 'off'
 
   // Stylelint: `null` disables a rule
-  if (first === null)
-    return 'off'
+  if (first === null) return 'off'
 
   if (Array.isArray(level)) {
     const second = level[1]
@@ -76,6 +73,5 @@ export function getRuleLevel(level: RuleEntry | undefined) {
 export function getRuleOptions(
   level: RuleEntry | undefined,
 ): unknown[] | undefined {
-  if (Array.isArray(level))
-    return level.slice(1)
+  if (Array.isArray(level)) return level.slice(1)
 }

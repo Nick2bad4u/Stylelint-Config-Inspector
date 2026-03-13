@@ -30,15 +30,13 @@ function getValue(name: string) {
 const containerClass = computed(() => {
   if (isGridView.value) {
     return 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-2'
-  }
-  else {
+  } else {
     return 'grid gap-x-2 gap-y-2 items-center'
   }
 })
 
 const containerStyle = computed(() => {
-  if (isGridView.value)
-    return undefined
+  if (isGridView.value) return undefined
 
   const columns = props.listColumns || defaultListColumns
   return {
@@ -53,7 +51,8 @@ const Wrapper = defineComponent({
         ? h(
             'div',
             {
-              class: 'relative border border-base max-w-full rounded-lg p4 py3 flex flex-col gap-2 of-hidden justify-start',
+              class:
+                'relative border border-base max-w-full rounded-lg p4 py3 flex flex-col gap-2 of-hidden justify-start',
             },
             slots.default?.(),
           )
@@ -78,15 +77,9 @@ const Wrapper = defineComponent({
           v-bind="getBind?.(name)"
         >
           <template #popup>
-            <slot
-              name="popup"
-              :rule-name="name"
-              :value="getValue(name)"
-            >
+            <slot name="popup" :rule-name="name" :value="getValue(name)">
               <RuleStateItem
-                v-for="(state, idx) of payload.ruleToState.get(
-                  name,
-                ) || []"
+                v-for="(state, idx) of payload.ruleToState.get(name) || []"
                 :key="idx"
                 border="t base"
                 :state="state"

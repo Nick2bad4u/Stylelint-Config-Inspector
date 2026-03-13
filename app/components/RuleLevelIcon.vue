@@ -12,8 +12,7 @@ const props = defineProps<{
 }>()
 
 const title = computed(() => {
-  if (props.configIndex == null)
-    return `Enabled as '${props.level}'`
+  if (props.configIndex == null) return `Enabled as '${props.level}'`
   return `Enabled as '${props.level}', in the ${nth(props.configIndex + 1)} config item`
 })
 
