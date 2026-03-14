@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'pathe'
@@ -22,6 +22,14 @@ const allSupportedConfigFilenames = [
   ...stylelintLegacyConfigFilenames,
   'package.json',
 ]
+
+const fixtureFilenameMap = new Map<string, string>([
+  ['package.json', 'test-package.json'],
+])
+
+const fixtureFilenamesForSupportedConfigs = allSupportedConfigFilenames.map(
+  filename => fixtureFilenameMap.get(filename) ?? filename,
+)
 
 afterEach(async () => {
   await Promise.all(
@@ -63,7 +71,8 @@ async function createTempProject(
 }
 
 async function readConfigFormatFixture(filename: string): Promise<string> {
-  return await readFile(join(configFormatFixturesDir, filename), 'utf-8')
+  const fixtureFilename = fixtureFilenameMap.get(filename) ?? filename
+  return await readFile(join(configFormatFixturesDir, fixtureFilename), 'utf-8')
 }
 
 describe('stylelint adapter', () => {
@@ -976,104 +985,23 @@ describe('stylelint adapter', () => {
     })
   })
 
-  describe('config format compatibility (supported filename matrix)', () => {
-    it('loads stylelint.config.ts', async () => {
-      const cwd = await createTempProject(
-        `
-          export default {
-            rules: {
-              'color-no-invalid-hex': true,
-            },
-          }
-        `,
-        undefined,
-        {
-          configFilename: 'stylelint.config.ts',
-        },
-      )
-
-      const result = await readConfig({
-        cwd,
-        chdir: false,
-        globMatchedFiles: false,
-        targetFilePath: 'src/styles.css',
-      })
-
-      expect(result.payload.meta.configPath).toBe('stylelint.config.ts')
-      expect(result.payload.meta.configNotFound).toBeUndefined()
-      expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
-    })
-
-    it('loads .stylelintrc.yaml', async () => {
-      const cwd = await createTempProject(undefined, {
-        '.stylelintrc.yaml': [
-          'rules:',
-          '  alpha-value-notation: number',
-          '  color-no-invalid-hex: true',
-          '',
-        ].join('\n'),
-      })
-
-      const result = await readConfig({
-        cwd,
-        chdir: false,
-        globMatchedFiles: false,
-        targetFilePath: 'src/styles.css',
-      })
-
-      expect(result.payload.meta.configPath).toBe('.stylelintrc.yaml')
-      expect(result.payload.meta.configNotFound).toBeUndefined()
-      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
-    })
-
-    it('loads .stylelintrc.cjs', async () => {
-      const cwd = await createTempProject(undefined, {
-        '.stylelintrc.cjs': `
-          module.exports = {
-            rules: {
-              'alpha-value-notation': 'number',
-            },
-          }
-        `,
-      })
-
-      const result = await readConfig({
-        cwd,
-        chdir: false,
-        globMatchedFiles: false,
-        targetFilePath: 'src/styles.css',
-      })
-
-      expect(result.payload.meta.configPath).toBe('.stylelintrc.cjs')
-      expect(result.payload.meta.configNotFound).toBeUndefined()
-      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
-    })
-
-    it('loads .stylelintrc.mjs', async () => {
-      const cwd = await createTempProject(undefined, {
-        '.stylelintrc.mjs': `
-          export default {
-            rules: {
-              'alpha-value-notation': 'number',
-            },
-          }
-        `,
-      })
-
-      const result = await readConfig({
-        cwd,
-        chdir: false,
-        globMatchedFiles: false,
-        targetFilePath: 'src/styles.css',
-      })
-
-      expect(result.payload.meta.configPath).toBe('.stylelintrc.mjs')
-      expect(result.payload.meta.configNotFound).toBeUndefined()
-      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
-    })
-  })
-
   describe('config format compatibility (full fixture matrix)', () => {
+    it('keeps fixture files in sync with supported config filenames', async () => {
+      const fixtureEntries = await readdir(configFormatFixturesDir, {
+        withFileTypes: true,
+      })
+
+      const fixtureFilenames = fixtureEntries
+        .filter(entry => entry.isFile())
+        .map(entry => entry.name)
+        .sort()
+
+      const expectedFixtureFilenames = [...new Set(fixtureFilenamesForSupportedConfigs)]
+        .toSorted()
+
+      expect(fixtureFilenames).toEqual(expectedFixtureFilenames)
+    })
+
     for (const filename of allSupportedConfigFilenames) {
       it(`parses fixture ${filename}`, async () => {
         const fixtureContent = await readConfigFormatFixture(filename)

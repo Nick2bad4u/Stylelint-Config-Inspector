@@ -1,9 +1,0 @@
-{
-  "name": "config-format-fixture",
-  "private": true,
-  "stylelint": {
-    "rules": {
-      "color-no-invalid-hex": true
-    }
-  }
-}
