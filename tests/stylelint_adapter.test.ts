@@ -1,10 +1,27 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'pathe'
 import { afterEach, describe, expect, it } from 'vitest'
 import { readConfig } from '../src/configs'
+import {
+  stylelintConfigFilenames,
+  stylelintLegacyConfigFilenames,
+} from '../src/constants'
 
 const tempDirs: string[] = []
+
+const configFormatFixturesDir = join(
+  dirname(fileURLToPath(import.meta.url)),
+  'fixtures',
+  'config-formats',
+)
+
+const allSupportedConfigFilenames = [
+  ...stylelintConfigFilenames,
+  ...stylelintLegacyConfigFilenames,
+  'package.json',
+]
 
 afterEach(async () => {
   await Promise.all(
@@ -17,12 +34,19 @@ afterEach(async () => {
 async function createTempProject(
   configContent?: string,
   extraFiles?: Record<string, string>,
+  options?: {
+    configFilename?: string
+  },
 ): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'stylelint-config-inspector-'))
   tempDirs.push(dir)
 
   if (configContent) {
-    await writeFile(join(dir, 'stylelint.config.mjs'), configContent, 'utf-8')
+    await writeFile(
+      join(dir, options?.configFilename ?? 'stylelint.config.mjs'),
+      configContent,
+      'utf-8',
+    )
   }
 
   if (extraFiles) {
@@ -36,6 +60,10 @@ async function createTempProject(
   }
 
   return dir
+}
+
+async function readConfigFormatFixture(filename: string): Promise<string> {
+  return await readFile(join(configFormatFixturesDir, filename), 'utf-8')
 }
 
 describe('stylelint adapter', () => {
@@ -807,6 +835,264 @@ describe('stylelint adapter', () => {
     }
     else {
       expect(recommendedCount).toBe(0)
+    }
+  })
+
+  describe('config format compatibility (ecosystem samples)', () => {
+    it('loads stylelint.config.cjs inspired by thelounge/thelounge', async () => {
+      const cwd = await createTempProject(
+        `
+          module.exports = {
+            extends: 'stylelint-config-standard',
+            rules: {
+              'selector-class-pattern': null,
+              'no-descending-specificity': null,
+            },
+          }
+        `,
+        undefined,
+        {
+          configFilename: 'stylelint.config.cjs',
+        },
+      )
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('stylelint.config.cjs')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(result.payload.configs.some(config => !!config.rules)).toBe(true)
+      expect(Object.keys(result.payload.rules).length).toBeGreaterThan(0)
+    })
+
+    it('loads .stylelintrc.json inspired by reviewdog/action-stylelint', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc.json': JSON.stringify(
+          {
+            rules: {
+              'color-no-invalid-hex': true,
+            },
+          },
+          null,
+          2,
+        ),
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc.json')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
+    })
+
+    it('loads .stylelintrc (no extension) inspired by actions-hub/stylelint', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc': JSON.stringify(
+          {
+            rules: {
+              indentation: 2,
+            },
+          },
+          null,
+          2,
+        ),
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules).length).toBeGreaterThan(0)
+    })
+
+    it('loads .stylelintrc.yml inspired by bandlab/stylelint-config-bandlab', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc.yml': [
+          'extends: stylelint-config-standard',
+          'customSyntax: postcss-scss',
+          'rules:',
+          '  selector-class-pattern: null',
+          '  color-no-invalid-hex: true',
+          '',
+        ].join('\n'),
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.scss',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc.yml')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(result.payload.meta.targetFilePath).toBe('src/styles.scss')
+      expect(Object.keys(result.payload.rules).length).toBeGreaterThan(0)
+    })
+
+    it('loads package.json stylelint property (documented Stylelint format)', async () => {
+      const cwd = await createTempProject(undefined, {
+        'package.json': JSON.stringify(
+          {
+            name: 'format-fixture',
+            private: true,
+            stylelint: {
+              extends: 'stylelint-config-standard',
+              rules: {
+                'alpha-value-notation': 'number',
+                'selector-class-pattern': null,
+              },
+            },
+          },
+          null,
+          2,
+        ),
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('package.json')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
+    })
+  })
+
+  describe('config format compatibility (supported filename matrix)', () => {
+    it('loads stylelint.config.ts', async () => {
+      const cwd = await createTempProject(
+        `
+          export default {
+            rules: {
+              'color-no-invalid-hex': true,
+            },
+          }
+        `,
+        undefined,
+        {
+          configFilename: 'stylelint.config.ts',
+        },
+      )
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('stylelint.config.ts')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
+    })
+
+    it('loads .stylelintrc.yaml', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc.yaml': [
+          'rules:',
+          '  alpha-value-notation: number',
+          '  color-no-invalid-hex: true',
+          '',
+        ].join('\n'),
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc.yaml')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
+    })
+
+    it('loads .stylelintrc.cjs', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc.cjs': `
+          module.exports = {
+            rules: {
+              'alpha-value-notation': 'number',
+            },
+          }
+        `,
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc.cjs')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
+    })
+
+    it('loads .stylelintrc.mjs', async () => {
+      const cwd = await createTempProject(undefined, {
+        '.stylelintrc.mjs': `
+          export default {
+            rules: {
+              'alpha-value-notation': 'number',
+            },
+          }
+        `,
+      })
+
+      const result = await readConfig({
+        cwd,
+        chdir: false,
+        globMatchedFiles: false,
+        targetFilePath: 'src/styles.css',
+      })
+
+      expect(result.payload.meta.configPath).toBe('.stylelintrc.mjs')
+      expect(result.payload.meta.configNotFound).toBeUndefined()
+      expect(Object.keys(result.payload.rules)).toContain('alpha-value-notation')
+    })
+  })
+
+  describe('config format compatibility (full fixture matrix)', () => {
+    for (const filename of allSupportedConfigFilenames) {
+      it(`parses fixture ${filename}`, async () => {
+        const fixtureContent = await readConfigFormatFixture(filename)
+
+        const cwd = await createTempProject(undefined, {
+          [filename]: fixtureContent,
+        })
+
+        const result = await readConfig({
+          cwd,
+          chdir: false,
+          globMatchedFiles: false,
+          targetFilePath: 'src/styles.css',
+        })
+
+        expect(result.payload.meta.configPath).toBe(filename)
+        expect(result.payload.meta.configNotFound).toBeUndefined()
+        expect(Object.keys(result.payload.rules)).toContain('color-no-invalid-hex')
+      })
     }
   })
 })

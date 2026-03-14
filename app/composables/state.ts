@@ -105,6 +105,51 @@ const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
   },
 }
 
+const VIEWER_STATE_STORAGE_KEYS = [
+  'theme',
+  'searchMode',
+  'viewFileMatchType',
+  'showSpecificOnly',
+  'viewType',
+  'gridViewRules',
+  'viewFilesTab',
+  'dimDisabledRules',
+  'filtersConfigs',
+  'filtersRules',
+] as const satisfies readonly (keyof ViewerStateStorage)[]
+
+const FILTERS_CONFIG_KEYS = [
+  'filepath',
+  'rule',
+  'plugin',
+] as const satisfies readonly (keyof FiltersConfigsPage)[]
+
+const FILTERS_RULES_KEYS = [
+  'state',
+  'status',
+  'fixable',
+  'search',
+  'plugins',
+] as const satisfies readonly (keyof FiltersRulesPage)[]
+
+function createDefaultFiltersConfigs(): FiltersConfigsPage {
+  return {
+    filepath: DEFAULT_STATE_STORAGE.filtersConfigs.filepath,
+    rule: DEFAULT_STATE_STORAGE.filtersConfigs.rule,
+    plugin: DEFAULT_STATE_STORAGE.filtersConfigs.plugin,
+  }
+}
+
+function createDefaultFiltersRules(): FiltersRulesPage {
+  return {
+    state: DEFAULT_STATE_STORAGE.filtersRules.state,
+    status: DEFAULT_STATE_STORAGE.filtersRules.status,
+    fixable: DEFAULT_STATE_STORAGE.filtersRules.fixable,
+    search: DEFAULT_STATE_STORAGE.filtersRules.search,
+    plugins: [...DEFAULT_STATE_STORAGE.filtersRules.plugins],
+  }
+}
+
 function getStoredStateStorage(): Partial<ViewerStateStorage> {
   if (!import.meta.client)
     return {}
@@ -268,29 +313,54 @@ function ensureStateRefs(): StateRefs {
   return cachedStateRefs
 }
 
-function createLazyStateProxy<T extends object>(resolveTarget: () => T): T {
-  return new Proxy({} as T, {
-    get(_target, property) {
-      return Reflect.get(resolveTarget(), property)
-    },
-    set(_target, property, value) {
-      return Reflect.set(resolveTarget(), property, value)
-    },
-    has(_target, property) {
-      return Reflect.has(resolveTarget(), property)
+function defineLazyAccessor<TTarget extends object, TKey extends keyof TTarget>(
+  host: Record<TKey, TTarget[TKey]>,
+  key: TKey,
+  resolveTarget: () => TTarget,
+): void {
+  Object.defineProperty(host, key, {
+    configurable: false,
+    enumerable: true,
+    get: () => resolveTarget()[key],
+    set: (value: TTarget[TKey]) => {
+      resolveTarget()[key] = value
     },
   })
 }
-export const stateStorage = createLazyStateProxy<ViewerStateStorage>(
+
+function createLazyStateAccessors<
+  TTarget extends object,
+  const TKeys extends readonly (keyof TTarget)[],
+>(
+  resolveTarget: () => TTarget,
+  keys: TKeys,
+): Pick<TTarget, TKeys[number]> {
+  const accessors = {} as Pick<TTarget, TKeys[number]>
+
+  for (const key of keys) {
+    defineLazyAccessor(
+      accessors as Record<typeof key, TTarget[typeof key]>,
+      key,
+      resolveTarget,
+    )
+  }
+
+  return accessors
+}
+
+export const stateStorage = createLazyStateAccessors(
   () => ensureStateRefs().stateStorageRef.value,
+  VIEWER_STATE_STORAGE_KEYS,
 )
 
-export const filtersConfigs = createLazyStateProxy<FiltersConfigsPage>(
+export const filtersConfigs = createLazyStateAccessors(
   () => ensureStateRefs().stateStorageRef.value.filtersConfigs,
+  FILTERS_CONFIG_KEYS,
 )
 
-export const filtersRules = createLazyStateProxy<FiltersRulesPage>(
+export const filtersRules = createLazyStateAccessors(
   () => ensureStateRefs().stateStorageRef.value.filtersRules,
+  FILTERS_RULES_KEYS,
 )
 
 export const isGridView = computed<boolean>({
@@ -363,11 +433,11 @@ export function setStateFilters(
 
 export function resetStateFilters(page: 'configs' | 'rules'): void {
   if (page === 'configs') {
-    Object.assign(filtersConfigs, DEFAULT_STATE_STORAGE.filtersConfigs)
+    Object.assign(filtersConfigs, createDefaultFiltersConfigs())
     return
   }
 
-  Object.assign(filtersRules, DEFAULT_STATE_STORAGE.filtersRules)
+  Object.assign(filtersRules, createDefaultFiltersRules())
 }
 
 export function useRuleGridMode() {
