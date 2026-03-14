@@ -24,6 +24,9 @@ describe('ws error payload contract', () => {
   it('returns a valid payload shape when readConfig throws', async () => {
     const cwd = await mkdtemp(join(tmpdir(), 'stylelint-config-inspector-ws-'))
     tempDirs.push(cwd)
+    const consoleErrorSpy = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => undefined)
 
     resolveConfigPathMock.mockResolvedValue({
       basePath: cwd,
@@ -58,6 +61,7 @@ describe('ws error payload contract', () => {
       ).toBe(true)
     }
     finally {
+      consoleErrorSpy.mockRestore()
       await server.watcher.close()
       await new Promise<void>((resolve, reject) => {
         server.wss.close((error) => {

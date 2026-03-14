@@ -5,6 +5,8 @@ Thanks for your interest in contributing.
 This repository contains an ESLint plugin focused on `type-fest` and
 `ts-extras` usage patterns for TypeScript codebases.
 
+Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md).
+
 ## Prerequisites
 
 - Node.js `>=20.19.0` (see `package.json#engines`)

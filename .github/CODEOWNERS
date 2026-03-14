@@ -1,1 +1,1 @@
-.github/workflows/release-please.yml @eslint/eslint-tsc
+.github/workflows/release.yml @eslint/eslint-tsc

@@ -24,16 +24,19 @@
   ],
   "scripts": {
     "build": "nuxt build && tsdown",
+    "changelog:release-notes": "git-cliff --config cliff.toml --current --strip all",
+    "check": "npm run lint && npm run typecheck && npm run test -- --run && npm run build",
     "dev": "nuxt dev",
     "prepare": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prestart": "npm run build",
-    "start": "node bin.mjs",
+    "prebench": "npm run build",
     "prepack": "npm run build",
+    "prestart": "npm run build",
+    "release:check": "npm run check",
+    "start": "node bin.mjs",
     "test": "vitest",
-    "typecheck": "nuxt typecheck",
-    "prebench": "npm run build"
+    "typecheck": "nuxt typecheck"
   },
   "peerDependencies": {
     "stylelint": "^16.0.0"
