@@ -13,9 +13,49 @@ import {
 
 const rules = computed(() => Object.values(payload.value.rules))
 const listColumns = '64px_minmax(220px,360px)_150px_minmax(0,1fr)'
-const pluginNames = computed(() =>
-  [...new Set(rules.value.map(i => i.plugin))].filter(Boolean),
-)
+const pluginNames = computed<string[]>(() => {
+  return [...new Set(rules.value.map(i => i.plugin))].filter(
+    (plugin): plugin is string => typeof plugin === 'string' && plugin.length > 0,
+  )
+})
+
+const pluginOptions = computed(() => {
+  return pluginNames.value.map(plugin => ({
+    value: plugin,
+    title: plugin,
+    style: {
+      color: getPluginColor(plugin),
+      borderColor: getPluginColor(plugin, 0.55),
+      backgroundColor: getPluginColor(plugin, 0.1),
+    },
+  }))
+})
+
+const selectedPlugins = computed({
+  get: () => filters.plugins,
+  set: (value: string[]) => {
+    filters.plugins = [...new Set(value)].toSorted((left, right) => left.localeCompare(right))
+  },
+})
+
+const hasSelectedPlugin = computed(() => selectedPlugins.value.length > 0)
+
+const isPluginSelected = (pluginName: string): boolean => selectedPlugins.value.includes(pluginName)
+
+function togglePluginSelection(pluginName: string): void {
+  const nextSelection = new Set(selectedPlugins.value)
+
+  if (nextSelection.has(pluginName))
+    nextSelection.delete(pluginName)
+  else
+    nextSelection.add(pluginName)
+
+  selectedPlugins.value = [...nextSelection]
+}
+
+function clearPluginSelection(): void {
+  selectedPlugins.value = []
+}
 const hasGeneratedDescriptions = computed(() =>
   rules.value.some(
     rule =>
@@ -39,6 +79,9 @@ function hasEnabledRuleState(ruleName: string): boolean {
 }
 
 function getRuleRowClass(ruleName: string): string {
+  if (!stateStorage.dimDisabledRules)
+    return ''
+
   if (!hasAnyRuleState(ruleName) && filters.state !== 'unused')
     return 'op42'
 
@@ -61,8 +104,17 @@ const recommendedRulesCount = computed(
 const conditionalFiltered = computed(() => {
   let conditional = rules.value
 
-  if (filters.plugin) {
-    conditional = conditional.filter(rule => rule.plugin === filters.plugin)
+  if (hasSelectedPlugin.value) {
+    conditional = conditional.filter((rule) => {
+      const [scope, remainder] = rule.name.split('/')
+      const scopeCandidate = remainder ? (scope ?? '') : ''
+      const pluginCandidate = typeof rule.plugin === 'string' ? rule.plugin : ''
+      const candidates = new Set<string>(
+        [pluginCandidate, scopeCandidate].filter(Boolean),
+      )
+
+      return selectedPlugins.value.some(selectedPlugin => candidates.has(selectedPlugin))
+    })
   }
 
   if (filters.fixable != null) {
@@ -138,7 +190,7 @@ const filtered = ref(conditionalFiltered.value)
 
 if (
   !filters.search
-  && !filters.plugin
+  && !hasSelectedPlugin.value
   && filters.state === 'using'
   && filters.status === 'active'
 ) {
@@ -174,7 +226,7 @@ const isDefaultFilters = computed(
   () =>
     !(
       filters.search
-      || filters.plugin
+      || hasSelectedPlugin.value
       || filters.state !== 'using'
       || filters.status
     ),
@@ -182,7 +234,7 @@ const isDefaultFilters = computed(
 
 function resetFilters() {
   filters.search = ''
-  filters.plugin = ''
+  clearPluginSelection()
   filters.state = 'using'
   filters.status = ''
 }
@@ -220,29 +272,43 @@ function resetFilters() {
         <div text-right text-sm op50>
           Plugins
         </div>
-        <OptionSelectGroup
-          v-model="filters.plugin"
-          :options="['', ...pluginNames]"
-          :titles="['All', ...pluginNames]"
-          :classes="['', ...pluginNames.map(() => 'op85!')]"
-          :props="[
-            {},
-            ...pluginNames.map(i => ({
-              class: 'font-mono saturate-100! transition-colors',
-              style: {
-                color: getPluginColor(i),
-                backgroundColor: getPluginColor(
-                  i,
-                  filters.plugin === i ? 0.16 : 0.08,
-                ),
-                borderColor: getPluginColor(
-                  i,
-                  filters.plugin === i ? 0.34 : 0.2,
-                ),
-              },
-            })),
-          ]"
-        />
+        <div class="space-y-2">
+          <div class="text-xs text-zinc-300/85 font-semibold tracking-wide uppercase">
+            Plugin
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="badge border border-base px-2 py-0.5 text-xs transition"
+              :class="[
+                !hasSelectedPlugin
+                  ? 'bg-zinc-700/45 text-zinc-100'
+                  : 'bg-zinc-900/30 text-zinc-300 hover:bg-zinc-800/50',
+              ]"
+              @click="clearPluginSelection"
+            >
+              All plugins
+            </button>
+
+            <button
+              v-for="pluginOption in pluginOptions"
+              :key="pluginOption.value"
+              type="button"
+              class="badge border border-base px-2 py-0.5 text-xs transition"
+              :class="[
+                isPluginSelected(pluginOption.value)
+                  ? 'bg-zinc-700/45 text-zinc-100 opacity-100'
+                  : hasSelectedPlugin
+                    ? 'bg-zinc-900/30 text-zinc-300 opacity-45 hover:opacity-80'
+                    : 'bg-zinc-900/30 text-zinc-300 hover:bg-zinc-800/50',
+              ]"
+              :style="pluginOption.style"
+              @click="togglePluginSelection(pluginOption.value)"
+            >
+              {{ pluginOption.title }}
+            </button>
+          </div>
+        </div>
         <div text-right text-sm op50>
           Usage
         </div>
@@ -267,6 +333,16 @@ function resetFilters() {
             'Off',
             'Overloaded',
             'Off Only',
+          ]"
+          :tooltips="[
+            'Show every rule',
+            'Rules currently active in at least one config block',
+            'Rules currently disabled in all config blocks',
+            'Rules with effective error severity',
+            'Rules with effective warning severity',
+            'Rules set to off',
+            'Rules with mixed state across overrides',
+            'Rules explicitly off and never active',
           ]"
         >
           <template #default="{ value, title }">
@@ -408,6 +484,7 @@ function resetFilters() {
       my4
       :rules="filtered"
       :list-columns="listColumns"
+      :dim-disabled="stateStorage.dimDisabledRules"
       :get-bind="(name: string) => ({ class: getRuleRowClass(name) })"
     />
   </div>

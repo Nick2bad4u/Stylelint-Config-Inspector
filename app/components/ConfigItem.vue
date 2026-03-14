@@ -37,7 +37,6 @@ const META_FIELDS = new Set(['name'])
 const CONFIG_INSPECTOR_FIELDS = new Set(['index'])
 const STYLELINT_OVERRIDE_NAME_RE
   = /^stylelint\/override-(\d+)(?:\s+\(.+\))?$/
-const OVERRIDE_GLOB_PREVIEW_MAX_LENGTH = 24
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/
 const FILE_EXTENSION_SUFFIX_RE = /\.[^.]+$/
@@ -49,6 +48,8 @@ const open = defineModel('open', {
 })
 
 const hasShown = ref(open.value)
+const showAdditionalConfigs = ref(false)
+
 if (!hasShown.value) {
   const stop = watchEffect(() => {
     if (open.value) {
@@ -163,9 +164,9 @@ function resolvePluginFilter(name: string): string {
 
 function gotoPlugin(name: string) {
   const pluginFilter = resolvePluginFilter(name)
-  filtersRules.plugin = pluginFilter
+  filtersRules.plugins = pluginFilter ? [pluginFilter] : []
   filtersRules.search = ''
-  filtersRules.state = pluginFilter ? '' : 'using'
+  filtersRules.state = pluginFilter ? 'using' : ''
   filtersRules.status = ''
   filtersRules.fixable = null
   router.push('/rules')
@@ -178,24 +179,6 @@ const affectedFilesCount = computed(() => {
 
   return configToFiles.get(props.config.index)?.size ?? 0
 })
-
-function summarizeOverrideFiles(
-  files: string[] | undefined,
-): string | undefined {
-  if (!files?.length)
-    return undefined
-
-  const [first] = files
-  if (!first)
-    return undefined
-
-  const head
-    = first.length > OVERRIDE_GLOB_PREVIEW_MAX_LENGTH
-      ? `${first.slice(0, OVERRIDE_GLOB_PREVIEW_MAX_LENGTH)}…`
-      : first
-
-  return files.length === 1 ? head : `${head} +${files.length - 1}`
-}
 
 const extraConfigs = computed(() => {
   const ignoredKeys = [
@@ -237,11 +220,8 @@ const sourceBadge = computed(() => {
 
   const override = STYLELINT_OVERRIDE_NAME_RE.exec(name)
   if (override?.[1]) {
-    const overrideFileSummary = summarizeOverrideFiles(props.config.files)
     return {
-      text: overrideFileSummary
-        ? `Override #${override[1]} · ${overrideFileSummary}`
-        : `Override #${override[1]}`,
+      text: `Override #${override[1]}`,
       colorClass: 'text-amber6 dark:text-amber3',
       bgClass: 'bg-amber:10',
     }
@@ -394,11 +374,7 @@ const sourceBadge = computed(() => {
             <button
               v-for="(name, idx) of Object.keys(config.plugins)"
               :key="idx"
-              border="~ rounded-full"
-              px2.5
-              py0.5
-              text-sm
-              leading-4
+              class="badge border border-transparent rounded-full px-2.5 py-0.5 text-sm leading-4"
               :style="{
                 color: getPluginColor(name),
                 borderColor: getPluginColor(name, 0.55),
@@ -535,25 +511,29 @@ const sourceBadge = computed(() => {
         <div i-ph-sliders-duotone my1 flex-none />
 
         <div flex="~ col gap-2" w-full>
-          <div>Additional configurations</div>
-
-          <div
-            v-for="(value, key) in extraConfigs"
-            :key="key"
-            class="flex items-center gap-1"
+          <button
+            class="w-fit flex items-center gap-1 text-sm text-zinc-300 hover:text-zinc-100"
+            @click="showAdditionalConfigs = !showAdditionalConfigs"
           >
-            <span class="text-zinc-300 font-600">{{ key }}:</span>
+            <span>Additional configurations ({{ Object.keys(extraConfigs).length }})</span>
+            <span i-ph-caret-down-fill transition-transform :class="showAdditionalConfigs ? 'rotate-180' : ''" />
+          </button>
 
-            <template v-if="isPrimitiveExtraConfigValue(value)">
-              <code class="break-all rounded bg-zinc-900/50 px1.5 py0.5 text-zinc-200">
-                {{ stringifyUnquoted(value) }}
-              </code>
-            </template>
+          <div v-if="showAdditionalConfigs" class="grid grid-cols-[minmax(10rem,auto)_1fr] gap-x-2 gap-y-1.5">
+            <template v-for="(value, key) in extraConfigs" :key="key">
+              <span class="text-zinc-300 font-600">{{ key }}:</span>
 
-            <template v-else>
-              <code class="break-all rounded bg-zinc-900/35 px1.5 py0.5 text-zinc-300">
-                {{ JSON.stringify(value) }}
-              </code>
+              <template v-if="isPrimitiveExtraConfigValue(value)">
+                <code class="break-all rounded bg-zinc-900/50 px1.5 py0.5 text-zinc-200">
+                  {{ stringifyUnquoted(value) }}
+                </code>
+              </template>
+
+              <template v-else>
+                <code class="break-all rounded bg-zinc-900/35 px1.5 py0.5 text-zinc-300">
+                  {{ JSON.stringify(value) }}
+                </code>
+              </template>
             </template>
           </div>
         </div>

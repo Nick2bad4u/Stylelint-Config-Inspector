@@ -148,14 +148,14 @@ cli
   .option('--host <host>', 'Host', {
     default: process.env.HOST || '127.0.0.1',
   })
-  .option('--port <port>', 'Port', { default: process.env.PORT || 7777 })
+  .option('--port <port>', 'Port', { default: process.env.PORT || 8888 })
   .option('--open', 'Open browser', { default: true })
   // Action
   .action(async (options) => {
     const host = options.host
     const port = await getPort({
       port: options.port,
-      portRange: [7777, 9000],
+      portRange: [8888, 10000],
       host,
     })
 

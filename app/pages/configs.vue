@@ -121,7 +121,7 @@ function autoCompleteMove(delta: number) {
 }
 
 const mergedRules = computed(() => {
-  if (!filters.filepath || stateStorage.value.viewFileMatchType !== 'merged') {
+  if (!filters.filepath || stateStorage.viewFileMatchType !== 'merged') {
     return {
       all: {},
       common: {},

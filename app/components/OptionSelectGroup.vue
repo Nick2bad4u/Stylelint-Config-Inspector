@@ -2,6 +2,7 @@
 defineProps<{
   options: readonly string[] | number[]
   titles?: string[]
+  tooltips?: string[]
   classes?: string[]
   props?: any[]
 }>()
@@ -26,7 +27,7 @@ const value = defineModel<string | number>('modelValue', {
         props?.[idx]?.class || '',
       ]"
       v-bind="props?.[idx]"
-      :title="titles?.[idx]"
+      :title="tooltips?.[idx] ?? titles?.[idx]"
     >
       <div
         :class="[
@@ -43,7 +44,7 @@ const value = defineModel<string | number>('modelValue', {
         v-model="value"
         type="radio"
         :value="i"
-        :title="titles?.[idx]"
+        :title="tooltips?.[idx] ?? titles?.[idx]"
         absolute
         inset-0
         op-0.1

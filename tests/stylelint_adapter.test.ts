@@ -187,7 +187,7 @@ describe('stylelint adapter', () => {
     const matched = result.payload.files ?? []
     expect(result.payload.configs).toHaveLength(2)
     expect(result.payload.configs[1]).toMatchObject({
-      name: 'stylelint/resolved/override-1 (src/**/*.css)',
+      name: 'stylelint/override-1',
       files: ['src/**/*.css'],
       rules: {
         'color-no-invalid-hex': true,
@@ -389,7 +389,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(result.payload.rules['acme/templated-rule']?.docs?.description).toBe(
-      'Unexpected token "<value>" for acme/templated-rule',
+      'Unexpected token "a value" for acme/templated-rule',
     )
     expect(
       result.payload.rules['acme/templated-rule']?.messages?.rejected,
@@ -521,7 +521,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(result.payload.rules['scales/sizes']?.docs?.description).toBe(
-      'Expected "<value>" to be one of "<value>"',
+      'Expected "a value" to be one of "a value"',
     )
   })
 
@@ -775,7 +775,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(result.payload.configs[1]?.name).toBe(
-      'stylelint/resolved/override-1 (src/**/*.css +2)',
+      'stylelint/override-1',
     )
   })
 

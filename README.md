@@ -12,7 +12,7 @@ From a project that contains a Stylelint config (`stylelint.config.*` or `.style
 npx @stylelint/config-inspector@latest
 ```
 
-Then open http://localhost:7777/.
+Then open http://localhost:8888/.
 
 ### Resolve for a target file
 

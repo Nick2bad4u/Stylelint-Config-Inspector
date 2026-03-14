@@ -21,27 +21,29 @@ const LEADING_SLASHES_RE = /^\/+/
 
 const parsed = computed(() => {
   const parts = props.name.split('/')
+  const firstPart = parts[0] ?? ''
+
   if (parts.length === 1) {
     if (props.prefix) {
       return {
         scope: props.prefix,
-        name: parts[0].replace(LEADING_SLASHES_RE, ''),
+        name: firstPart.replace(LEADING_SLASHES_RE, ''),
       }
     }
 
     return {
       scope: undefined,
-      name: parts[0],
+      name: firstPart,
     }
   }
 
   return {
-    scope: parts[0],
+    scope: firstPart,
     name: parts.slice(1).join('/'),
   }
 })
 
-const scopeColorKey = computed(() => {
+const displayScope = computed(() => {
   if (!parsed.value.scope) {
     return undefined
   }
@@ -52,6 +54,8 @@ const scopeColorKey = computed(() => {
 
   return parsed.value.scope
 })
+
+const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
 </script>
 
 <template>
@@ -66,8 +70,8 @@ const scopeColorKey = computed(() => {
   >
     <span
       v-if="parsed.scope"
-      :style="{ color: getPluginColor(scopeColorKey) }"
-    >{{ parsed.scope }}</span>
+      :style="{ color: scopeColor }"
+    >{{ displayScope }}</span>
     <span v-if="parsed.scope" op30>/</span>
     <br v-if="parsed.scope && props.break">
     <span op75>{{ parsed.name }}</span>

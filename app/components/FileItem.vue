@@ -19,7 +19,8 @@ const icon = computed(() => {
 const router = useRouter()
 function searchFile() {
   filtersConfigs.filepath = props.filepath
-  filtersConfigs.rule = undefined
+  filtersConfigs.rule = ''
+  filtersConfigs.plugin = ''
   router.push(`/configs`)
 }
 </script>

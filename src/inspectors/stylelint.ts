@@ -70,6 +70,8 @@ const UNSAFE_MESSAGE_DESCRIPTION_RE
 const MESSAGE_PLACEHOLDER_RE = /%[a-z]/i
 const MESSAGE_UNDEFINED_RE = /\bundefined\b/i
 const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/
+const DESCRIPTION_TEMPLATE_TOKEN_RE = /<([a-z][\w-]*)>/gi
+const MULTIPLE_WHITESPACE_RE = /\s+/g
 const GIT_SUFFIX_RE = /\.git$/i
 const GIT_PROTOCOL_PREFIX_RE = /^git\+/i
 const MESSAGE_CALL_ARGS: readonly unknown[][] = [
@@ -723,7 +725,20 @@ function sanitizeDescription(ruleName: string, description: string): string {
   if (!withoutPrefix.length)
     return humanizeRuleName(ruleName)
 
-  const lower = withoutPrefix.toLowerCase()
+  const normalizedDescription = withoutPrefix
+    .replace(DESCRIPTION_TEMPLATE_TOKEN_RE, (_match, token: string) => {
+      const lowerToken = token.toLowerCase()
+      if (lowerToken === 'value')
+        return 'a value'
+      return token.replaceAll('-', ' ')
+    })
+    .replace(MULTIPLE_WHITESPACE_RE, ' ')
+    .trim()
+
+  if (!normalizedDescription.length)
+    return humanizeRuleName(ruleName)
+
+  const lower = normalizedDescription.toLowerCase()
   if (
     lower === ruleName.toLowerCase()
     || lower === humanizeRuleName(ruleName).toLowerCase()
@@ -732,18 +747,18 @@ function sanitizeDescription(ruleName: string, description: string): string {
   }
 
   const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
-  const trailingRuleReference = withoutPrefix.match(TRAILING_RULE_REFERENCE_RE)
+  const trailingRuleReference = normalizedDescription.match(TRAILING_RULE_REFERENCE_RE)
   if (trailingRuleReference?.[1]) {
     const referencedRule = trailingRuleReference[1].trim().toLowerCase()
     if (
       referencedRule === ruleName.toLowerCase()
       || referencedRule === shortRuleName.toLowerCase()
     ) {
-      return withoutPrefix.slice(0, trailingRuleReference.index).trim()
+      return normalizedDescription.slice(0, trailingRuleReference.index).trim()
     }
   }
 
-  return withoutPrefix
+  return normalizedDescription
 }
 
 function getMessageDescriptionScore(key: string, description: string): number {
@@ -1128,17 +1143,7 @@ function extractConfigs(
       if (!isRecord(override))
         return
 
-      const overrideFiles = toStringArray(override.files)
-      const firstGlob = overrideFiles?.[0]
-      const filesSummary = firstGlob
-        ? overrideFiles.length > 1
-          ? `${firstGlob} +${overrideFiles.length - 1}`
-          : firstGlob
-        : undefined
-
-      const fallbackName = filesSummary
-        ? `stylelint/override-${index + 1} (${filesSummary})`
-        : `stylelint/override-${index + 1}`
+      const fallbackName = `stylelint/override-${index + 1}`
 
       configs.push(normalizeConfigItem(override, index + 1, fallbackName))
     })

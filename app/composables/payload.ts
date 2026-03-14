@@ -230,6 +230,34 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     file.globs.forEach(i => group.globs.add(i))
   }
 
+  for (const [configIndex, config] of payload.configs.entries()) {
+    const declaredPositiveGlobs = (config.files ?? [])
+      .flat()
+      .filter(glob => typeof glob === 'string' && !glob.startsWith('!'))
+
+    for (const glob of declaredPositiveGlobs) {
+      if (!globToFiles.has(glob))
+        globToFiles.set(glob, new Set())
+
+      if ((globToFiles.get(glob)?.size ?? 0) > 0)
+        continue
+
+      const groupId = `declared-glob:${glob}`
+      if (!filesGroupMap.has(groupId)) {
+        filesGroupMap.set(groupId, {
+          id: groupId,
+          files: [],
+          configs: [],
+          globs: new Set<string>([glob]),
+        })
+      }
+
+      const group = filesGroupMap.get(groupId)!
+      if (!group.configs.includes(config))
+        group.configs.push(payload.configs[configIndex]!)
+    }
+  }
+
   const groups = [...filesGroupMap.values()]
   fileGroupsOpenState.value = groups.map(() => true)
 

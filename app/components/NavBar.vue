@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { version } from '~~/package.json'
 import { toggleDark } from '~/composables/dark'
 import { isFetching, payload } from '~/composables/payload'
-import { filtersRules as filters } from '~/composables/state'
+import { filtersRules as filters, stateStorage } from '~/composables/state'
 
 const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate)
 const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
@@ -28,7 +28,7 @@ const deprecatedUsing = computed(() =>
 const router = useRouter()
 function showDeprecated() {
   filters.status = 'deprecated'
-  filters.plugin = ''
+  filters.plugins = []
   filters.state = 'using'
   filters.search = ''
 
@@ -152,6 +152,18 @@ function showDeprecated() {
         <div i-ph-terminal-window-duotone flex-none />
         Dev
       </NuxtLink>
+      <button
+        :title="stateStorage.dimDisabledRules ? 'Disable dimming for disabled rules' : 'Enable dimming for disabled rules'"
+        ml1
+        text-xl
+        op50
+        hover:op75
+        @click="stateStorage.dimDisabledRules = !stateStorage.dimDisabledRules"
+      >
+        <span
+          :class="stateStorage.dimDisabledRules ? 'i-ph-eyes-closed-duotone' : 'i-ph-eye-duotone'"
+        />
+      </button>
       <button
         title="Toggle Dark Mode"
         i-ph-sun-dim-duotone

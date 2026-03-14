@@ -17,6 +17,7 @@ const props = defineProps<{
   value?: any
   class?: string
   gridView?: boolean
+  dimDisabled?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -132,6 +133,14 @@ const localConfiguredValue = computed(() => {
   return getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
 })
 
+const isDimmedRule = computed(
+  () => (props.dimDisabled ?? true) && getRuleLevel(props.value) === 'off',
+)
+
+const dimRuleClass = computed(() =>
+  isDimmedRule.value ? 'op55 hover:op100 transition-opacity' : '',
+)
+
 const effectiveConfiguredValue = computed(() => {
   if (localConfiguredValue.value !== undefined)
     return localConfiguredValue.value
@@ -198,7 +207,11 @@ const docsTooltip = computed(() => {
 
   <div
     v-if="value !== undefined"
-    :class="[props.class, gridView ? 'absolute top-2 right-2 flex-col' : '']"
+    class="min-w-0 w-full" :class="[
+      props.class,
+      dimRuleClass,
+      gridView ? 'absolute top-2 right-2 flex-col' : '',
+    ]"
   >
     <RuleLevelIcon
       :level="getRuleLevel(value)"
@@ -210,7 +223,7 @@ const docsTooltip = computed(() => {
     />
   </div>
 
-  <div :class="props.class" min-w-0 of-hidden pr2>
+  <div :class="[props.class, dimRuleClass]" min-w-0 of-hidden pr2>
     <VDropdown inline-block>
       <ColorizedRuleName
         v-tooltip="{ content: rule.name }"
@@ -252,11 +265,18 @@ const docsTooltip = computed(() => {
     </VDropdown>
   </div>
 
-  <div v-if="!gridView" :class="props.class" mx2 min-w-0 flex justify-center>
+  <div
+    v-if="!gridView"
+    :class="[props.class, dimRuleClass]"
+    mx2
+    min-w-0
+    flex
+    justify-center
+  >
     <div
-      grid="~ cols-[repeat(4,1.1rem)]"
+      grid="~ cols-[repeat(4,1.15rem)]"
 
-      min-h-5 items-center justify-items-center gap-x-1
+      min-h-5 items-center justify-items-center gap-x-1.5
     >
       <div
         v-if="rule.invalid"
@@ -292,7 +312,7 @@ const docsTooltip = computed(() => {
     </div>
   </div>
 
-  <div :class="props.class" min-w-0 flex="~ gap-2 items-center" of-hidden>
+  <div :class="[props.class, dimRuleClass]" min-w-0 flex="~ gap-2 items-center" of-hidden>
     <div
       :title="resolvedDescription"
       :class="[

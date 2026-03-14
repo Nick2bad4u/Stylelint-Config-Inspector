@@ -9,8 +9,8 @@ const props = defineProps<{
   getBind?: (ruleName: string) => Record<string, any>
   filter?: (ruleName: string) => boolean
   listColumns?: string
+  dimDisabled?: boolean
 }>()
-
 const defaultListColumns = 'max-content_max-content_max-content_minmax(0,1fr)'
 
 const names = computed(() =>
@@ -18,6 +18,8 @@ const names = computed(() =>
     ? props.rules.map(i => i.name)
     : Object.keys(props.rules),
 )
+
+const dimDisabled = computed(() => props.dimDisabled ?? true)
 function getRule(name: string) {
   return Array.isArray(props.rules)
     ? props.rules.find(i => i.name === name)!
@@ -77,6 +79,7 @@ const Wrapper = defineComponent({
           :grid-view="isGridView"
           :value="getValue(name)"
           v-bind="getBind?.(name)"
+          :dim-disabled="dimDisabled"
         >
           <template #popup>
             <slot name="popup" :rule-name="name" :value="getValue(name)">

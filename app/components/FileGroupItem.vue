@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { FilesGroup, SharedConfigEntry } from '~~/shared/types'
+import type { FilesGroup, FlatConfigItem } from '~~/shared/types'
 import { useRouter } from '#app/composables/router'
 import { computed, ref, watchEffect } from 'vue'
 
@@ -43,10 +43,10 @@ function goToConfig(idx: number) {
   router.push(`/configs?index=${idx + 1}`)
 }
 
-function getConfigFilePatterns(config: SharedConfigEntry): string[] {
+function getConfigFilePatterns(config: FlatConfigItem): string[] {
   return (config.files ?? [])
     .flat()
-    .map(pattern => pattern.trim())
+    .map((pattern: string) => pattern.trim())
     .filter(Boolean)
 }
 </script>
