@@ -7,6 +7,7 @@ import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
 import {
   filtersRules as filters,
+  isGridView,
   stateStorage,
 } from '~/composables/state'
 
@@ -238,6 +239,10 @@ function resetFilters() {
   filters.state = 'using'
   filters.status = ''
 }
+
+function setRulesViewMode(mode: 'list' | 'grid'): void {
+  isGridView.value = mode === 'grid'
+}
 </script>
 
 <template>
@@ -279,7 +284,7 @@ function resetFilters() {
           <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              class="badge border border-base px-2 py-0.5 text-xs transition"
+              class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 !hasSelectedPlugin
                   ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
@@ -294,7 +299,7 @@ function resetFilters() {
               v-for="pluginOption in pluginOptions"
               :key="pluginOption.value"
               type="button"
-              class="badge border border-base px-2 py-0.5 text-xs transition"
+              class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 isPluginSelected(pluginOption.value)
                   ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
@@ -468,9 +473,9 @@ function resetFilters() {
         <button
           btn-action
           :class="{
-            'btn-action-active': stateStorage.viewType === 'list',
+            'btn-action-active': !isGridView,
           }"
-          @click="stateStorage.viewType = 'list'"
+          @click="setRulesViewMode('list')"
         >
           <div i-ph-list-duotone />
           List
@@ -478,9 +483,9 @@ function resetFilters() {
         <button
           btn-action
           :class="{
-            'btn-action-active': stateStorage.viewType === 'grid',
+            'btn-action-active': isGridView,
           }"
-          @click="stateStorage.viewType = 'grid'"
+          @click="setRulesViewMode('grid')"
         >
           <div i-ph-grid-four-duotone />
           Grid
@@ -489,6 +494,7 @@ function resetFilters() {
     </div>
     <RuleList
       my4
+      :grid-view="isGridView"
       :rules="filtered"
       :list-columns="listColumns"
       :dim-disabled="stateStorage.dimDisabledRules"

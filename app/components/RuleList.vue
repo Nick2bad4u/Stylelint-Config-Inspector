@@ -10,9 +10,13 @@ const props = defineProps<{
   filter?: (ruleName: string) => boolean
   listColumns?: string
   dimDisabled?: boolean
+  showRuleStates?: boolean
+  gridView?: boolean
 }>()
 const defaultListColumns
   = '42px_minmax(12rem,clamp(12rem,32vw,24rem))_5rem_minmax(0,1fr)'
+
+const resolvedGridView = computed(() => props.gridView ?? isGridView.value)
 
 const names = computed(() =>
   Array.isArray(props.rules)
@@ -31,7 +35,7 @@ function getValue(name: string) {
 }
 
 const containerClass = computed(() => {
-  if (isGridView.value) {
+  if (resolvedGridView.value) {
     return 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-2'
   }
   else {
@@ -40,7 +44,7 @@ const containerClass = computed(() => {
 })
 
 const containerStyle = computed(() => {
-  if (isGridView.value)
+  if (resolvedGridView.value)
     return undefined
 
   const columns = props.listColumns || defaultListColumns
@@ -52,7 +56,7 @@ const containerStyle = computed(() => {
 const Wrapper = defineComponent({
   setup(_, { slots }) {
     return () =>
-      isGridView.value
+      resolvedGridView.value
         ? h(
             'div',
             {
@@ -73,11 +77,11 @@ const Wrapper = defineComponent({
         <RuleItem
           :rule="getRule(name)"
           :rule-states="
-            Array.isArray(rules)
+            props.showRuleStates !== false && Array.isArray(rules)
               ? payload.ruleToState.get(name) || []
               : undefined
           "
-          :grid-view="isGridView"
+          :grid-view="resolvedGridView"
           :value="getValue(name)"
           v-bind="getBind?.(name)"
           :dim-disabled="dimDisabled"

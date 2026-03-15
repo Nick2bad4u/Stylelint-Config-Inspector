@@ -551,7 +551,7 @@ coverage/**
     })
 
     expect(result.payload.rules['acme/templated-rule']?.docs?.description).toBe(
-      'Unexpected token "‹foo›" for acme/templated-rule',
+      'Unexpected token ‹foo› for acme/templated-rule',
     )
     expect(
       result.payload.rules['acme/templated-rule']?.messages?.rejected,
@@ -683,7 +683,7 @@ coverage/**
     })
 
     expect(result.payload.rules['scales/sizes']?.docs?.description).toBe(
-      'Expected "‹foo›" to be one of "‹bar›"',
+      'Expected ‹foo› to be one of ‹bar›',
     )
   })
 

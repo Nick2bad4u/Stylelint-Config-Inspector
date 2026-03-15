@@ -22,14 +22,14 @@ const rootTag = computed(() => (props.clickable ? 'button' : 'div'))
   <component
     :is="rootTag"
     v-tooltip="`${props.number} ${props.title}`"
-    flex="~ gap-2"
+    class="inline-flex items-center gap-1.5 text-left leading-none"
     :class="[
       props.number ? props.color : 'op25',
       props.clickable ? 'cursor-pointer transition hover:op100' : '',
     ]"
     @click="emit('click')"
   >
-    <div :class="props.icon" />
-    <span min-w-6 :class="props.color">{{ props.number || '' }}</span>
+    <div :class="props.icon" class="h-4 w-4 flex-none text-center" />
+    <span inline-block min-w="1.75ch" text-right font-mono tabular-nums :class="props.color">{{ props.number || '' }}</span>
   </component>
 </template>

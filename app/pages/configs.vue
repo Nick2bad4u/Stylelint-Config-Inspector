@@ -471,7 +471,7 @@ onMounted(async () => {
           <div class="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              class="badge border border-base px-2 py-0.5 text-xs transition"
+              class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 !hasSelectedPlugin
                   ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
@@ -485,7 +485,7 @@ onMounted(async () => {
               v-for="pluginOption in pluginOptions"
               :key="pluginOption.value"
               type="button"
-              class="badge border border-base px-2 py-0.5 text-xs transition"
+              class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 isPluginSelected(pluginOption.value)
                   ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
@@ -637,7 +637,7 @@ onMounted(async () => {
                 rules)
               </div>
             </summary>
-            <RuleList m4 :rules="mergedRules.common" />
+            <RuleList m4 :rules="mergedRules.common" :grid-view="false" />
           </details>
           <details
             class="flat-config-item"
@@ -676,6 +676,7 @@ onMounted(async () => {
               </div>
               <RuleList
                 m4
+                :grid-view="false"
                 :get-bind="(name: string) => ({ class: 'op50' })"
                 :rules="mergedRules.specificDisabled"
               />
@@ -684,7 +685,7 @@ onMounted(async () => {
               <div px4 pt4>
                 Enables ({{ Object.keys(mergedRules.specificEnabled).length }})
               </div>
-              <RuleList m4 :rules="mergedRules.specificEnabled" />
+              <RuleList m4 :rules="mergedRules.specificEnabled" :grid-view="false" />
             </template>
           </details>
         </template>

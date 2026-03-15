@@ -48,15 +48,19 @@ const displayScope = computed(() => {
   if (!parsed.value.scope) {
     return undefined
   }
-
-  if (parsed.value.scope === 'plugin' && props.prefix) {
-    return props.prefix
-  }
-
   return parsed.value.scope
 })
 
-const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
+const scopeColorKey = computed(() => {
+  if (!parsed.value.scope)
+    return ''
+
+  return parsed.value.scope === 'plugin' && props.prefix
+    ? props.prefix
+    : parsed.value.scope
+})
+
+const scopeColor = computed(() => getPluginColor(scopeColorKey.value))
 </script>
 
 <template>
@@ -65,6 +69,7 @@ const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
     :title="props.name"
     class="colorized-rule-name"
     :class="[
+      as === 'button' ? 'colorized-rule-name--button' : '',
       deprecated ? 'line-through' : '',
       borderless ? '' : 'badge',
       hoverReveal ? 'colorized-rule-name--hoverable' : '',
@@ -91,6 +96,17 @@ const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
   overflow: hidden;
   position: relative;
   white-space: nowrap;
+}
+
+.colorized-rule-name--button {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
 }
 
 .colorized-rule-name__name {

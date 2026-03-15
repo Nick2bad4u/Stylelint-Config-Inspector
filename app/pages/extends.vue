@@ -224,8 +224,10 @@ const activeRules = computed(() => {
           </div>
           <div v-if="activeRules.length" mt3>
             <RuleList
+              :grid-view="false"
               :rules="activeRules"
-              list-columns="56px_minmax(14rem,clamp(14rem,36vw,28rem))_5.25rem_minmax(0,1fr)"
+              :show-rule-states="false"
+              list-columns="40px_minmax(14rem,clamp(14rem,36vw,28rem))_5.25rem_minmax(0,1fr)"
             />
           </div>
           <div v-else mt3 text-sm italic op60>

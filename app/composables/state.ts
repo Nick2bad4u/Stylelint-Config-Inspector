@@ -57,7 +57,7 @@ export interface ViewerStateStorage {
   viewFileMatchType: ViewFileMatchType
   showSpecificOnly: boolean
   viewType: ViewType
-  gridViewRules: boolean
+  rulesViewType: ViewType
   viewFilesTab: ViewFilesTab
   dimDisabledRules: boolean
   filtersConfigs: FiltersConfigsPage
@@ -100,7 +100,7 @@ const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
   viewFileMatchType: 'all',
   showSpecificOnly: false,
   viewType: 'grid',
-  gridViewRules: true,
+  rulesViewType: 'list',
   viewFilesTab: 'group',
   dimDisabledRules: true,
   filtersConfigs: {
@@ -124,7 +124,7 @@ const VIEWER_STATE_STORAGE_KEYS = [
   'viewFileMatchType',
   'showSpecificOnly',
   'viewType',
-  'gridViewRules',
+  'rulesViewType',
   'viewFilesTab',
   'dimDisabledRules',
   'filtersConfigs',
@@ -251,10 +251,10 @@ function buildInitialStateStorage(): ViewerStateStorage {
       stored.viewType === 'list' || stored.viewType === 'grid'
         ? stored.viewType
         : DEFAULT_STATE_STORAGE.viewType,
-    gridViewRules:
-      typeof stored.gridViewRules === 'boolean'
-        ? stored.gridViewRules
-        : DEFAULT_STATE_STORAGE.gridViewRules,
+    rulesViewType:
+      stored.rulesViewType === 'list' || stored.rulesViewType === 'grid'
+        ? stored.rulesViewType
+        : DEFAULT_STATE_STORAGE.rulesViewType,
     viewFilesTab:
       stored.viewFilesTab === 'list' || stored.viewFilesTab === 'group'
         ? stored.viewFilesTab
@@ -326,24 +326,6 @@ function ensureStateRefs(): StateRefs {
       },
       { immediate: true },
     )
-
-    watch(
-      () => stateStorageRef.value.viewType,
-      (viewType) => {
-        stateStorageRef.value.gridViewRules = viewType === 'grid'
-      },
-      { immediate: true },
-    )
-
-    watch(
-      () => stateStorageRef.value.gridViewRules,
-      (grid) => {
-        const next: ViewType = grid ? 'grid' : 'list'
-        if (stateStorageRef.value.viewType !== next)
-          stateStorageRef.value.viewType = next
-      },
-      { immediate: true },
-    )
   }
 
   cachedStateRefs = {
@@ -406,9 +388,9 @@ export const filtersRules = createLazyStateAccessors(
 )
 
 export const isGridView = computed<boolean>({
-  get: () => ensureStateRefs().stateStorageRef.value.gridViewRules,
+  get: () => ensureStateRefs().stateStorageRef.value.rulesViewType === 'grid',
   set: (value) => {
-    ensureStateRefs().stateStorageRef.value.gridViewRules = value
+    ensureStateRefs().stateStorageRef.value.rulesViewType = value ? 'grid' : 'list'
   },
 })
 

@@ -13,7 +13,7 @@ import {
 } from '~~/shared/rules'
 import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
-import { isGridView, stateStorage } from '~/composables/state'
+import { stateStorage } from '~/composables/state'
 import { stringifyUnquoted } from '~/composables/strings'
 
 const props = defineProps<{
@@ -203,6 +203,92 @@ const sourceBadge = computed(() => {
   return undefined
 })
 
+interface SummaryItemDescriptor {
+  key: string
+  icon: string
+  number: number
+  color: string
+  title: string
+  clickable: boolean
+  section: 'files' | 'plugins' | 'extends' | 'ignores' | 'stylelintignore' | 'rules' | 'options'
+  extraClass?: string
+}
+
+const summaryItems = computed<SummaryItemDescriptor[]>(() => {
+  const optionsCount = Object.keys(extraConfigs.value).length
+  const pluginCount = Object.keys(props.config.plugins ?? {}).length
+  const extendsCount = props.config.extends?.length ?? 0
+  const rulesCount = Object.keys(props.config.rules ?? {}).length
+  const ignoresCount = props.config.ignores?.length ?? 0
+  const stylelintIgnoreCount = stylelintIgnoreInfo.value?.patterns.length ?? 0
+  return [
+    {
+      key: 'stylelintignore',
+      icon: 'i-ph-file-x-duotone',
+      number: stylelintIgnoreCount,
+      color: 'text-fuchsia5 dark:text-fuchsia4',
+      title: '.stylelintignore',
+      clickable: stylelintIgnoreCount > 0,
+      section: 'stylelintignore',
+    },
+    {
+      key: 'ignores',
+      icon: 'i-ph-eye-closed-duotone',
+      number: ignoresCount,
+      color: 'text-purple5 dark:text-purple4',
+      title: 'ignoreFiles',
+      clickable: ignoresCount > 0,
+      section: 'ignores',
+    },
+    {
+      key: 'options',
+      icon: 'i-ph-sliders-duotone',
+      number: optionsCount,
+      color: 'text-green5',
+      title: 'Options',
+      clickable: optionsCount > 0,
+      section: 'options',
+    },
+    {
+      key: 'files',
+      icon: 'i-ph-file-magnifying-glass-duotone',
+      number: affectedFilesCount.value,
+      color: 'text-yellow5',
+      title: 'Files',
+      clickable: affectedFilesCount.value > 0 || !!props.config.files,
+      section: 'files',
+    },
+    {
+      key: 'plugins',
+      icon: 'i-ph-plug-duotone',
+      number: pluginCount,
+      color: 'text-teal5',
+      title: 'Plugins',
+      clickable: pluginCount > 0,
+      section: 'plugins',
+    },
+    {
+      key: 'extends',
+      icon: 'i-ph-stack-plus-duotone',
+      number: extendsCount,
+      color: 'text-violet5',
+      title: 'Extends',
+      clickable: extendsCount > 0,
+      section: 'extends',
+    },
+    {
+      key: 'rules',
+      icon: 'i-ph-list-dashes-duotone',
+      number: rulesCount,
+      color: 'text-blue5 dark:text-blue4',
+      title: 'Rules',
+      clickable: rulesCount > 0,
+      section: 'rules',
+      extraClass: 'mr-2',
+    },
+  ]
+})
+
 async function scrollToSection(
   section:
     | 'files'
@@ -293,64 +379,18 @@ async function scrollToSection(
             </code>
           </span>
 
-          <div flex="~ gap-2 items-start">
+          <div class="grid grid-cols-7 items-center justify-items-end gap-2">
             <SummarizeItem
-              icon="i-ph-file-magnifying-glass-duotone"
-              :number="affectedFilesCount"
-              color="text-yellow5"
-              title="Files"
-              :clickable="affectedFilesCount > 0 || !!config.files"
-              @click="scrollToSection('files')"
-            />
-            <SummarizeItem
-              icon="i-ph-eye-closed-duotone"
-              :number="config.ignores?.length || 0"
-              color="text-purple5 dark:text-purple4"
-              title="ignoreFiles"
-              :clickable="!!config.ignores?.length"
-              @click="scrollToSection('ignores')"
-            />
-            <SummarizeItem
-              v-if="stylelintIgnoreInfo?.patterns.length"
-              icon="i-ph-file-x-duotone"
-              :number="stylelintIgnoreInfo.patterns.length"
-              color="text-fuchsia5 dark:text-fuchsia4"
-              title=".stylelintignore"
-              clickable
-              @click="scrollToSection('stylelintignore')"
-            />
-            <SummarizeItem
-              icon="i-ph-sliders-duotone"
-              :number="Object.keys(extraConfigs).length"
-              color="text-green5"
-              title="Options"
-              :clickable="Object.keys(extraConfigs).length > 0"
-              @click="scrollToSection('options')"
-            />
-            <SummarizeItem
-              icon="i-ph-plug-duotone"
-              :number="Object.keys(config.plugins || {}).length"
-              color="text-teal5"
-              title="Plugins"
-              :clickable="Object.keys(config.plugins || {}).length > 0"
-              @click="scrollToSection('plugins')"
-            />
-            <SummarizeItem
-              icon="i-ph-stack-plus-duotone"
-              :number="config.extends?.length || 0"
-              color="text-violet5"
-              title="Extends"
-              :clickable="!!config.extends?.length"
-              @click="scrollToSection('extends')"
-            />
-            <SummarizeItem
-              icon="i-ph-list-dashes-duotone"
-              :number="Object.keys(config.rules || {}).length"
-              color="text-blue5 dark:text-blue4"
-              title="Rules"
-              :clickable="!!Object.keys(config.rules || {}).length"
-              mr-2
-              @click="scrollToSection('rules')"
+              v-for="item of summaryItems"
+              :key="item.key"
+              class="w-14 justify-between"
+              :icon="item.icon"
+              :number="item.number"
+              :color="item.color"
+              :title="item.title"
+              :clickable="item.clickable"
+              :class="item.extraClass"
+              @click="scrollToSection(item.section)"
             />
           </div>
         </div>
@@ -553,7 +593,7 @@ async function scrollToSection(
         </div>
         <RuleList
           py2
-          :class="isGridView ? 'pl6' : ''"
+          :grid-view="false"
           :list-columns="configRuleListColumns"
           :rules="config.rules"
           :filter="name => (!filters?.rule || filters.rule === name) && matchesSelectedRulePlugins(name)"

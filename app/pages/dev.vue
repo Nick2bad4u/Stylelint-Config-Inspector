@@ -62,7 +62,8 @@ const viewerSummary = computed(() => ({
   theme: stateStorage.theme,
   fontScale: stateStorage.fontScale,
   dimDisabledRules: stateStorage.dimDisabledRules,
-  viewType: stateStorage.viewType,
+  configsViewType: stateStorage.viewType,
+  rulesViewType: stateStorage.rulesViewType,
   viewFilesTab: stateStorage.viewFilesTab,
   viewFileMatchType: stateStorage.viewFileMatchType,
   configFilepathFilter: stateStorage.filtersConfigs.filepath,
@@ -130,42 +131,72 @@ const metadataHealth = computed(() => {
       </div>
       <div mt3 grid="~ cols-1 gap-3 md:cols-2 xl:cols-4">
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
-          <div font-mono>
-            Config path: {{ payload.meta.configPath || 'not resolved' }}
+          <div class="dev-kv">
+            <span class="dev-label">Config path:</span> <code class="dev-value">{{ payload.meta.configPath || 'not resolved' }}</code>
           </div>
-          <div font-mono>
-            Target file: {{ payload.meta.targetFilePath || 'default synthetic target' }}
+          <div class="dev-kv">
+            <span class="dev-label">Target file:</span> <code class="dev-value">{{ payload.meta.targetFilePath || 'default synthetic target' }}</code>
           </div>
-          <div font-mono>
-            Engine: {{ payload.meta.engine || 'unknown' }}
+          <div class="dev-kv">
+            <span class="dev-label">Engine:</span> <code class="dev-value">{{ payload.meta.engine || 'unknown' }}</code>
           </div>
-          <div font-mono>
-            Last update: {{ new Date(payload.meta.lastUpdate).toLocaleString() }}
+          <div class="dev-kv">
+            <span class="dev-label">Last update:</span> <code class="dev-value">{{ new Date(payload.meta.lastUpdate).toLocaleString() }}</code>
           </div>
-          <div font-mono>
-            .stylelintignore: {{ payload.meta.stylelintIgnore?.path || 'not found' }}
+          <div class="dev-kv">
+            <span class="dev-label">.stylelintignore:</span> <code class="dev-value">{{ payload.meta.stylelintIgnore?.path || 'not found' }}</code>
           </div>
         </div>
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
-          <div>Total rules: {{ rules.length }}</div>
-          <div>Total config items: {{ configSummary.total }}</div>
-          <div>General configs: {{ configSummary.general }}</div>
-          <div>Ignore-only configs: {{ configSummary.ignoreOnly }}</div>
-          <div>Override configs: {{ configSummary.overrides }}</div>
+          <div class="dev-kv">
+            <span class="dev-label">Total rules:</span> <span class="dev-value">{{ rules.length }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Total config items:</span> <span class="dev-value">{{ configSummary.total }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">General configs:</span> <span class="dev-value">{{ configSummary.general }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Ignore-only configs:</span> <span class="dev-value">{{ configSummary.ignoreOnly }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Override configs:</span> <span class="dev-value">{{ configSummary.overrides }}</span>
+          </div>
         </div>
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
-          <div>Matched files: {{ workspaceSummary.matchedFiles }}</div>
-          <div>Files groups: {{ workspaceSummary.groups }}</div>
-          <div>Tracked globs: {{ workspaceSummary.globs }}</div>
-          <div>Configs with files: {{ workspaceSummary.configsWithFiles }}</div>
-          <div>Diagnostics: {{ diagnostics.length }}</div>
+          <div class="dev-kv">
+            <span class="dev-label">Matched files:</span> <span class="dev-value">{{ workspaceSummary.matchedFiles }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">File groups:</span> <span class="dev-value">{{ workspaceSummary.groups }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Tracked globs:</span> <span class="dev-value">{{ workspaceSummary.globs }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Configs with files:</span> <span class="dev-value">{{ workspaceSummary.configsWithFiles }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Diagnostics:</span> <span class="dev-value">{{ diagnostics.length }}</span>
+          </div>
         </div>
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
-          <div>Extends entries: {{ extendsSummary.total }}</div>
-          <div>Package extends: {{ extendsSummary.packages }}</div>
-          <div>Local extends: {{ extendsSummary.locals }}</div>
-          <div>Extends with rules: {{ extendsSummary.withRules }}</div>
-          <div>Total extends rules: {{ extendsSummary.totalRules }}</div>
+          <div class="dev-kv">
+            <span class="dev-label">Extends entries:</span> <span class="dev-value">{{ extendsSummary.total }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Package extends:</span> <span class="dev-value">{{ extendsSummary.packages }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Local extends:</span> <span class="dev-value">{{ extendsSummary.locals }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Extends with rules:</span> <span class="dev-value">{{ extendsSummary.withRules }}</span>
+          </div>
+          <div class="dev-kv">
+            <span class="dev-label">Total extends rules:</span> <span class="dev-value">{{ extendsSummary.totalRules }}</span>
+          </div>
         </div>
       </div>
     </section>
@@ -189,29 +220,20 @@ const metadataHealth = computed(() => {
         leading-7
         font-mono
       >
-        <div>
-          Generated descriptions:
-          {{ metadataHealth.generatedDescriptions }} ({{
-            metadataHealth.generatedDescriptionsPct
-          }}%)
+        <div class="dev-kv">
+          <span class="dev-label">Generated descriptions:</span> <span class="dev-value">{{ metadataHealth.generatedDescriptions }} ({{ metadataHealth.generatedDescriptionsPct }}%)</span>
         </div>
-        <div>
-          Message-derived descriptions:
-          {{ metadataHealth.messageDescriptions }} ({{
-            metadataHealth.messageDescriptionsPct
-          }}%)
+        <div class="dev-kv">
+          <span class="dev-label">Message-derived descriptions:</span> <span class="dev-value">{{ metadataHealth.messageDescriptions }} ({{ metadataHealth.messageDescriptionsPct }}%)</span>
         </div>
-        <div>
-          Missing docs URLs: {{ metadataHealth.missingDocsUrls }} ({{
-            metadataHealth.missingDocsUrlsPct
-          }}%)
+        <div class="dev-kv">
+          <span class="dev-label">Missing docs URLs:</span> <span class="dev-value">{{ metadataHealth.missingDocsUrls }} ({{ metadataHealth.missingDocsUrlsPct }}%)</span>
         </div>
-        <div>Inferred docs URLs: {{ metadataHealth.inferredDocsUrls }}</div>
-        <div>
-          Placeholder descriptions:
-          {{ metadataHealth.placeholderDescriptions }} ({{
-            metadataHealth.placeholderDescriptionsPct
-          }}%)
+        <div class="dev-kv">
+          <span class="dev-label">Inferred docs URLs:</span> <span class="dev-value">{{ metadataHealth.inferredDocsUrls }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Placeholder descriptions:</span> <span class="dev-value">{{ metadataHealth.placeholderDescriptions }} ({{ metadataHealth.placeholderDescriptionsPct }}%)</span>
         </div>
       </div>
     </section>
@@ -239,16 +261,39 @@ const metadataHealth = computed(() => {
         <span font-medium>Viewer state</span>
       </div>
       <div border="~ emerald/20" mt3 rounded-lg bg-black:8 p3 text-sm leading-7 font-mono dark:bg-white:4>
-        <div>Theme: {{ viewerSummary.theme }}</div>
-        <div>Font scale: {{ viewerSummary.fontScale }}</div>
-        <div>Rule view: {{ viewerSummary.viewType }}</div>
-        <div>Files tab mode: {{ viewerSummary.viewFilesTab }}</div>
-        <div>File match view: {{ viewerSummary.viewFileMatchType }}</div>
-        <div>Config filepath filter: {{ viewerSummary.configFilepathFilter || '∅' }}</div>
-        <div>Config rule filter: {{ viewerSummary.configRuleFilter || '∅' }}</div>
-        <div>Config plugin filters: {{ viewerSummary.configPluginFilters.length ? viewerSummary.configPluginFilters.join(', ') : '∅' }}</div>
-        <div>Rules plugin filters: {{ viewerSummary.rulesPluginFilters.length ? viewerSummary.rulesPluginFilters.join(', ') : '∅' }}</div>
-        <div>Dim disabled rules: {{ viewerSummary.dimDisabledRules ? 'on' : 'off' }}</div>
+        <div class="dev-kv">
+          <span class="dev-label">Theme:</span> <span class="dev-value">{{ viewerSummary.theme }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Font scale:</span> <span class="dev-value">{{ viewerSummary.fontScale }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Configs view:</span> <span class="dev-value">{{ viewerSummary.configsViewType }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Rules view:</span> <span class="dev-value">{{ viewerSummary.rulesViewType }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Files tab mode:</span> <span class="dev-value">{{ viewerSummary.viewFilesTab }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">File match view:</span> <span class="dev-value">{{ viewerSummary.viewFileMatchType }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Config filepath filter:</span> <span class="dev-value">{{ viewerSummary.configFilepathFilter || '∅' }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Config rule filter:</span> <span class="dev-value">{{ viewerSummary.configRuleFilter || '∅' }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Config plugin filters:</span> <span class="dev-value">{{ viewerSummary.configPluginFilters.length ? viewerSummary.configPluginFilters.join(', ') : '∅' }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Rules plugin filters:</span> <span class="dev-value">{{ viewerSummary.rulesPluginFilters.length ? viewerSummary.rulesPluginFilters.join(', ') : '∅' }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Dim disabled rules:</span> <span class="dev-value">{{ viewerSummary.dimDisabledRules ? 'on' : 'off' }}</span>
+        </div>
       </div>
       <div v-if="activeViewerFilters.length" mt3 flex="~ gap-2 wrap">
         <code
@@ -270,12 +315,24 @@ const metadataHealth = computed(() => {
         <span font-medium>Config composition summary</span>
       </div>
       <div border="~ violet/20" mt3 rounded-lg bg-black:8 p3 text-sm leading-7 font-mono dark:bg-white:4>
-        <div>Root entries: {{ configSummary.root }}</div>
-        <div>Configs with extends: {{ configSummary.withExtends }}</div>
-        <div>Configs with plugins: {{ configSummary.withPlugins }}</div>
-        <div>Unique extends entries: {{ payload.extendsInfo?.length ?? 0 }}</div>
-        <div>General config items: {{ configSummary.general }}</div>
-        <div>Ignore-only config items: {{ configSummary.ignoreOnly }}</div>
+        <div class="dev-kv">
+          <span class="dev-label">Root entries:</span> <span class="dev-value">{{ configSummary.root }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Configs with extends:</span> <span class="dev-value">{{ configSummary.withExtends }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Configs with plugins:</span> <span class="dev-value">{{ configSummary.withPlugins }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Unique extends entries:</span> <span class="dev-value">{{ payload.extendsInfo?.length ?? 0 }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">General config items:</span> <span class="dev-value">{{ configSummary.general }}</span>
+        </div>
+        <div class="dev-kv">
+          <span class="dev-label">Ignore-only config items:</span> <span class="dev-value">{{ configSummary.ignoreOnly }}</span>
+        </div>
       </div>
       <div mt3 grid="~ cols-1 gap-3 lg:cols-2">
         <div border="~ violet/20" rounded-lg bg-black:8 p3 dark:bg-white:4>

@@ -60,6 +60,32 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
     .map((pattern: string) => pattern.trim())
     .filter(Boolean)
 }
+
+const filesOpen = ref(true)
+
+const groupIdentity = computed(() => {
+  if (groupName.value?.type === 'config') {
+    return {
+      label: 'Config',
+      icon: 'i-ph-stack-duotone',
+      colorClass: 'text-sky6 dark:text-sky3',
+    } as const
+  }
+
+  if (props.group.kind === 'default') {
+    return {
+      label: 'Workspace scan',
+      icon: 'i-ph-binoculars-duotone',
+      colorClass: 'text-fuchsia6 dark:text-fuchsia3',
+    } as const
+  }
+
+  return {
+    label: 'Glob',
+    icon: 'i-ph-file-magnifying-glass-duotone',
+    colorClass: 'text-violet6 dark:text-violet3',
+  } as const
+})
 </script>
 
 <template>
@@ -100,7 +126,10 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
         <div flex flex-auto flex-col gap-3 md:flex-row>
           <span flex-auto flex="~ gap-2 items-center">
             <template v-if="groupName?.type === 'config'">
-              <span op75>Config</span>
+              <span flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
+                <div :class="groupIdentity.icon" flex-none />
+                <span op85>{{ groupIdentity.label }}</span>
+              </span>
               <ColorizedConfigName
                 badge
                 :name="groupName.config.name"
@@ -108,7 +137,10 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
               />
             </template>
             <template v-else-if="groupName?.type === 'glob'">
-              <span op75>{{ group.kind === 'default' ? 'Workspace scan' : 'Glob' }}</span>
+              <span flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
+                <div :class="groupIdentity.icon" flex-none />
+                <span op85>{{ groupIdentity.label }}</span>
+              </span>
               <GlobItem
                 v-for="(glob, idx) of groupName.globs"
                 :key="idx"
@@ -270,19 +302,26 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
         />
       </div>
 
-      <div flex="~ gap-2 items-center">
-        <div i-ph-files-duotone flex-none />
-        <div>Matched Local Files ({{ group.files.length }})</div>
-      </div>
+      <details
+        :open="filesOpen"
+        class="border border-base rounded-lg bg-black:4 p3 dark:bg-white:3"
+        @toggle="filesOpen = ($event.target as HTMLDetailsElement).open"
+      >
+        <summary flex="~ gap-2 items-center wrap" cursor-pointer select-none>
+          <div class="[details[open]_&]:rotate-90" i-ph-caret-right op50 transition />
+          <div i-ph-files-duotone flex-none />
+          <div>Matched Local Files ({{ group.files.length }})</div>
+        </summary>
 
-      <div flex="~ col gap-1" ml7 mt--2>
-        <FileItem
-          v-for="file of group.files"
-          :key="file"
-          font-mono
-          :filepath="file"
-        />
-      </div>
+        <div flex="~ col gap-1" mt3>
+          <FileItem
+            v-for="file of group.files"
+            :key="file"
+            font-mono
+            :filepath="file"
+          />
+        </div>
+      </details>
     </div>
   </details>
 </template>

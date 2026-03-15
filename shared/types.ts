@@ -113,6 +113,7 @@ export type RuleDocsUrlSource = 'meta' | 'inferred'
 export interface RuleInfo {
   name: string
   plugin: string
+  pluginPackageName?: string
   docs?: {
     description?: string
     descriptionSource?: RuleDescriptionSource

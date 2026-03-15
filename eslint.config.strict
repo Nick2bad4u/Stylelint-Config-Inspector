@@ -1,3 +1,5 @@
+// @ts-nocheck -- ESLint plugins always have the wrong types and are a PITA to type correctly,
+// and this file is already checked by ESLint itself, so we can skip type checking for the whole file.
 /**
  * Optimized ESLint configuration
  *

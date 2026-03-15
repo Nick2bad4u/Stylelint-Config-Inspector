@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { payload } from '~/composables/payload'
 import { fileGroupsOpenState, stateStorage } from '../composables/state'
+
+const listFilesOpen = ref(true)
 
 function expandAll() {
   fileGroupsOpenState.value = fileGroupsOpenState.value.map(() => true)
@@ -69,19 +72,22 @@ function collapseAll() {
         />
       </div>
       <div v-else>
-        <div flex="~ gap-2 items-center">
-          <div i-ph-files-duotone flex-none />
-          <div>
-            Matched Local Files ({{ payload.filesResolved.list.length }})
+        <details :open="listFilesOpen" class="border border-base rounded-xl bg-black:4 p3 dark:bg-white:3" @toggle="listFilesOpen = ($event.target as HTMLDetailsElement).open">
+          <summary flex="~ gap-2 items-center wrap" cursor-pointer select-none>
+            <div class="[details[open]_&]:rotate-90" i-ph-caret-right op50 transition />
+            <div i-ph-files-duotone flex-none text-sky5 />
+            <div>
+              Matched Local Files ({{ payload.filesResolved.list.length }})
+            </div>
+          </summary>
+          <div flex="~ col gap-1" py4 font-mono>
+            <FileItem
+              v-for="file of payload.filesResolved.list"
+              :key="file"
+              :filepath="file"
+            />
           </div>
-        </div>
-        <div flex="~ col gap-1" py4 font-mono>
-          <FileItem
-            v-for="file of payload.filesResolved.list"
-            :key="file"
-            :filepath="file"
-          />
-        </div>
+        </details>
       </div>
     </template>
     <div v-else rounded border="~ base" bg-gray:5 p3 text-sm>

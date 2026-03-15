@@ -235,70 +235,118 @@ const isDimmedRule = computed(() => {
 const dimRuleClass = computed(() =>
   isDimmedRule.value ? 'op55 hover:op100 transition-opacity' : '',
 )
+
+const hasRuleStates = computed(() => (props.ruleStates?.length ?? 0) > 0)
+const hasLocalValue = computed(() => props.value !== undefined)
+
+const pluginPackageName = computed(() => {
+  if (props.rule.pluginPackageName)
+    return props.rule.pluginPackageName
+
+  if (props.rule.plugin)
+    return `stylelint-${props.rule.plugin}`
+
+  return undefined
+})
+
+const pluginPrefixHint = computed(() => {
+  const [scope] = props.rule.name.split('/')
+  if (scope !== 'plugin')
+    return undefined
+
+  if (!pluginPackageName.value) {
+    return 'This rule uses a generic plugin/ prefix from its upstream plugin package.'
+  }
+
+  return `This rule is published with a generic plugin/ prefix by ${pluginPackageName.value}. Use ${props.rule.name} in config.`
+})
+
+const ruleNameTooltip = computed(() => {
+  if (!pluginPrefixHint.value)
+    return `Rule name: ${props.rule.name}`
+
+  return [
+    `Rule name: ${props.rule.name}`,
+    pluginPrefixHint.value,
+  ].join('\n')
+})
 </script>
 
 <template>
   <div
-    v-if="ruleStates"
-    flex="~ items-center gap-0.5 justify-end"
-    text-lg
-    :class="gridView ? 'absolute top-2 right-2 flex-col' : ''"
-  >
-    <template v-for="(s, idx) of ruleStates" :key="idx">
-      <VDropdown>
-        <RuleLevelIcon
-          :level="s.level"
-          :config-index="s.configIndex"
-          :has-options="s.primaryOption !== undefined || !!s.options?.length"
-          :has-redundant-options="redundantOptions(s.options)"
-        />
-        <template #popper="{ shown }">
-          <RuleStateItem v-if="shown" :state="s" />
-        </template>
-      </VDropdown>
-    </template>
-  </div>
-
-  <div
-    v-if="value !== undefined"
-    class="min-w-0" :class="[
+    :class="[
       props.class,
       dimRuleClass,
-      gridView ? 'absolute top-2 right-2 flex justify-end items-start' : 'w-full',
+      gridView
+        ? 'absolute top-2 right-2 flex justify-end items-start'
+        : 'w-full flex items-center justify-end',
     ]"
+    text-lg
   >
-    <RuleLevelIcon
-      :level="getRuleLevel(value)"
-      :has-options="
-        getRulePrimaryOption(value) !== undefined
-          || !!getRuleOptions(value)?.length
-      "
-      :has-redundant-options="redundantOptions(getRuleOptions(value))"
-    />
+    <template v-if="hasRuleStates">
+      <div flex="~ items-center gap-0.5 justify-end" :class="gridView ? 'flex-col' : ''">
+        <template v-for="(s, idx) of ruleStates" :key="idx">
+          <VDropdown>
+            <RuleLevelIcon
+              :level="s.level"
+              :config-index="s.configIndex"
+              :has-options="s.primaryOption !== undefined || !!s.options?.length"
+              :has-redundant-options="redundantOptions(s.options)"
+            />
+            <template #popper="{ shown }">
+              <RuleStateItem v-if="shown" :state="s" />
+            </template>
+          </VDropdown>
+        </template>
+      </div>
+    </template>
+    <template v-else-if="hasLocalValue">
+      <RuleLevelIcon
+        :level="getRuleLevel(value)"
+        :has-options="
+          getRulePrimaryOption(value) !== undefined
+            || !!getRuleOptions(value)?.length
+        "
+        :has-redundant-options="redundantOptions(getRuleOptions(value))"
+      />
+    </template>
+    <div v-else-if="!gridView" h-5 w-5 op0 />
   </div>
 
   <div :class="[props.class, dimRuleClass]" relative min-w-0 pr2>
-    <VDropdown inline-block>
-      <ColorizedRuleName
-        v-tooltip="{ content: rule.name }"
-        :name="rule.name"
-        :prefix="rule.plugin"
-        :deprecated="rule.deprecated"
-        :borderless="gridView"
-        :break="gridView"
-        :hover-reveal="!gridView"
-        :title="rule.name"
-        text-start
-        as="button"
-        @click="(e: MouseEvent) => emit('badgeClick', e)"
-      />
+    <VDropdown>
+      <div min-w-0 w-full inline-flex items-center gap-1>
+        <button
+          v-if="pluginPrefixHint"
+          v-tooltip="pluginPrefixHint"
+          class="flex-none rounded-full p0.5 text-violet6 transition hover:bg-violet:12 dark:text-violet3"
+          type="button"
+          title="Plugin prefix note"
+        >
+          <span i-ph-info-duotone text-sm />
+        </button>
+        <ColorizedRuleName
+          v-tooltip="{ content: ruleNameTooltip }"
+          :name="rule.name"
+          :prefix="rule.plugin"
+          :deprecated="rule.deprecated"
+          :borderless="true"
+          :break="gridView"
+          :hover-reveal="false"
+          :title="rule.name"
+          class="min-w-0"
+          text-start
+          as="button"
+          @click="(e: MouseEvent) => emit('badgeClick', e)"
+        />
+      </div>
       <template #popper="{ shown }">
         <div v-if="shown" max-h="50vh" min-w="min(32rem,82vw)">
           <div flex="~ items-center gap-2" p3>
             <NuxtLink
               v-if="!rule.invalid && rule.docs?.url"
               v-tooltip="docsTooltip"
-              btn-action-sm
+              class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/8 px3 py1.5 text-sm text-inherit no-underline transition dark:bg-white/6 hover:bg-black/14 dark:hover:bg-white/12"
               :to="rule.docs?.url"
               target="_blank"
               rel="noopener noreferrer"
@@ -308,11 +356,32 @@ const dimRuleClass = computed(() =>
               Docs
               <div v-if="isInferredDocsUrl" i-ph-magic-wand-duotone op60 />
             </NuxtLink>
-            <button btn-action-sm title="Copy" @click="copy(rule.name)">
+            <button
+              class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/8 px3 py1.5 text-sm text-inherit transition dark:bg-white/6 hover:bg-black/14 dark:hover:bg-white/12"
+              title="Copy"
+              @click="copy(rule.name)"
+            >
               <div i-ph-copy-duotone />
               Copy name
             </button>
             <slot name="popup-actions" />
+          </div>
+          <div border="t base" px3 pb2 pt2 text-xs>
+            <div flex="~ items-center gap-1.5 wrap">
+              <span op65>Rule name</span>
+              <code font-mono>
+                {{ rule.name }}
+              </code>
+            </div>
+            <div
+              v-if="pluginPrefixHint"
+              class="mt1 inline-flex items-start gap-1.5 text-xs op75"
+            >
+              <span i-ph-info-duotone mt0.25 text-sm />
+              <span>
+                Published by <code>{{ pluginPackageName ?? 'unknown package' }}</code> with a generic <code>plugin/</code> prefix.
+              </span>
+            </div>
           </div>
           <slot name="popup" />
         </div>
@@ -382,9 +451,8 @@ const dimRuleClass = computed(() =>
         <span v-if="segment.type === 'text'">{{ segment.value }}</span>
         <code
           v-else
-          class="mx-0.5 inline-flex items-center gap-1 rounded-full bg-violet:10 px-1.5 py-0.2 text-[0.92em] text-violet7 dark:text-violet3"
+          class="mx-0.5 inline text-[0.94em] text-violet7 font-mono dark:text-violet3"
         >
-          <span class="text-[0.95em]" i-ph-brackets-angle-duotone op70 />
           {{ segment.value }}
         </code>
       </template>

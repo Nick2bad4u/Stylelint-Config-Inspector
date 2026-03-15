@@ -71,6 +71,7 @@ const MESSAGE_PLACEHOLDER_RE = /%[a-z]/i
 const MESSAGE_UNDEFINED_RE = /\bundefined\b/i
 const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/
 const DESCRIPTION_TEMPLATE_TOKEN_RE = /<([a-z][\w-]*)>/gi
+const QUOTED_GENERATED_PLACEHOLDER_RE = /(["'])(‹[^›]+›)\1/g
 const MULTIPLE_WHITESPACE_RE = /\s+/g
 const LINE_SPLIT_RE = /\r?\n/u
 const GIT_SUFFIX_RE = /\.git$/i
@@ -988,6 +989,7 @@ function sanitizeDescription(ruleName: string, description: string): string {
       }
       return token.replaceAll('-', ' ')
     })
+    .replace(QUOTED_GENERATED_PLACEHOLDER_RE, '$2')
     .replace(MULTIPLE_WHITESPACE_RE, ' ')
     .trim()
 
@@ -1130,6 +1132,7 @@ function buildRuleInfo(
   recommendedRuleNames: Set<string>,
   configuredRuleNames: Set<string>,
   sourcePlugin?: string,
+  sourcePackageName?: string,
   sourceDocsUrl?: string,
   sourceDocsUrlSource?: RuleDocsUrlSource,
 ): RuleInfo {
@@ -1149,6 +1152,7 @@ function buildRuleInfo(
   const info: RuleInfo = {
     name,
     plugin,
+    ...(sourcePackageName ? { pluginPackageName: sourcePackageName } : {}),
     docs: {
       description: description.text,
       descriptionSource: description.source,
@@ -1510,6 +1514,7 @@ async function buildRuleCatalog(
         recommendedRuleNames,
         configuredRuleNames,
         pluginDefinition?.sourcePlugin,
+        pluginDefinition?.sourcePackageName,
         pluginDefinition?.sourceDocsUrl,
         pluginDefinition?.sourceDocsUrlSource,
       ),
