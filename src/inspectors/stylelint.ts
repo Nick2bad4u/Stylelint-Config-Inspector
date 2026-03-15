@@ -32,6 +32,7 @@ import {
   matchFile,
 } from '../../shared/configs'
 import {
+  DEFAULT_TARGET_FILE,
   MARK_CHECK,
   MARK_INFO,
   stylelintConfigFilenames,
@@ -39,7 +40,6 @@ import {
 } from '../constants'
 import { ConfigPathError } from '../errors'
 
-const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
 const DEFAULT_WORKSPACE_SCAN_GLOBS = [
   '**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}',
 ]

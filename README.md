@@ -28,7 +28,9 @@ Use a target file so Stylelint resolves context-sensitive options (`overrides`, 
 npx @stylelint/config-inspector --file src/styles/app.css
 ```
 
-`--target` is also supported as a backward-compatible alias.
+If you do not provide `--file` or `--target`, the inspector resolves your config against a synthetic file named `stylelint-inspector-target.css` relative to the resolved base path.
+
+`--file` and `--target` are equivalent.
 
 ### Static build
 
@@ -54,14 +56,6 @@ Environment aliases are also supported:
 - `STYLELINT_TARGET` (or legacy `ESLINT_TARGET`)
 
 Run `npx @stylelint/config-inspector --help` for all options.
-
-## Development
-
-- `npm install`
-- `npm run dev` to run Nuxt dev server
-- `npm test` to run tests
-- `npm run typecheck` for type checks
-- `npm run build` for production build
 
 ## License
 

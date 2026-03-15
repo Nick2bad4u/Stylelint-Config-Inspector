@@ -1,15 +1,15 @@
-# Contributing to eslint-plugin-typefest
+# Contributing to Stylelint Config Inspector
 
 Thanks for your interest in contributing.
 
-This repository contains an ESLint plugin focused on `type-fest` and
-`ts-extras` usage patterns for TypeScript codebases.
+This repository contains the Stylelint Config Inspector CLI, server, and web UI
+for exploring resolved Stylelint configuration state.
 
 Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md).
 
 ## Prerequisites
 
-- Node.js `>=20.19.0` (see `package.json#engines`)
+- Node.js LTS
 - npm `>=11`
 - Git
 
@@ -20,23 +20,21 @@ Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md)
 2. Install dependencies from the repository root:
 
    ```bash
-   npm ci --force
+  npm ci
    ```
 
 3. Run the main quality gate:
 
    ```bash
-   npm run lint:all:fix:quiet
-   npm run typecheck
-   npm test
+  npm run check
    ```
 
 ## Recommended development workflow
 
 1. Create a branch from `main`.
 2. Make focused changes.
-3. Add or update tests in `test/` when behavior changes.
-4. Update relevant documentation in `docs/` and root docs when needed.
+3. Add or update tests in `tests/` when behavior changes.
+4. Update relevant documentation in root docs when needed.
 5. Run validation commands before opening a pull request.
 
 ## Debugging and logging policy
@@ -44,11 +42,11 @@ Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md)
 To keep runtime plugin behavior predictable, this repository enforces strict
 rules for logging and debugger usage in source code.
 
-- `src/**` and `plugin.mjs`: do **not** commit `console.*` or `debugger`
+- `src/**`, `app/**`, `server/**`, and `shared/**`: do **not** commit `console.*` or `debugger`
   statements.
 - `scripts/**`: `console.log`/`console.warn`/`console.error` are allowed for
   CLI progress and diagnostics.
-- `test/**`: avoid noisy logging by default; only keep it when a test is
+- `tests/**`: avoid noisy logging by default; only keep it when a test is
   explicitly validating logging behavior.
 
 When adding script output, prefer this severity split:
@@ -61,9 +59,11 @@ When adding script output, prefer this severity split:
 
 ```text
 .
-├── src/                  # Plugin source and rule implementations
-├── test/                 # Rule tests and test helpers
-├── docs/                 # Rule docs and Docusaurus docs app
+├── app/                  # Nuxt app UI
+├── server/               # Nitro server endpoints
+├── shared/               # Shared payload and type definitions
+├── src/                  # CLI and Stylelint inspector implementation
+├── tests/                # Vitest coverage and fixtures
 ├── scripts/              # Repository scripts
 ├── .github/              # Workflows and automation configs
 └── package.json          # Scripts, dependencies, metadata
@@ -73,50 +73,26 @@ When adding script output, prefer this severity split:
 
 Use these commands locally before submitting a pull request:
 
+- `npm run lint`
 - `npm run typecheck`
-- `npm test`
-- `npm run lint:all:fix:quiet`
+- `npm run test -- --run`
+- `npm run build`
+- `npm run check`
 
-## Snapshot testing guidance
+## Testing guidance
 
-This repository uses Vitest snapshots selectively for stable contract surfaces,
-not as a replacement for explicit rule behavior assertions.
+Prefer focused Vitest coverage that exercises real Stylelint config discovery,
+config normalization, payload generation, and CLI-facing behavior.
 
-Use snapshots for:
+When adding regression coverage, favor small temporary fixture projects in
+`tests/` over broad snapshots.
 
-- normalized plugin contract summaries
-- normalized rule metadata matrices
-- generated documentation artifacts (for example README rules sections)
-- docs structure schemas where heading order and presence are contractual
-
-Avoid snapshots for:
-
-- raw AST trees
-- broad ESLint diagnostics payloads in rule tests
-- unnormalized objects with volatile or environment-specific fields
-
-Focused update flow:
+Focused run examples:
 
 ```bash
-npx vitest run test/plugin-contract-snapshots.test.ts -u
-npx vitest run test/rule-metadata-snapshots.test.ts -u
-npx vitest run test/readme-rules-table-sync.test.ts -u
-npx vitest run test/docs-heading-snapshots.test.ts -u
+npx vitest --run tests/stylelint_adapter.test.ts
+npx vitest --run tests/ws_error_payload.test.ts
 ```
-
-Verification flow:
-
-```bash
-npx vitest run test/plugin-contract-snapshots.test.ts test/rule-metadata-snapshots.test.ts test/readme-rules-table-sync.test.ts test/docs-heading-snapshots.test.ts
-```
-
-For detailed design and review guidance, see
-[`docs/rules/guides/snapshot-testing.md`](./docs/rules/guides/snapshot-testing.md).
-
-Optional focused checks:
-
-- `npm run mutation:test` for Stryker mutation testing
-- `npm run changelog:preview` to preview unreleased changelog output
 
 ## Commit guidance
 
@@ -129,9 +105,9 @@ Format:
 
 Examples:
 
-- `:sparkles: feat(rule): add prefer-type-fest-xyz`
-- `:bug: fix(rule): avoid false positive in union type handling`
-- `:memo: docs: clarify configuration for type-aware rules`
+- `:sparkles: feat(cli): add target path normalization`
+- `:bug: fix(inspector): honor file-specific Stylelint overrides`
+- `:memo: docs: clarify target resolution behavior`
 
 ## Pull request expectations
 
@@ -148,4 +124,4 @@ Use the process described in [SECURITY.md](./SECURITY.md).
 ## License
 
 By contributing, you agree your contributions are licensed under the
-[MIT License](./LICENSE).
+[Apache-2.0](./LICENSE).

@@ -21,6 +21,7 @@ export const stylelintLegacyConfigFilenames = [
 
 export const configFilenames = stylelintConfigFilenames
 export const legacyConfigFilenames = stylelintLegacyConfigFilenames
+export const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
 
 export const MARK_CHECK = c.green('✔')
 export const MARK_INFO = c.blue('ℹ')

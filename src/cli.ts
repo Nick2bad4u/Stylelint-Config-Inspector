@@ -8,6 +8,7 @@ import { getPort } from 'get-port-please'
 import open from 'open'
 import { relative, resolve } from 'pathe'
 import { glob } from 'tinyglobby'
+import { normalizeCliInspectorOptions } from './cli-options'
 import { readConfig } from './configs'
 import { MARK_CHECK, MARK_INFO } from './constants'
 import { distDir } from './dirs'
@@ -32,7 +33,6 @@ cli
   .option(
     '--target <filePath>',
     'Target file path used to resolve effective config',
-    { default: 'stylelint-inspector-target.css' },
   )
   .option(
     '--basePath <basePath>',
@@ -44,23 +44,10 @@ cli
     default: '.stylelint-config-inspector',
   })
   // Action
-  .action(async (options) => {
+  .action(async (rawOptions) => {
+    const options = normalizeCliInspectorOptions(rawOptions)
+
     console.log(MARK_INFO, 'Building static Stylelint config inspector...')
-
-    if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config
-        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
-    }
-    if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath
-        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
-    }
-    if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target
-        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
-    }
-
-    options.target ||= options.file
 
     const cwd = process.cwd()
     const outDir = resolve(cwd, options.outDir)
@@ -138,7 +125,6 @@ cli
   .option(
     '--target <filePath>',
     'Target file path used to resolve effective config',
-    { default: 'stylelint-inspector-target.css' },
   )
   .option(
     '--basePath <basePath>',
@@ -151,28 +137,15 @@ cli
   .option('--port <port>', 'Port', { default: process.env.PORT || 8888 })
   .option('--open', 'Open browser', { default: true })
   // Action
-  .action(async (options) => {
+  .action(async (rawOptions) => {
+    const options = normalizeCliInspectorOptions(rawOptions)
+
     const host = options.host
     const port = await getPort({
       port: options.port,
       portRange: [8888, 10000],
       host,
     })
-
-    if (process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG) {
-      options.config
-        ||= process.env.STYLELINT_CONFIG || process.env.ESLINT_CONFIG
-    }
-    if (process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH) {
-      options.basePath
-        ||= process.env.STYLELINT_BASE_PATH || process.env.ESLINT_BASE_PATH
-    }
-    if (process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET) {
-      options.target
-        ||= process.env.STYLELINT_TARGET || process.env.ESLINT_TARGET
-    }
-
-    options.target ||= options.file
 
     console.log(
       MARK_INFO,

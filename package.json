@@ -14,9 +14,7 @@
   "bugs": "https://github.com/Nick2bad4u/Stylelint-Config-Inspector/issues",
   "bin": {
     "@stylelint/config-inspector": "./bin.mjs",
-    "stylelint-config-inspector": "./bin.mjs",
-    "@eslint/config-inspector": "./bin.mjs",
-    "eslint-config-inspector": "./bin.mjs"
+    "stylelint-config-inspector": "./bin.mjs"
   },
   "files": [
     "*.mjs",
@@ -28,8 +26,10 @@
     "check": "npm run lint && npm run typecheck && npm run test -- --run && npm run build",
     "dev": "nuxt dev",
     "prepare": "nuxt prepare",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint:node-version-files": "node scripts/sync-node-version-files.mjs --check",
+    "sync:node-version-files": "node scripts/sync-node-version-files.mjs",
+    "lint": "npm run lint:node-version-files && eslint --cache --cache-strategy content --cache-location .cache/.eslintcache",
+    "lint:fix": "npm run sync:node-version-files && eslint --cache --cache-strategy content --cache-location .cache/.eslintcache --fix",
     "prebench": "npm run build",
     "prepack": "npm run build",
     "prestart": "npm run build",
