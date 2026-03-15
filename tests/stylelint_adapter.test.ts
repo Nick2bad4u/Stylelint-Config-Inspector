@@ -160,7 +160,21 @@ describe('stylelint adapter', () => {
         customSyntax: "postcss-scss",
         rules: {
           "color-no-invalid-hex": true
-        }
+        },
+        overrides: [
+          {
+            files: ["**/*.html"],
+            extends: ["./stylelint.base.mjs"],
+            plugins: [{
+              ruleName: "demo/html-inline-rule",
+              rule: () => () => {}
+            }],
+            customSyntax: "postcss-html",
+            rules: {
+              "color-no-invalid-hex": true
+            }
+          }
+        ]
       }
     `,
       {
@@ -177,11 +191,20 @@ describe('stylelint adapter', () => {
 
     expect(result.payload.meta.configNotFound).toBeUndefined()
     const rootConfig = result.payload.configs[0]
-    if (rootConfig?.extends)
-      expect(rootConfig.extends[0]).toContain('stylelint.base.mjs')
+    expect(rootConfig?.extends).toBeDefined()
+    expect(rootConfig?.extends?.[0]).toContain('stylelint.base.mjs')
     expect(result.payload.configs[0]?.customSyntax).toBe('postcss-scss')
     expect(Object.keys(result.payload.configs[0]?.plugins ?? {})).toEqual([
       'local',
+    ])
+    expect(result.payload.configs[1]).toMatchObject({
+      name: 'stylelint/override-1',
+      files: ['**/*.html'],
+      customSyntax: 'postcss-html',
+    })
+    expect(result.payload.configs[1]?.extends?.[0]).toContain('stylelint.base.mjs')
+    expect(Object.keys(result.payload.configs[1]?.plugins ?? {})).toEqual([
+      'demo',
     ])
     expect(result.payload.configs[0]).not.toHaveProperty('pluginFunctions')
     expect(result.payload.rules['color-no-invalid-hex']).toMatchObject({

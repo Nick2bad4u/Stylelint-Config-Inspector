@@ -37,6 +37,7 @@ const configs = computed(() =>
 const router = useRouter()
 function goToConfig(idx: number) {
   filtersConfigs.filepath = ''
+  filtersConfigs.rule = ''
   router.push(`/configs?index=${idx + 1}`)
 }
 

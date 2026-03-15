@@ -3,6 +3,10 @@ import type { FlatConfigItem, MatchedFile } from './types'
 import { ConfigArray } from '@eslint/config-array'
 import { Minimatch } from 'minimatch'
 
+export const DEFAULT_WORKSPACE_SCAN_GLOBS = [
+  '**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}',
+]
+
 const minimatchOpts: MinimatchOptions = { dot: true }
 const _matchInstances = new Map<string, Minimatch>()
 

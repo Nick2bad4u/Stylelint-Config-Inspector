@@ -347,7 +347,7 @@ onMounted(async () => {
           <div
             flex="~ gap-2 items-center"
             border="~ blue/20 rounded-full"
-            bg-blue:10
+            bg-violet:10
             px3
             py1
           >
@@ -426,6 +426,28 @@ onMounted(async () => {
           <span op50>Show Specific Rules Only</span>
         </label>
         <div flex-auto />
+        <div flex="~ gap-1">
+          <button
+            btn-action
+            :class="{
+              'btn-action-active': stateStorage.viewType === 'list',
+            }"
+            @click="stateStorage.viewType = 'list'"
+          >
+            <div i-ph-list-duotone />
+            List
+          </button>
+          <button
+            btn-action
+            :class="{
+              'btn-action-active': stateStorage.viewType === 'grid',
+            }"
+            @click="stateStorage.viewType = 'grid'"
+          >
+            <div i-ph-grid-four-duotone />
+            Grid
+          </button>
+        </div>
         <button btn-action px3 @click="expandAll">
           Expand All
         </button>

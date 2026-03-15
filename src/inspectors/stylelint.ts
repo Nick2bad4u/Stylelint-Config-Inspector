@@ -27,6 +27,7 @@ import { basename, dirname, normalize, relative, resolve } from 'pathe'
 import stylelint from 'stylelint'
 import { glob } from 'tinyglobby'
 import {
+  DEFAULT_WORKSPACE_SCAN_GLOBS,
   isGeneralConfig,
   isIgnoreOnlyConfig,
   matchFile,
@@ -40,9 +41,6 @@ import {
 } from '../constants'
 import { ConfigPathError } from '../errors'
 
-const DEFAULT_WORKSPACE_SCAN_GLOBS = [
-  '**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}',
-]
 const DEFAULT_WORKSPACE_SCAN_IGNORES = [
   '**/node_modules/**',
   '**/.git/**',
@@ -1124,28 +1122,73 @@ function normalizeConfigItem(
   return config
 }
 
+function mergeConfigForDisplay(
+  resolvedConfig: StylelintConfigLike,
+  sourceConfig?: StylelintConfigLike,
+): StylelintConfigLike {
+  if (!sourceConfig)
+    return resolvedConfig
+
+  return {
+    ...resolvedConfig,
+    ...sourceConfig,
+    rules: resolvedConfig.rules ?? sourceConfig.rules,
+    files: sourceConfig.files ?? resolvedConfig.files,
+    ignoreFiles: sourceConfig.ignoreFiles ?? resolvedConfig.ignoreFiles,
+    plugins: sourceConfig.plugins ?? resolvedConfig.plugins,
+    extends: sourceConfig.extends ?? resolvedConfig.extends,
+    customSyntax: sourceConfig.customSyntax ?? resolvedConfig.customSyntax,
+    name: sourceConfig.name ?? resolvedConfig.name,
+  }
+}
+
 function extractConfigs(
   resolvedConfig: StylelintConfigLike,
   sourceConfig?: StylelintConfigLike,
 ): FlatConfigItem[] {
   const { overrides: _resolvedOverrides, ...rootConfig } = resolvedConfig
+  const { overrides: _sourceOverrides, ...sourceRootConfig }
+    = sourceConfig ?? {}
 
   const configs: FlatConfigItem[] = [
-    normalizeConfigItem(rootConfig, 0, 'stylelint/root'),
+    normalizeConfigItem(
+      mergeConfigForDisplay(rootConfig, sourceConfig ? sourceRootConfig : undefined),
+      0,
+      'stylelint/root',
+    ),
   ]
 
+  const resolvedOverrides = Array.isArray(_resolvedOverrides)
+    ? _resolvedOverrides
+    : []
   const overrideSource = Array.isArray(sourceConfig?.overrides)
     ? sourceConfig.overrides
-    : _resolvedOverrides
+    : resolvedOverrides
 
   if (Array.isArray(overrideSource)) {
     overrideSource.forEach((override, index) => {
-      if (!isRecord(override))
+      const sourceOverride = isRecord(override)
+        ? (override as StylelintConfigLike)
+        : undefined
+      const resolvedOverride = isRecord(resolvedOverrides[index])
+        ? (resolvedOverrides[index] as StylelintConfigLike)
+        : undefined
+
+      if (!sourceOverride && !resolvedOverride)
         return
 
       const fallbackName = `stylelint/override-${index + 1}`
 
-      configs.push(normalizeConfigItem(override, index + 1, fallbackName))
+      configs.push(
+        normalizeConfigItem(
+          mergeConfigForDisplay(
+            resolvedOverride ?? sourceOverride ?? {},
+            sourceOverride,
+          ),
+          index + 1,
+          fallbackName,
+        ),
+      )
     })
   }
 

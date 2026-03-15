@@ -10,7 +10,11 @@ import type {
 } from '~~/shared/types'
 import { $fetch } from 'ofetch'
 import { computed, ref } from 'vue'
-import { isGeneralConfig, isIgnoreOnlyConfig } from '~~/shared/configs'
+import {
+  DEFAULT_WORKSPACE_SCAN_GLOBS,
+  isGeneralConfig,
+  isIgnoreOnlyConfig,
+} from '~~/shared/configs'
 import {
   getRuleLevel,
   getRuleOptions,
@@ -220,6 +224,7 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     if (!filesGroupMap.has(groupId)) {
       filesGroupMap.set(groupId, {
         id: groupId,
+        kind: 'matched',
         files: [],
         configs: displayConfigs.map(i => payload.configs[i]!),
         globs: new Set<string>(),
@@ -246,6 +251,7 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
       if (!filesGroupMap.has(groupId)) {
         filesGroupMap.set(groupId, {
           id: groupId,
+          kind: 'declared',
           files: [],
           configs: [],
           globs: new Set<string>([glob]),
@@ -255,6 +261,31 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
       const group = filesGroupMap.get(groupId)!
       if (!group.configs.includes(config))
         group.configs.push(payload.configs[configIndex]!)
+    }
+  }
+
+  const generalConfigs = payload.configs.filter(
+    config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config),
+  )
+
+  if (generalConfigs.length) {
+    for (const glob of DEFAULT_WORKSPACE_SCAN_GLOBS) {
+      if (!globToFiles.has(glob))
+        globToFiles.set(glob, new Set())
+
+      if ((globToFiles.get(glob)?.size ?? 0) > 0)
+        continue
+
+      const groupId = `default-scan:${glob}`
+      if (!filesGroupMap.has(groupId)) {
+        filesGroupMap.set(groupId, {
+          id: groupId,
+          kind: 'default',
+          files: [],
+          configs: [...generalConfigs],
+          globs: new Set<string>([glob]),
+        })
+      }
     }
   }
 

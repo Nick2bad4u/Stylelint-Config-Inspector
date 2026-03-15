@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from '#app/composables/router'
 import { useTimeAgo } from '@vueuse/core'
+import { Dropdown as VDropdown } from 'floating-vue'
 import { computed } from 'vue'
 import { version } from '~~/package.json'
 import { toggleDark } from '~/composables/dark'
@@ -26,6 +27,16 @@ const deprecatedUsing = computed(() =>
 )
 
 const router = useRouter()
+const fontScaleOptions = [
+  { value: 'sm', label: 'Small' },
+  { value: 'md', label: 'Default' },
+  { value: 'lg', label: 'Large' },
+] as const
+
+const activeFontScaleLabel = computed(() => {
+  return fontScaleOptions.find(option => option.value === stateStorage.fontScale)?.label ?? 'Default'
+})
+
 function showDeprecated() {
   filters.status = 'deprecated'
   filters.plugins = []
@@ -152,36 +163,66 @@ function showDeprecated() {
         <div i-ph-terminal-window-duotone flex-none />
         Dev
       </NuxtLink>
+      <VDropdown>
+        <button
+          btn-action
+          rounded-full
+          :title="`Font size: ${activeFontScaleLabel}`"
+          :aria-label="`Font size: ${activeFontScaleLabel}`"
+        >
+          <div i-ph-text-aa-duotone flex-none />
+        </button>
+        <template #popper>
+          <div min-w-44 flex="~ col gap-1" p2>
+            <button
+              v-for="option in fontScaleOptions"
+              :key="option.value"
+              btn-action
+              justify-between
+              :class="{
+                'btn-action-active': stateStorage.fontScale === option.value,
+              }"
+              @click="stateStorage.fontScale = option.value"
+            >
+              <span>{{ option.label }}</span>
+              <span text-xs op70>
+                {{ option.value === 'sm' ? '95%' : option.value === 'lg' ? '112.5%' : '100%' }}
+              </span>
+            </button>
+          </div>
+        </template>
+      </VDropdown>
       <button
+        btn-action
+        rounded-full
+        :class="{
+          'btn-action-active': stateStorage.dimDisabledRules,
+        }"
         :title="stateStorage.dimDisabledRules ? 'Disable dimming for disabled rules' : 'Enable dimming for disabled rules'"
-        ml1
-        text-xl
-        op50
-        hover:op75
+        :aria-pressed="stateStorage.dimDisabledRules"
         @click="stateStorage.dimDisabledRules = !stateStorage.dimDisabledRules"
       >
-        <span
-          :class="stateStorage.dimDisabledRules ? 'i-ph-eyes-closed-duotone' : 'i-ph-eye-duotone'"
+        <div
+          :class="stateStorage.dimDisabledRules ? 'i-ph-eye-closed-duotone' : 'i-ph-eye-duotone'"
         />
       </button>
       <button
+        btn-action
+        rounded-full
         title="Toggle Dark Mode"
-        i-ph-sun-dim-duotone
-        dark:i-ph-moon-stars-duotone
-        ml1
-        text-xl
-        op50
-        hover:op75
         @click="toggleDark()"
-      />
+      >
+        <div i-ph-sun-dim-duotone dark:i-ph-moon-stars-duotone />
+      </button>
       <NuxtLink
         href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector"
         target="_blank"
-        i-carbon-logo-github
-        text-lg
-        op50
-        hover:op75
-      />
+        btn-action
+        rounded-full
+        title="GitHub repository"
+      >
+        <div i-carbon-logo-github text-lg />
+      </NuxtLink>
       <template v-if="deprecatedUsing.length">
         <div border="l base" ml3 mr2 h-5 w-1px />
         <button

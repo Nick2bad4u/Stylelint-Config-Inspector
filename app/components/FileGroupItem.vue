@@ -23,6 +23,17 @@ if (!hasShown.value) {
 }
 
 const groupName = computed(() => {
+  if (
+    props.group.kind !== 'matched'
+    || props.group.files.length === 0
+    || props.group.globs.size === 1
+  ) {
+    return {
+      type: 'glob',
+      globs: [...props.group.globs.values()],
+    } as const
+  }
+
   if (props.group.configs.length === 1) {
     return {
       type: 'config',
@@ -97,7 +108,7 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
               />
             </template>
             <template v-else-if="groupName?.type === 'glob'">
-              <span op75>Globs</span>
+              <span op75>{{ group.kind === 'default' ? 'Workspace scan' : 'Glob' }}</span>
               <GlobItem
                 v-for="(glob, idx) of groupName.globs"
                 :key="idx"
@@ -212,13 +223,13 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
             v-if="config.customSyntax || getConfigFilePatterns(config).length > 0"
             ml7
             flex="~ gap-1 wrap items-center"
-            text="2.5 zinc-300/75"
+            text="2.5 zinc-600 dark:zinc-300/75"
           >
             <span
               v-if="config.customSyntax"
               rounded-md
               border="~ base"
-              bg="zinc-950/35"
+              bg="black:8 dark:zinc-950/35"
               px1.5
               py0.5
             >
@@ -235,10 +246,10 @@ function getConfigFilePatterns(config: FlatConfigItem): string[] {
               v-if="getConfigFilePatterns(config).length > 3"
               rounded-md
               border="~ base"
-              bg="zinc-950/25"
+              bg="black:6 dark:zinc-950/25"
               px1.5
               py0.5
-              text="zinc-300/70"
+              text="zinc-600 dark:zinc-300/70"
             >
               +{{ getConfigFilePatterns(config).length - 3 }} more
             </span>

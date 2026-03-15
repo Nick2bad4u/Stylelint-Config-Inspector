@@ -66,6 +66,7 @@ export interface ErrorInfo {
 
 export interface FilesGroup {
   id: string
+  kind: 'matched' | 'declared' | 'default'
   files: string[]
   configs: FlatConfigItem[]
   globs: Set<string>

@@ -6,13 +6,13 @@ import { isRuleConfigured, isRuleEnabled } from '~~/shared/rules'
 import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
 import {
-  bpSm,
   filtersRules as filters,
   stateStorage,
 } from '~/composables/state'
 
 const rules = computed(() => Object.values(payload.value.rules))
-const listColumns = '64px_minmax(220px,360px)_150px_minmax(0,1fr)'
+const listColumns
+  = '56px_minmax(14rem,clamp(14rem,38vw,30rem))_5.25rem_minmax(0,1fr)'
 const pluginNames = computed<string[]>(() => {
   return [...new Set(rules.value.map(i => i.plugin))].filter(
     (plugin): plugin is string => typeof plugin === 'string' && plugin.length > 0,
@@ -273,7 +273,7 @@ function resetFilters() {
           Plugins
         </div>
         <div class="space-y-2">
-          <div class="text-xs text-zinc-300/85 font-semibold tracking-wide uppercase">
+          <div class="text-xs text-zinc-600 font-semibold tracking-wide uppercase dark:text-zinc-300/85">
             Plugin
           </div>
           <div class="flex flex-wrap items-center gap-2">
@@ -282,8 +282,8 @@ function resetFilters() {
               class="badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 !hasSelectedPlugin
-                  ? 'bg-zinc-700/45 text-zinc-100'
-                  : 'bg-zinc-900/30 text-zinc-300 hover:bg-zinc-800/50',
+                  ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
+                  : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
               ]"
               @click="clearPluginSelection"
             >
@@ -297,10 +297,10 @@ function resetFilters() {
               class="badge border border-base px-2 py-0.5 text-xs transition"
               :class="[
                 isPluginSelected(pluginOption.value)
-                  ? 'bg-zinc-700/45 text-zinc-100 opacity-100'
+                  ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
                   : hasSelectedPlugin
-                    ? 'bg-zinc-900/30 text-zinc-300 opacity-45 hover:opacity-80'
-                    : 'bg-zinc-900/30 text-zinc-300 hover:bg-zinc-800/50',
+                    ? 'bg-white/65 text-zinc-700 opacity-55 hover:opacity-85 dark:bg-zinc-900/30 dark:text-zinc-300 dark:opacity-45 dark:hover:opacity-80'
+                    : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
               ]"
               :style="pluginOption.style"
               @click="togglePluginSelection(pluginOption.value)"
@@ -310,7 +310,7 @@ function resetFilters() {
           </div>
         </div>
         <div text-right text-sm op50>
-          Usage
+          State
         </div>
         <OptionSelectGroup
           v-model="filters.state"
@@ -370,12 +370,19 @@ function resetFilters() {
           </template>
         </OptionSelectGroup>
         <div text-right text-sm op50>
-          State
+          Status
         </div>
         <OptionSelectGroup
           v-model="filters.status"
           :options="['', 'active', 'recommended', 'fixable', 'deprecated']"
           :titles="['All', 'Active', 'Recommended', 'Fixable', 'Deprecated']"
+          :tooltips="[
+            'Show every rule status',
+            'Rules that are enabled in at least one matched config item',
+            'Rules recommended by Stylelint or plugin metadata',
+            'Rules that support automatic fixes',
+            'Rules marked as deprecated by upstream metadata',
+          ]"
         >
           <template #default="{ value, title }">
             <div flex items-center gap-1>
@@ -457,7 +464,7 @@ function resetFilters() {
         </button>
       </div>
 
-      <div v-if="!bpSm" flex="~ gap-1">
+      <div flex="~ gap-1">
         <button
           btn-action
           :class="{

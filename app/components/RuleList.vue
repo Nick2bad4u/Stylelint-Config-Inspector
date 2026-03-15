@@ -11,7 +11,8 @@ const props = defineProps<{
   listColumns?: string
   dimDisabled?: boolean
 }>()
-const defaultListColumns = 'max-content_max-content_max-content_minmax(0,1fr)'
+const defaultListColumns
+  = '42px_minmax(12rem,clamp(12rem,32vw,24rem))_5rem_minmax(0,1fr)'
 
 const names = computed(() =>
   Array.isArray(props.rules)
@@ -34,7 +35,7 @@ const containerClass = computed(() => {
     return 'grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-2'
   }
   else {
-    return 'grid gap-x-2 gap-y-2 items-center'
+    return 'grid max-w-full min-w-0 gap-x-2 gap-y-2 items-center'
   }
 })
 

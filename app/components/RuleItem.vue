@@ -133,14 +133,6 @@ const localConfiguredValue = computed(() => {
   return getRulePrimaryOption(props.value) ?? getRuleOptions(props.value)?.[0]
 })
 
-const isDimmedRule = computed(
-  () => (props.dimDisabled ?? true) && getRuleLevel(props.value) === 'off',
-)
-
-const dimRuleClass = computed(() =>
-  isDimmedRule.value ? 'op55 hover:op100 transition-opacity' : '',
-)
-
 const effectiveConfiguredValue = computed(() => {
   if (localConfiguredValue.value !== undefined)
     return localConfiguredValue.value
@@ -150,6 +142,14 @@ const effectiveConfiguredValue = computed(() => {
     return undefined
 
   return state.primaryOption ?? state.options?.[0]
+})
+
+const isOffOnlyState = computed(() => {
+  const states = props.ruleStates
+  if (!states?.length)
+    return false
+
+  return states.every(state => state.level === 'off')
 })
 
 const resolvedDescription = computed(() => {
@@ -181,6 +181,20 @@ const docsTooltip = computed(() => {
     return 'Docs (inferred from plugin package metadata)'
   return 'Docs'
 })
+
+const isDimmedRule = computed(() => {
+  if (!(props.dimDisabled ?? true))
+    return false
+
+  if (props.value !== undefined)
+    return getRuleLevel(props.value) === 'off'
+
+  return isOffOnlyState.value
+})
+
+const dimRuleClass = computed(() =>
+  isDimmedRule.value ? 'op55 hover:op100 transition-opacity' : '',
+)
 </script>
 
 <template>
@@ -207,10 +221,10 @@ const docsTooltip = computed(() => {
 
   <div
     v-if="value !== undefined"
-    class="min-w-0 w-full" :class="[
+    class="min-w-0" :class="[
       props.class,
       dimRuleClass,
-      gridView ? 'absolute top-2 right-2 flex-col' : '',
+      gridView ? 'absolute top-2 right-2 flex justify-end items-start' : 'w-full',
     ]"
   >
     <RuleLevelIcon
@@ -238,7 +252,7 @@ const docsTooltip = computed(() => {
         @click="(e: MouseEvent) => emit('badgeClick', e)"
       />
       <template #popper="{ shown }">
-        <div v-if="shown" max-h="50vh">
+        <div v-if="shown" max-h="50vh" min-w="min(32rem,82vw)">
           <div flex="~ items-center gap-2" p3>
             <NuxtLink
               v-if="!rule.invalid && rule.docs?.url"

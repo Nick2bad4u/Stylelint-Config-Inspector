@@ -29,6 +29,7 @@ body {
             #00000000 78%
         ),
         radial-gradient(80% 68% at 10% 18%, #00000008 0%, #00000000 70%);
+    font-size: calc(16px * var(--inspector-font-scale, 1));
 }
 
 html.dark {
@@ -84,13 +85,33 @@ html.dark {
     font-variant-ligatures: none;
 }
 
+.config-plugin-filter-pill {
+    padding: 0.125rem 0.625rem;
+    border: 1px solid rgb(139 92 246 / 0.25);
+    border-radius: 9999px;
+    background: rgb(139 92 246 / 0.1);
+    color: rgb(109 40 217);
+
+    html.dark & {
+        color: rgb(196 181 253);
+    }
+}
+
 /* Overrides Floating Vue */
 .v-popper--theme-dropdown .v-popper__inner,
 .v-popper--theme-tooltip .v-popper__inner {
     --at-apply: bg-tooltip color-base font-sans rounded border border-base
         shadow dark: shadow-2xl;
     border-color: color-mix(in srgb, var(--c-fg) 18%, transparent);
+    background: rgb(255 255 255 / 0.94);
     box-shadow: 0 10px 30px rgb(0 0 0 / 0.28);
+    color: rgb(24 24 27);
+}
+
+html.dark .v-popper--theme-dropdown .v-popper__inner,
+html.dark .v-popper--theme-tooltip .v-popper__inner {
+    background: rgb(17 24 39 / 0.94);
+    color: rgb(228 228 231);
 }
 
 .v-popper--theme-tooltip .v-popper__arrow-inner,
@@ -111,6 +132,12 @@ html.dark {
 
 html:not(.dark) .text-zinc-300 {
     color: rgb(82 82 91);
+
+    &\/70,
+    &\/75,
+    &\/85 {
+        color: rgb(82 82 91);
+    }
 }
 
 html:not(.dark) .text-zinc-400 {
@@ -119,4 +146,12 @@ html:not(.dark) .text-zinc-400 {
 
 html:not(.dark) .text-zinc-500 {
     color: rgb(39 39 42);
+}
+
+html:not(.dark) .bg-zinc-900\/30,
+html:not(.dark) .bg-zinc-900\/35,
+html:not(.dark) .bg-zinc-900\/50,
+html:not(.dark) .bg-zinc-950\/25,
+html:not(.dark) .bg-zinc-950\/35 {
+    background-color: rgb(244 244 245 / 0.82);
 }

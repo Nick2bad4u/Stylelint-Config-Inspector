@@ -17,6 +17,8 @@ export type ViewType = 'list' | 'grid'
 
 export type ViewFilesTab = 'list' | 'group'
 
+export type FontScale = 'sm' | 'md' | 'lg'
+
 export type RuleStateFilter
   = ''
     | 'using'
@@ -37,7 +39,6 @@ export type RuleStatusFilter
 export interface FiltersConfigsPage {
   filepath: string
   rule: string
-  plugin: string
 }
 
 export interface FiltersRulesPage {
@@ -50,6 +51,7 @@ export interface FiltersRulesPage {
 
 export interface ViewerStateStorage {
   theme: UserTheme
+  fontScale: FontScale
   searchMode: SearchMode
   viewFileMatchType: ViewFileMatchType
   showSpecificOnly: boolean
@@ -82,8 +84,17 @@ const RULE_STATUS_FILTER_VALUES: readonly RuleStatusFilter[] = [
   'deprecated',
 ]
 
+const FONT_SCALE_VALUES: readonly FontScale[] = ['sm', 'md', 'lg']
+
+const FONT_SCALE_MULTIPLIERS: Record<FontScale, string> = {
+  sm: '0.9375',
+  md: '1',
+  lg: '1.125',
+}
+
 const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
   theme: 'auto',
+  fontScale: 'md',
   searchMode: 'advanced',
   viewFileMatchType: 'all',
   showSpecificOnly: false,
@@ -94,7 +105,6 @@ const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
   filtersConfigs: {
     filepath: '',
     rule: '',
-    plugin: '',
   },
   filtersRules: {
     state: '',
@@ -107,6 +117,7 @@ const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
 
 const VIEWER_STATE_STORAGE_KEYS = [
   'theme',
+  'fontScale',
   'searchMode',
   'viewFileMatchType',
   'showSpecificOnly',
@@ -121,7 +132,6 @@ const VIEWER_STATE_STORAGE_KEYS = [
 const FILTERS_CONFIG_KEYS = [
   'filepath',
   'rule',
-  'plugin',
 ] as const satisfies readonly (keyof FiltersConfigsPage)[]
 
 const FILTERS_RULES_KEYS = [
@@ -136,7 +146,6 @@ function createDefaultFiltersConfigs(): FiltersConfigsPage {
   return {
     filepath: DEFAULT_STATE_STORAGE.filtersConfigs.filepath,
     rule: DEFAULT_STATE_STORAGE.filtersConfigs.rule,
-    plugin: DEFAULT_STATE_STORAGE.filtersConfigs.plugin,
   }
 }
 
@@ -180,6 +189,21 @@ function isRuleStatusFilter(value: unknown): value is RuleStatusFilter {
     && RULE_STATUS_FILTER_VALUES.includes(value as RuleStatusFilter)
 }
 
+function isFontScale(value: unknown): value is FontScale {
+  return typeof value === 'string'
+    && FONT_SCALE_VALUES.includes(value as FontScale)
+}
+
+function applyFontScale(scale: FontScale): void {
+  if (!import.meta.client)
+    return
+
+  document.documentElement.style.setProperty(
+    '--inspector-font-scale',
+    FONT_SCALE_MULTIPLIERS[scale],
+  )
+}
+
 function buildInitialStateStorage(): ViewerStateStorage {
   const stored = getStoredStateStorage()
   const storedFiltersConfigs = (stored.filtersConfigs ?? {}) as Partial<FiltersConfigsPage>
@@ -196,6 +220,9 @@ function buildInitialStateStorage(): ViewerStateStorage {
       stored.theme === 'auto' || stored.theme === 'light' || stored.theme === 'dark'
         ? stored.theme
         : DEFAULT_STATE_STORAGE.theme,
+    fontScale: isFontScale(stored.fontScale)
+      ? stored.fontScale
+      : DEFAULT_STATE_STORAGE.fontScale,
     searchMode:
       stored.searchMode === 'advanced' || stored.searchMode === 'native'
         ? stored.searchMode
@@ -235,10 +262,6 @@ function buildInitialStateStorage(): ViewerStateStorage {
         typeof storedFiltersConfigs.rule === 'string'
           ? storedFiltersConfigs.rule
           : DEFAULT_STATE_STORAGE.filtersConfigs.rule,
-      plugin:
-        typeof storedFiltersConfigs.plugin === 'string'
-          ? storedFiltersConfigs.plugin
-          : DEFAULT_STATE_STORAGE.filtersConfigs.plugin,
     },
     filtersRules: {
       state: isRuleStateFilter(storedFiltersRules.state)
@@ -269,7 +292,7 @@ interface StateRefs {
 let cachedStateRefs: StateRefs | null = null
 
 function ensureStateRefs(): StateRefs {
-  if (cachedStateRefs)
+  if (cachedStateRefs !== null)
     return cachedStateRefs
 
   const stateStorageRef = useState<ViewerStateStorage>('stateStorage', buildInitialStateStorage)
@@ -283,6 +306,14 @@ function ensureStateRefs(): StateRefs {
         localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(value))
       },
       { deep: true },
+    )
+
+    watch(
+      () => stateStorageRef.value.fontScale,
+      (fontScale) => {
+        applyFontScale(fontScale)
+      },
+      { immediate: true },
     )
 
     watch(
@@ -406,7 +437,7 @@ export function useStateFilters() {
 export function setStateFilters(
   page: 'configs',
   key: keyof FiltersConfigsPage,
-  value: string,
+  value: FiltersConfigsPage[keyof FiltersConfigsPage],
 ): void
 
 export function setStateFilters(
@@ -421,8 +452,9 @@ export function setStateFilters(
   value: unknown,
 ): void {
   if (page === 'configs') {
-    if (key in filtersConfigs)
-      filtersConfigs[key as keyof FiltersConfigsPage] = value as string
+    if (key in filtersConfigs) {
+      ;(filtersConfigs as Record<string, unknown>)[key] = value as unknown
+    }
 
     return
   }

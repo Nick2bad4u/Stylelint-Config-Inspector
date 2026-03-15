@@ -62,18 +62,28 @@ const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
   <component
     :is="as || 'div'"
     :title="props.name"
-    of-hidden
-    text-ellipsis
-    ws-nowrap
-    font-mono
+    class="colorized-rule-name"
     :class="[deprecated ? 'line-through' : '', borderless ? '' : 'badge']"
   >
     <span
       v-if="parsed.scope"
+      class="flex-none"
       :style="{ color: scopeColor }"
     >{{ displayScope }}</span>
-    <span v-if="parsed.scope" op30>/</span>
+    <span v-if="parsed.scope" class="flex-none" op30>/</span>
     <br v-if="parsed.scope && props.break">
-    <span op75>{{ parsed.name }}</span>
+    <span class="min-w-0 flex-1 text-ellipsis ws-nowrap" op75>{{ parsed.name }}</span>
   </component>
 </template>
+
+<style scoped>
+.colorized-rule-name {
+    display: inline-flex;
+    align-items: baseline;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+</style>
