@@ -15,6 +15,7 @@ const props = defineProps<{
     }
   borderless?: boolean
   break?: boolean
+  hoverReveal?: boolean
 }>()
 
 const LEADING_SLASHES_RE = /^\/+/
@@ -63,7 +64,11 @@ const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
     :is="as || 'div'"
     :title="props.name"
     class="colorized-rule-name"
-    :class="[deprecated ? 'line-through' : '', borderless ? '' : 'badge']"
+    :class="[
+      deprecated ? 'line-through' : '',
+      borderless ? '' : 'badge',
+      hoverReveal ? 'colorized-rule-name--hoverable' : '',
+    ]"
   >
     <span
       v-if="parsed.scope"
@@ -72,18 +77,41 @@ const scopeColor = computed(() => getPluginColor(displayScope.value ?? ''))
     >{{ displayScope }}</span>
     <span v-if="parsed.scope" class="flex-none" op30>/</span>
     <br v-if="parsed.scope && props.break">
-    <span class="min-w-0 flex-1 text-ellipsis ws-nowrap" op75>{{ parsed.name }}</span>
+    <span class="colorized-rule-name__name" op75>{{ parsed.name }}</span>
   </component>
 </template>
 
 <style scoped>
 .colorized-rule-name {
-    display: inline-flex;
-    align-items: baseline;
-    inline-size: 100%;
-    max-inline-size: 100%;
-    min-inline-size: 0;
-    overflow: hidden;
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  overflow: hidden;
+  position: relative;
+  white-space: nowrap;
+}
+
+.colorized-rule-name__name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.colorized-rule-name--hoverable:hover,
+.colorized-rule-name--hoverable:focus-visible {
+  inline-size: max-content;
+  max-inline-size: min(72ch, calc(100vw - 8rem));
+  overflow: visible;
+  z-index: 20;
+}
+
+.colorized-rule-name--hoverable:hover .colorized-rule-name__name,
+.colorized-rule-name--hoverable:focus-visible .colorized-rule-name__name {
+  overflow: visible;
+  text-overflow: clip;
 }
 </style>

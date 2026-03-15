@@ -20,6 +20,7 @@ const router = useRouter()
 function searchFile() {
   filtersConfigs.filepath = props.filepath
   filtersConfigs.rule = ''
+  filtersConfigs.plugins = []
   router.push(`/configs`)
 }
 </script>

@@ -141,6 +141,18 @@ function showDeprecated() {
         Rules
       </NuxtLink>
       <NuxtLink
+        to="/extends"
+        btn-action
+        px3
+        py1
+        text-base
+        active-class="btn-action-active"
+      >
+        <div i-ph-stack-plus-duotone flex-none />
+        Extends
+        <span v-tooltip="'Experimental'" i-ph-flask-duotone text-xs op60 />
+      </NuxtLink>
+      <NuxtLink
         to="/files"
         btn-action
         px3
@@ -150,7 +162,7 @@ function showDeprecated() {
       >
         <div i-ph-files-duotone flex-none />
         Files
-        <span text-xs op60>(experimental)</span>
+        <span v-tooltip="'Experimental'" i-ph-flask-duotone text-xs op60 />
       </NuxtLink>
       <NuxtLink
         to="/dev"

@@ -16,8 +16,11 @@ import {
   watch,
   watchEffect,
 } from 'vue'
+import {
+} from '~~/shared/config-plugin-filters'
 import { isIgnoreOnlyConfig, matchFile } from '~~/shared/configs'
 import { getRuleLevel } from '~~/shared/rules'
+import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
 import {
   configsOpenState,
@@ -44,8 +47,8 @@ function collapseAll() {
 }
 
 const filteredConfigs = shallowRef<FlatConfigItem[]>([])
+const prePluginFilteredConfigs = shallowRef<FlatConfigItem[]>([])
 const fileMatchResult = shallowRef<MatchedFile | null>(null)
-
 watchEffect(() => {
   let configs = payload.value.configs
 
@@ -77,6 +80,70 @@ watchEffect(() => {
 
   if (filters.rule) {
     configs = configs.filter(config => filters.rule! in (config.rules || {}))
+  }
+
+  prePluginFilteredConfigs.value = configs
+})
+
+const configPluginNames = computed(() => {
+  const pluginNames = new Set<string>()
+
+  for (const config of prePluginFilteredConfigs.value) {
+    for (const pluginName of Object.keys(config.plugins ?? {}))
+      pluginNames.add(pluginName)
+  }
+
+  return [...pluginNames].toSorted((left, right) => left.localeCompare(right))
+})
+
+const pluginOptions = computed(() => {
+  return configPluginNames.value.map(plugin => ({
+    value: plugin,
+    title: plugin,
+    style: {
+      color: getPluginColor(plugin),
+      borderColor: getPluginColor(plugin, 0.55),
+      backgroundColor: getPluginColor(plugin, 0.1),
+    },
+  }))
+})
+
+const hasSelectedPlugin = computed(() => filters.plugins.length > 0)
+
+function isPluginSelected(pluginName: string): boolean {
+  return filters.plugins.includes(pluginName)
+}
+
+function togglePluginSelection(pluginName: string): void {
+  const nextSelection = new Set(filters.plugins)
+
+  if (nextSelection.has(pluginName))
+    nextSelection.delete(pluginName)
+  else
+    nextSelection.add(pluginName)
+
+  filters.plugins = [...nextSelection].toSorted((left, right) => left.localeCompare(right))
+}
+
+function clearPluginSelection(): void {
+  filters.plugins = []
+}
+
+watchEffect(() => {
+  const availablePlugins = new Set(configPluginNames.value)
+  const normalizedSelectedPlugins = filters.plugins.filter(plugin => availablePlugins.has(plugin))
+
+  if (normalizedSelectedPlugins.length !== filters.plugins.length)
+    filters.plugins = normalizedSelectedPlugins
+})
+
+watchEffect(() => {
+  let configs = prePluginFilteredConfigs.value
+
+  if (filters.plugins.length) {
+    configs = configs.filter(config =>
+      filters.plugins.some(pluginName => pluginName in (config.plugins ?? {})),
+    )
   }
 
   filteredConfigs.value = configs
@@ -298,7 +365,7 @@ onMounted(async () => {
         </div>
       </div>
       <div
-        v-if="filters.filepath || filters.rule"
+        v-if="filters.filepath || filters.rule || filters.plugins.length"
         flex="~ gap-2 items-center wrap"
         mb2
       >
@@ -362,6 +429,75 @@ onMounted(async () => {
               hover:op100
               @click="filters.rule = ''"
             />
+          </div>
+        </div>
+        <div v-if="filters.plugins.length">
+          <div
+            flex="~ gap-2 items-center wrap"
+            border="~ teal/20 rounded-full"
+            bg-teal:10
+            px3
+            py1
+          >
+            <div i-ph-plug-duotone text-teal5 />
+            <span op50>Plugin rules</span>
+            <code
+              v-for="pluginName in filters.plugins"
+              :key="pluginName"
+            >{{ pluginName }}</code>
+            <button
+              i-ph-x
+              text-sm
+              op25
+              hover:op100
+              @click="clearPluginSelection()"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        v-if="pluginOptions.length"
+        grid="~ cols-[max-content_1fr] gap-2"
+        my2
+        items-center
+      >
+        <div text-right text-sm op50>
+          Plugin rules
+        </div>
+        <div class="space-y-2">
+          <div class="text-xs text-zinc-600 font-semibold tracking-wide uppercase dark:text-zinc-300/85">
+            Filter all configs by plugin-scoped rules
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="badge border border-base px-2 py-0.5 text-xs transition"
+              :class="[
+                !hasSelectedPlugin
+                  ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
+                  : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+              ]"
+              @click="clearPluginSelection"
+            >
+              All plugins
+            </button>
+            <button
+              v-for="pluginOption in pluginOptions"
+              :key="pluginOption.value"
+              type="button"
+              class="badge border border-base px-2 py-0.5 text-xs transition"
+              :class="[
+                isPluginSelected(pluginOption.value)
+                  ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
+                  : hasSelectedPlugin
+                    ? 'bg-white/65 text-zinc-700 opacity-55 hover:opacity-85 dark:bg-zinc-900/30 dark:text-zinc-300 dark:opacity-45 dark:hover:opacity-80'
+                    : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+              ]"
+              :style="pluginOption.style"
+              @click="togglePluginSelection(pluginOption.value)"
+            >
+              {{ pluginOption.title }}
+            </button>
           </div>
         </div>
       </div>

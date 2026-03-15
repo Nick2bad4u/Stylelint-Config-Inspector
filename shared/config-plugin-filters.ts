@@ -21,11 +21,15 @@ export function getRulePluginName(ruleName: string): string {
 
   if (segments[0]?.startsWith('@') === true) {
     const scope = segments[0]
-    const plugin = segments[1]
+    if (segments.length >= 3) {
+      const plugin = segments[1]
 
-    return typeof plugin === 'string' && plugin.length > 0
-      ? `${scope}/${plugin}`
-      : (scope ?? '')
+      return typeof plugin === 'string' && plugin.length > 0
+        ? `${scope}/${plugin}`
+        : (scope ?? '')
+    }
+
+    return scope ?? ''
   }
 
   return segments[0] ?? ''
@@ -196,4 +200,15 @@ export function ruleMatchesPluginFilters(
 
   const rulePluginName = getRulePluginName(ruleName)
   return selectedPlugins.includes(rulePluginName)
+}
+
+export function configMatchesRulePluginFilters(
+  config: Pick<FlatConfigItem, 'rules'>,
+  selectedPlugins: readonly string[],
+): boolean {
+  if (!selectedPlugins.length)
+    return true
+
+  const configRulePlugins = getConfigRulePlugins(config)
+  return selectedPlugins.some(selectedPlugin => configRulePlugins.has(selectedPlugin))
 }

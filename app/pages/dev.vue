@@ -3,10 +3,14 @@ import { computed } from 'vue'
 import { payload } from '~/composables/payload'
 import { stateStorage } from '~/composables/state'
 
+const PLACEHOLDER_DESCRIPTION_RE = /<value>|‹[^›]+›/u
+
 const rules = computed(() => Object.values(payload.value.rules))
 const diagnostics = computed(() => payload.value.diagnostics ?? [])
 const configs = computed(() => payload.value.configs)
 const filesResolved = computed(() => payload.value.filesResolved)
+const extendsEntries = computed(() => payload.value.extendsInfo ?? [])
+const stylelintIgnore = computed(() => payload.value.meta.stylelintIgnore)
 
 const configSummary = computed(() => {
   const items = configs.value
@@ -31,6 +35,29 @@ const workspaceSummary = computed(() => {
   }
 })
 
+const extendsSummary = computed(() => {
+  const entries = extendsEntries.value
+  return {
+    total: entries.length,
+    packages: entries.filter(entry => entry.source === 'package').length,
+    locals: entries.filter(entry => entry.source === 'local').length,
+    withRules: entries.filter(entry => !!entry.rules?.length).length,
+    totalRules: entries.reduce((count, entry) => count + (entry.rules?.length ?? 0), 0),
+  }
+})
+
+const pluginPackageSummary = computed(() => {
+  const counts = new Map<string, number>()
+
+  for (const config of configs.value) {
+    for (const pluginName of Object.keys(config.plugins ?? {}))
+      counts.set(pluginName, (counts.get(pluginName) ?? 0) + 1)
+  }
+
+  return Array.from(counts.entries(), ([name, count]) => ({ name, count }))
+    .toSorted((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+})
+
 const viewerSummary = computed(() => ({
   theme: stateStorage.theme,
   fontScale: stateStorage.fontScale,
@@ -40,8 +67,23 @@ const viewerSummary = computed(() => ({
   viewFileMatchType: stateStorage.viewFileMatchType,
   configFilepathFilter: stateStorage.filtersConfigs.filepath,
   configRuleFilter: stateStorage.filtersConfigs.rule,
+  configPluginFilters: stateStorage.filtersConfigs.plugins,
   rulesPluginFilters: stateStorage.filtersRules.plugins,
 }))
+
+const activeViewerFilters = computed(() => {
+  const filters: string[] = []
+
+  if (viewerSummary.value.configFilepathFilter)
+    filters.push(`filepath:${viewerSummary.value.configFilepathFilter}`)
+  if (viewerSummary.value.configRuleFilter)
+    filters.push(`config-rule:${viewerSummary.value.configRuleFilter}`)
+
+  viewerSummary.value.configPluginFilters.forEach(plugin => filters.push(`config-plugin:${plugin}`))
+  viewerSummary.value.rulesPluginFilters.forEach(plugin => filters.push(`rules-plugin:${plugin}`))
+
+  return filters
+})
 
 const metadataHealth = computed(() => {
   const allRules = rules.value
@@ -59,7 +101,7 @@ const metadataHealth = computed(() => {
     rule => rule.docs?.urlSource === 'inferred',
   ).length
   const placeholderDescriptions = allRules.filter(rule =>
-    rule.docs?.description?.includes('<value>'),
+    PLACEHOLDER_DESCRIPTION_RE.test(rule.docs?.description ?? ''),
   ).length
 
   const toPct = (count: number) =>
@@ -86,7 +128,7 @@ const metadataHealth = computed(() => {
         <div i-ph-chart-bar-horizontal-duotone flex-none />
         <span font-medium>Inspector snapshot</span>
       </div>
-      <div mt3 grid="~ cols-1 gap-3 md:cols-2 xl:cols-3">
+      <div mt3 grid="~ cols-1 gap-3 md:cols-2 xl:cols-4">
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
           <div font-mono>
             Config path: {{ payload.meta.configPath || 'not resolved' }}
@@ -99,6 +141,9 @@ const metadataHealth = computed(() => {
           </div>
           <div font-mono>
             Last update: {{ new Date(payload.meta.lastUpdate).toLocaleString() }}
+          </div>
+          <div font-mono>
+            .stylelintignore: {{ payload.meta.stylelintIgnore?.path || 'not found' }}
           </div>
         </div>
         <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
@@ -114,6 +159,13 @@ const metadataHealth = computed(() => {
           <div>Tracked globs: {{ workspaceSummary.globs }}</div>
           <div>Configs with files: {{ workspaceSummary.configsWithFiles }}</div>
           <div>Diagnostics: {{ diagnostics.length }}</div>
+        </div>
+        <div border="~ base rounded-lg" bg-black:8 p3 text-sm leading-7 dark:bg-white:4>
+          <div>Extends entries: {{ extendsSummary.total }}</div>
+          <div>Package extends: {{ extendsSummary.packages }}</div>
+          <div>Local extends: {{ extendsSummary.locals }}</div>
+          <div>Extends with rules: {{ extendsSummary.withRules }}</div>
+          <div>Total extends rules: {{ extendsSummary.totalRules }}</div>
         </div>
       </div>
     </section>
@@ -194,9 +246,21 @@ const metadataHealth = computed(() => {
         <div>File match view: {{ viewerSummary.viewFileMatchType }}</div>
         <div>Config filepath filter: {{ viewerSummary.configFilepathFilter || '∅' }}</div>
         <div>Config rule filter: {{ viewerSummary.configRuleFilter || '∅' }}</div>
-        <div>Config plugin filters: local to each config card</div>
+        <div>Config plugin filters: {{ viewerSummary.configPluginFilters.length ? viewerSummary.configPluginFilters.join(', ') : '∅' }}</div>
         <div>Rules plugin filters: {{ viewerSummary.rulesPluginFilters.length ? viewerSummary.rulesPluginFilters.join(', ') : '∅' }}</div>
         <div>Dim disabled rules: {{ viewerSummary.dimDisabledRules ? 'on' : 'off' }}</div>
+      </div>
+      <div v-if="activeViewerFilters.length" mt3 flex="~ gap-2 wrap">
+        <code
+          v-for="filterTag in activeViewerFilters"
+          :key="filterTag"
+          class="rounded-full bg-emerald:12 px3 py0.5 text-xs text-emerald8 font-mono dark:text-emerald2"
+        >
+          {{ filterTag }}
+        </code>
+      </div>
+      <div v-else mt3 text-sm op70>
+        No active viewer filters.
       </div>
     </section>
 
@@ -209,8 +273,42 @@ const metadataHealth = computed(() => {
         <div>Root entries: {{ configSummary.root }}</div>
         <div>Configs with extends: {{ configSummary.withExtends }}</div>
         <div>Configs with plugins: {{ configSummary.withPlugins }}</div>
+        <div>Unique extends entries: {{ payload.extendsInfo?.length ?? 0 }}</div>
         <div>General config items: {{ configSummary.general }}</div>
         <div>Ignore-only config items: {{ configSummary.ignoreOnly }}</div>
+      </div>
+      <div mt3 grid="~ cols-1 gap-3 lg:cols-2">
+        <div border="~ violet/20" rounded-lg bg-black:8 p3 dark:bg-white:4>
+          <div text-sm font-medium>
+            Declared plugins
+          </div>
+          <div mt2 flex="~ gap-2 wrap">
+            <code
+              v-for="pluginEntry in pluginPackageSummary.slice(0, 18)"
+              :key="pluginEntry.name"
+              class="rounded-full bg-violet:10 px2.5 py0.5 text-xs text-violet8 font-mono dark:text-violet2"
+            >
+              {{ pluginEntry.name }} · {{ pluginEntry.count }}
+            </code>
+          </div>
+        </div>
+        <div border="~ violet/20" rounded-lg bg-black:8 p3 dark:bg-white:4>
+          <div text-sm font-medium>
+            .stylelintignore patterns
+          </div>
+          <div v-if="stylelintIgnore?.patterns.length" mt2 flex="~ gap-2 wrap">
+            <code
+              v-for="pattern in stylelintIgnore.patterns"
+              :key="pattern"
+              class="rounded-full bg-fuchsia:10 px2.5 py0.5 text-xs text-fuchsia8 font-mono dark:text-fuchsia2"
+            >
+              {{ pattern }}
+            </code>
+          </div>
+          <div v-else mt2 text-sm op60>
+            No <code>.stylelintignore</code> file was discovered.
+          </div>
+        </div>
       </div>
     </section>
   </div>

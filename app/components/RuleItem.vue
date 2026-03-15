@@ -27,6 +27,13 @@ const emit = defineEmits<{
 
 const PLACEHOLDER_CONTEXT_RE
   = /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/
+const PLACEHOLDER_VALUE_RE = /<value>|‹([^›]+)›/gu
+const DEFAULT_PLACEHOLDER_EXAMPLE = 'foo'
+
+interface DescriptionSegment {
+  type: 'text' | 'token'
+  value: string
+}
 
 function redundantOptions(options: any) {
   const { hasRedundantOptions } = deepCompareOptions(
@@ -166,6 +173,39 @@ const resolvedDescription = computed(() => {
   return applyPlaceholderGuesses(baseDescription, configuredValue)
 })
 
+const descriptionSegments = computed<DescriptionSegment[]>(() => {
+  const description = resolvedDescription.value
+  const segments: DescriptionSegment[] = []
+  let cursor = 0
+
+  for (const match of description.matchAll(PLACEHOLDER_VALUE_RE)) {
+    const index = match.index ?? 0
+    if (cursor < index) {
+      segments.push({
+        type: 'text',
+        value: description.slice(cursor, index),
+      })
+    }
+
+    segments.push({
+      type: 'token',
+      value: match[1] ?? DEFAULT_PLACEHOLDER_EXAMPLE,
+    })
+    cursor = index + match[0].length
+  }
+
+  if (cursor < description.length) {
+    segments.push({
+      type: 'text',
+      value: description.slice(cursor),
+    })
+  }
+
+  return segments.length
+    ? segments
+    : [{ type: 'text', value: description }]
+})
+
 const isMissingDescription = computed(
   () => !!props.rule.docs?.descriptionMissing && !props.rule.invalid,
 )
@@ -237,7 +277,7 @@ const dimRuleClass = computed(() =>
     />
   </div>
 
-  <div :class="[props.class, dimRuleClass]" min-w-0 of-hidden pr2>
+  <div :class="[props.class, dimRuleClass]" relative min-w-0 pr2>
     <VDropdown inline-block>
       <ColorizedRuleName
         v-tooltip="{ content: rule.name }"
@@ -246,6 +286,7 @@ const dimRuleClass = computed(() =>
         :deprecated="rule.deprecated"
         :borderless="gridView"
         :break="gridView"
+        :hover-reveal="!gridView"
         :title="rule.name"
         text-start
         as="button"
@@ -337,7 +378,16 @@ const dimRuleClass = computed(() =>
           : 'op75 text-sm ws-nowrap of-hidden text-ellipsis line-clamp-1',
       ]"
     >
-      {{ resolvedDescription }}
+      <template v-for="(segment, index) of descriptionSegments" :key="index">
+        <span v-if="segment.type === 'text'">{{ segment.value }}</span>
+        <code
+          v-else
+          class="mx-0.5 inline-flex items-center gap-1 rounded-full bg-violet:10 px-1.5 py-0.2 text-[0.92em] text-violet7 dark:text-violet3"
+        >
+          <span class="text-[0.95em]" i-ph-brackets-angle-duotone op70 />
+          {{ segment.value }}
+        </code>
+      </template>
     </div>
     <div
       v-if="isMissingDescription"

@@ -46,6 +46,7 @@ const ruleOptions = reactive({
 const router = useRouter()
 function goto() {
   filtersConfigs.rule = props.state.name
+  filtersConfigs.plugins = []
   router.push('/configs')
 }
 </script>

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   configMatchesPluginFilters,
+  configMatchesRulePluginFilters,
   getConfigPluginFilters,
   resolveConfigPluginFilter,
   ruleMatchesPluginFilters,
@@ -75,6 +76,22 @@ describe('config plugin filters', () => {
     ).toBe(true)
     expect(
       ruleMatchesPluginFilters('color-no-invalid-hex', ['defensive-css']),
+    ).toBe(false)
+  })
+
+  it('matches config plugin filters only when the config actually declares plugin-scoped rules', () => {
+    const config = {
+      index: 0,
+      plugins: {
+        'stylelint-plugin-use-nesting': {},
+      },
+      rules: {
+        'color-no-invalid-hex': true,
+      },
+    }
+
+    expect(
+      configMatchesRulePluginFilters(config, ['use-nesting']),
     ).toBe(false)
   })
 })

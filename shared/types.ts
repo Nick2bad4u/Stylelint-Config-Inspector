@@ -14,6 +14,28 @@ export interface FlatConfigItem extends Record<string, unknown> {
   customSyntax?: string
 }
 
+export interface StylelintIgnoreInfo {
+  path: string
+  patterns: string[]
+}
+
+export type ExtendsInfoSource = 'package' | 'local' | 'unknown'
+
+export interface ExtendsInfo {
+  specifier: string
+  packageName?: string
+  description?: string
+  docsUrl?: string
+  docsUrlSource?: RuleDocsUrlSource
+  source: ExtendsInfoSource
+  directExtends?: string[]
+  plugins?: string[]
+  customSyntax?: string
+  ruleCount?: number
+  rules?: string[]
+  usedByConfigIndexes: number[]
+}
+
 export type RuleLevel = 'off' | 'warn' | 'error'
 
 export interface Payload {
@@ -22,11 +44,13 @@ export interface Payload {
   meta: PayloadMeta
   diagnostics?: string[]
   files?: MatchedFile[]
+  extendsInfo?: ExtendsInfo[]
 }
 
 export interface ResolvedPayload extends Payload {
   configsIgnoreOnly: FlatConfigItem[]
   configsGeneral: FlatConfigItem[]
+  extendsInfoMap: Map<string, ExtendsInfo>
 
   ruleToState: Map<string, RuleConfigStates>
   globToConfigs: Map<string, FlatConfigItem[]>
@@ -80,6 +104,7 @@ export interface PayloadMeta {
   lastUpdate: number
   basePath: string
   configPath: string
+  stylelintIgnore?: StylelintIgnoreInfo
 }
 
 export type RuleDescriptionSource = 'meta' | 'message' | 'generated'
@@ -127,6 +152,7 @@ export interface RuleInfo {
 export interface FiltersConfigsPage {
   rule?: string
   filepath?: string
+  plugins?: string[]
 }
 
 export interface RuleConfigState {

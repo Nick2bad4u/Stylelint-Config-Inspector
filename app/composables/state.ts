@@ -39,6 +39,7 @@ export type RuleStatusFilter
 export interface FiltersConfigsPage {
   filepath: string
   rule: string
+  plugins: string[]
 }
 
 export interface FiltersRulesPage {
@@ -105,6 +106,7 @@ const DEFAULT_STATE_STORAGE: ViewerStateStorage = {
   filtersConfigs: {
     filepath: '',
     rule: '',
+    plugins: [],
   },
   filtersRules: {
     state: '',
@@ -132,6 +134,7 @@ const VIEWER_STATE_STORAGE_KEYS = [
 const FILTERS_CONFIG_KEYS = [
   'filepath',
   'rule',
+  'plugins',
 ] as const satisfies readonly (keyof FiltersConfigsPage)[]
 
 const FILTERS_RULES_KEYS = [
@@ -146,6 +149,7 @@ function createDefaultFiltersConfigs(): FiltersConfigsPage {
   return {
     filepath: DEFAULT_STATE_STORAGE.filtersConfigs.filepath,
     rule: DEFAULT_STATE_STORAGE.filtersConfigs.rule,
+    plugins: [...DEFAULT_STATE_STORAGE.filtersConfigs.plugins],
   }
 }
 
@@ -209,6 +213,12 @@ function buildInitialStateStorage(): ViewerStateStorage {
   const storedFiltersConfigs = (stored.filtersConfigs ?? {}) as Partial<FiltersConfigsPage>
   const storedFiltersRules = (stored.filtersRules ?? {}) as Partial<FiltersRulesPage>
 
+  const normalizedConfigPlugins = Array.isArray(storedFiltersConfigs.plugins)
+    ? storedFiltersConfigs.plugins.filter(
+        (value: unknown): value is string => typeof value === 'string' && value.length > 0,
+      )
+    : []
+
   const normalizedRulesPlugins = Array.isArray(storedFiltersRules.plugins)
     ? storedFiltersRules.plugins.filter(
         (value: unknown): value is string => typeof value === 'string' && value.length > 0,
@@ -262,6 +272,7 @@ function buildInitialStateStorage(): ViewerStateStorage {
         typeof storedFiltersConfigs.rule === 'string'
           ? storedFiltersConfigs.rule
           : DEFAULT_STATE_STORAGE.filtersConfigs.rule,
+      plugins: normalizedConfigPlugins,
     },
     filtersRules: {
       state: isRuleStateFilter(storedFiltersRules.state)

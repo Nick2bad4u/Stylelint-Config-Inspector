@@ -1,5 +1,6 @@
 import type { Config as StylelintConfig } from 'stylelint'
 import type {
+  ExtendsInfo,
   FlatConfigItem,
   MatchedFile,
   Payload,
@@ -7,6 +8,7 @@ import type {
   RuleDocsUrlSource,
   RuleInfo,
   RulesRecord,
+  StylelintIgnoreInfo,
 } from '../../shared/types'
 import type {
   InspectorAdapter,
@@ -70,6 +72,7 @@ const MESSAGE_UNDEFINED_RE = /\bundefined\b/i
 const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/
 const DESCRIPTION_TEMPLATE_TOKEN_RE = /<([a-z][\w-]*)>/gi
 const MULTIPLE_WHITESPACE_RE = /\s+/g
+const LINE_SPLIT_RE = /\r?\n/u
 const GIT_SUFFIX_RE = /\.git$/i
 const GIT_PROTOCOL_PREFIX_RE = /^git\+/i
 const MESSAGE_CALL_ARGS: readonly unknown[][] = [
@@ -89,6 +92,12 @@ const PRIORITIZED_MESSAGE_KEYS = new Set([
   'message',
   'default',
 ])
+const GENERATED_VALUE_PLACEHOLDERS = [
+  '‹foo›',
+  '‹bar›',
+  '‹baz›',
+  '‹qux›',
+] as const
 
 const require = createRequire(import.meta.url)
 
@@ -151,6 +160,14 @@ interface PluginPackageDocsMetadata {
   packageName?: string
   docsUrl?: string
   docsUrlSource?: RuleDocsUrlSource
+}
+
+interface ResolvedExtendsSpecifier {
+  specifier: string
+  packageName?: string
+  packageRoot?: string
+  resolvedPath?: string
+  source: ExtendsInfo['source']
 }
 
 let _recommendedCoreRulesPromise: Promise<Set<string>> | undefined
@@ -484,6 +501,241 @@ async function readPluginPackageDocsMetadata(
   }
 }
 
+async function readJsonFile(path: string): Promise<unknown> {
+  const content = await readFile(path, 'utf-8').catch(() => undefined)
+  if (!content)
+    return undefined
+
+  try {
+    return JSON.parse(content) as unknown
+  }
+  catch {
+    return undefined
+  }
+}
+
+async function readPackageManifest(
+  packageRoot: string,
+): Promise<Record<string, unknown> | undefined> {
+  const packageJson = await readJsonFile(resolve(packageRoot, 'package.json'))
+  return isRecord(packageJson) ? packageJson : undefined
+}
+
+async function resolvePackageRoot(
+  packageName: string,
+  searchPaths: readonly string[],
+): Promise<string | undefined> {
+  for (const searchPath of searchPaths) {
+    const candidate = resolve(searchPath, 'node_modules', packageName)
+    if (await exists(candidate))
+      return candidate
+  }
+
+  return undefined
+}
+
+async function resolveExtendsSpecifier(
+  specifier: string,
+  configBasePath: string,
+  workspaceBasePath: string,
+): Promise<ResolvedExtendsSpecifier> {
+  const packageName = toPackageNameFromSpecifier(specifier)
+  const searchPaths = [...new Set([
+    configBasePath,
+    workspaceBasePath,
+    process.cwd(),
+  ])]
+
+  let resolvedPath: string | undefined
+
+  if (isAbsolute(specifier)) {
+    resolvedPath = specifier
+  }
+  else {
+    try {
+      resolvedPath = require.resolve(specifier, { paths: searchPaths })
+    }
+    catch {
+      resolvedPath = undefined
+    }
+  }
+
+  const packageRoot = resolvedPath
+    ? getPackageRootFromResolvedPath(resolvedPath)
+    : packageName
+      ? await resolvePackageRoot(packageName, searchPaths)
+      : undefined
+
+  return {
+    specifier,
+    packageName,
+    packageRoot,
+    resolvedPath,
+    source: packageName
+      ? 'package'
+      : (specifier.startsWith('.') || isAbsolute(specifier))
+          ? 'local'
+          : 'unknown',
+  }
+}
+
+async function resolvePackageEntryPath(
+  packageRoot: string,
+): Promise<string | undefined> {
+  const packageJson = await readPackageManifest(packageRoot)
+  const entryCandidates = [
+    typeof packageJson?.main === 'string' ? packageJson.main : undefined,
+    'index.js',
+    'index.cjs',
+    'index.mjs',
+  ].filter((candidate): candidate is string => typeof candidate === 'string' && candidate.length > 0)
+
+  for (const candidate of entryCandidates) {
+    const entryPath = resolve(packageRoot, candidate)
+    if (await exists(entryPath))
+      return entryPath
+  }
+
+  return undefined
+}
+
+async function loadExtendsConfig(
+  resolvedSpecifier: ResolvedExtendsSpecifier,
+  configBasePath: string,
+): Promise<StylelintConfigLike | undefined> {
+  const entryPath = resolvedSpecifier.resolvedPath
+    ?? (resolvedSpecifier.packageRoot
+      ? await resolvePackageEntryPath(resolvedSpecifier.packageRoot)
+      : undefined)
+
+  if (!entryPath)
+    return undefined
+
+  try {
+    const loaded = await loadConfigFromPath(entryPath, configBasePath)
+    return loaded.config as StylelintConfigLike
+  }
+  catch {
+    return undefined
+  }
+}
+
+async function readExtendsPackageMetadata(
+  resolvedSpecifier: ResolvedExtendsSpecifier,
+): Promise<{
+  description?: string
+  docsUrl?: string
+  docsUrlSource?: RuleDocsUrlSource
+}> {
+  const packageRoot = resolvedSpecifier.packageRoot
+  const packageName = resolvedSpecifier.packageName
+
+  if (!packageRoot && !packageName)
+    return {}
+
+  const packageJson = packageRoot
+    ? await readPackageManifest(packageRoot)
+    : undefined
+
+  const description = typeof packageJson?.description === 'string'
+    ? packageJson.description.trim() || undefined
+    : undefined
+  const homepageUrl = normalizeAbsoluteUrl(
+    typeof packageJson?.homepage === 'string'
+      ? packageJson.homepage
+      : undefined,
+  )
+  const repositoryUrl = normalizeRepositoryUrl(packageJson?.repository)
+  const docsUrl = homepageUrl
+    ?? repositoryUrl
+    ?? (packageName ? `https://www.npmjs.com/package/${packageName}` : undefined)
+
+  return {
+    description,
+    docsUrl,
+    docsUrlSource: docsUrl ? 'inferred' : undefined,
+  }
+}
+
+async function buildExtendsInfo(
+  configs: FlatConfigItem[],
+  workspaceBasePath: string,
+  configBasePath: string,
+): Promise<ExtendsInfo[]> {
+  const usedBy = new Map<string, Set<number>>()
+
+  for (const config of configs) {
+    for (const specifier of config.extends ?? []) {
+      if (!usedBy.has(specifier))
+        usedBy.set(specifier, new Set<number>())
+      usedBy.get(specifier)?.add(config.index)
+    }
+  }
+
+  const entries = await Promise.all(
+    Array.from(usedBy.entries(), async ([specifier, indexes]) => {
+      const resolvedSpecifier = await resolveExtendsSpecifier(
+        specifier,
+        configBasePath,
+        workspaceBasePath,
+      )
+      const [packageMetadata, loadedConfig] = await Promise.all([
+        readExtendsPackageMetadata(resolvedSpecifier),
+        loadExtendsConfig(resolvedSpecifier, configBasePath),
+      ])
+
+      const normalizedPlugins = toPluginRecord(loadedConfig?.plugins)
+      const directExtends = toStringArray(loadedConfig?.extends)
+      const customSyntax = typeof loadedConfig?.customSyntax === 'string'
+        ? loadedConfig.customSyntax
+        : undefined
+      const rules = toRulesRecord(loadedConfig?.rules)
+      const ruleNames = rules
+        ? Object.keys(rules).toSorted((left, right) => left.localeCompare(right))
+        : undefined
+
+      return {
+        specifier,
+        packageName: resolvedSpecifier.packageName,
+        description: packageMetadata.description,
+        docsUrl: packageMetadata.docsUrl,
+        docsUrlSource: packageMetadata.docsUrlSource,
+        source: resolvedSpecifier.source,
+        ...(directExtends ? { directExtends } : {}),
+        ...(normalizedPlugins ? { plugins: Object.keys(normalizedPlugins) } : {}),
+        ...(customSyntax ? { customSyntax } : {}),
+        ...(rules ? { ruleCount: Object.keys(rules).length } : {}),
+        ...(ruleNames ? { rules: ruleNames } : {}),
+        usedByConfigIndexes: [...indexes].toSorted((left, right) => left - right),
+      } satisfies ExtendsInfo
+    }),
+  )
+
+  return entries.toSorted((left, right) => left.specifier.localeCompare(right.specifier))
+}
+
+async function readStylelintIgnoreInfo(
+  basePath: string,
+): Promise<StylelintIgnoreInfo | undefined> {
+  const ignorePath = await findUp('.stylelintignore', { cwd: basePath })
+  if (!ignorePath)
+    return undefined
+
+  const content = await readFile(ignorePath, 'utf-8').catch(() => undefined)
+  if (!content)
+    return undefined
+
+  const patterns = content
+    .split(LINE_SPLIT_RE)
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('#'))
+
+  return {
+    path: getRelativeFilepath(basePath, ignorePath),
+    patterns,
+  }
+}
+
 function toStringArray(value: unknown): string[] | undefined {
   if (typeof value === 'string')
     return [value]
@@ -723,11 +975,17 @@ function sanitizeDescription(ruleName: string, description: string): string {
   if (!withoutPrefix.length)
     return humanizeRuleName(ruleName)
 
+  let valuePlaceholderIndex = 0
   const normalizedDescription = withoutPrefix
     .replace(DESCRIPTION_TEMPLATE_TOKEN_RE, (_match, token: string) => {
       const lowerToken = token.toLowerCase()
-      if (lowerToken === 'value')
-        return 'a value'
+      if (lowerToken === 'value') {
+        const placeholder
+          = GENERATED_VALUE_PLACEHOLDERS[valuePlaceholderIndex]
+            ?? `‹value ${valuePlaceholderIndex + 1}›`
+        valuePlaceholderIndex += 1
+        return placeholder
+      }
       return token.replaceAll('-', ' ')
     })
     .replace(MULTIPLE_WHITESPACE_RE, ' ')
@@ -1570,10 +1828,15 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       resolved as StylelintConfigLike,
       config as StylelintConfigLike | undefined,
     )
-    const rules = await buildRuleCatalog(
-      configs,
-      resolved as StylelintConfigLike,
-    )
+    const configBasePath = configPath ? dirname(configPath) : basePath
+    const [rules, stylelintIgnore, extendsInfo] = await Promise.all([
+      buildRuleCatalog(
+        configs,
+        resolved as StylelintConfigLike,
+      ),
+      readStylelintIgnoreInfo(basePath),
+      buildExtendsInfo(configs, basePath, configBasePath),
+    ])
 
     let files: MatchedFile[] | undefined
     if (shouldGlobMatchedFiles) {
@@ -1596,12 +1859,14 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       rules,
       diagnostics,
       files,
+      extendsInfo,
       meta: {
         engine: this.engine,
         lastUpdate: Date.now(),
         basePath,
         configPath: configPathRelative,
         targetFilePath: targetFilepathRelative,
+        ...(stylelintIgnore ? { stylelintIgnore } : {}),
       },
     }
 

@@ -2,7 +2,6 @@
 import type { FiltersConfigsPage, FlatConfigItem } from '~~/shared/types'
 import { computed, nextTick, ref, watchEffect } from 'vue'
 import {
-  getConfigPluginFilters,
   getConfigRulePlugins,
   resolveConfigPluginFilter,
   ruleMatchesPluginFilters,
@@ -49,7 +48,6 @@ const open = defineModel('open', {
 
 const hasShown = ref(open.value)
 const showAdditionalConfigs = ref(false)
-const selectedRulePlugins = ref<string[]>([])
 
 if (!hasShown.value) {
   const stop = watchEffect(() => {
@@ -64,8 +62,23 @@ const knownRulePlugins = computed(
   () => new Set(Object.values(payload.value.rules).map(rule => rule.plugin).filter(Boolean)),
 )
 const configRulePlugins = computed(() => getConfigRulePlugins(props.config))
+const selectedPluginPackages = computed(() => props.filters?.plugins ?? [])
+const selectedRulePlugins = computed(() => {
+  const filters = new Set<string>()
+
+  for (const pluginName of selectedPluginPackages.value) {
+    if (!(pluginName in (props.config.plugins ?? {})))
+      continue
+
+    const filter = resolvePluginFilter(pluginName)
+    if (filter)
+      filters.add(filter)
+  }
+
+  return [...filters].toSorted((left, right) => left.localeCompare(right))
+})
 const configRuleListColumns
-  = '40px_minmax(12rem,clamp(12rem,34vw,24rem))_5rem_minmax(0,1fr)'
+  = '40px_minmax(14rem,clamp(14rem,38vw,28rem))_5rem_minmax(0,1fr)'
 const pluginEntries = computed(() => {
   return Object.keys(props.config.plugins ?? {}).map((name) => {
     const filter = resolvePluginFilter(name)
@@ -73,6 +86,8 @@ const pluginEntries = computed(() => {
     return {
       name,
       filter,
+      hasPluginScopedRules: filter.length > 0 && configRulePlugins.value.has(filter),
+      isSelected: selectedPluginPackages.value.includes(name),
       style: {
         color: getPluginColor(name),
         borderColor: getPluginColor(name, 0.55),
@@ -81,26 +96,28 @@ const pluginEntries = computed(() => {
     }
   })
 })
-const filterablePlugins = computed(() =>
-  getConfigPluginFilters(props.config, knownRulePlugins.value),
-)
 const totalRuleCount = computed(() => Object.keys(props.config.rules ?? {}).length)
 const filteredRuleCount = computed(() =>
   Object.keys(props.config.rules ?? {}).filter(ruleName =>
     ruleMatchesPluginFilters(ruleName, selectedRulePlugins.value),
   ).length,
 )
-const hasLocalPluginFilter = computed(() => selectedRulePlugins.value.length > 0)
-const selectedPluginLabels = computed(() =>
-  selectedRulePlugins.value.map(
-    pluginName => pluginEntries.value.find(entry => entry.filter === pluginName)?.name ?? pluginName,
-  ),
+const hasGlobalPluginFilter = computed(() => selectedPluginPackages.value.length > 0)
+const hasActiveRuleScopedPluginFilter = computed(() => selectedRulePlugins.value.length > 0)
+const isRootConfig = computed(() => {
+  return props.config.name === 'stylelint/root'
+    || props.config.name === 'stylelint/resolved/root'
+})
+const stylelintIgnoreInfo = computed(() =>
+  isRootConfig.value ? payload.value.meta.stylelintIgnore : undefined,
 )
 
 const filesSectionEl = ref<HTMLElement>()
 const pluginsSectionEl = ref<HTMLElement>()
 const extendsSectionEl = ref<HTMLElement>()
 const ignoresSectionEl = ref<HTMLElement>()
+const stylelintIgnoreSectionEl = ref<HTMLElement>()
+const stylelintIgnoreDetailsEl = ref<HTMLDetailsElement>()
 const rulesSectionEl = ref<HTMLElement>()
 const optionsSectionEl = ref<HTMLElement>()
 
@@ -110,28 +127,6 @@ function resolvePluginFilter(name: string): string {
     knownRulePlugins.value,
     configRulePlugins.value,
   )
-}
-
-function isPluginSelected(pluginName: string): boolean {
-  return selectedRulePlugins.value.includes(pluginName)
-}
-
-function togglePluginFilter(pluginName: string) {
-  if (!pluginName)
-    return
-
-  const nextSelection = new Set(selectedRulePlugins.value)
-
-  if (nextSelection.has(pluginName))
-    nextSelection.delete(pluginName)
-  else
-    nextSelection.add(pluginName)
-
-  selectedRulePlugins.value = [...nextSelection].toSorted((left, right) => left.localeCompare(right))
-}
-
-function clearPluginFilter() {
-  selectedRulePlugins.value = []
 }
 
 function matchesSelectedRulePlugins(ruleName: string): boolean {
@@ -195,8 +190,11 @@ const sourceBadge = computed(() => {
 
   const override = STYLELINT_OVERRIDE_NAME_RE.exec(name)
   if (override?.[1]) {
+    const filesLabel = props.config.files?.flat().join(', ')
+
     return {
-      text: `Override #${override[1]}`,
+      text: filesLabel || `Override #${override[1]}`,
+      title: filesLabel || `Override #${override[1]}`,
       colorClass: 'text-amber6 dark:text-amber3',
       bgClass: 'bg-amber:10',
     }
@@ -211,12 +209,15 @@ async function scrollToSection(
     | 'plugins'
     | 'extends'
     | 'ignores'
+    | 'stylelintignore'
     | 'rules'
     | 'options',
 ) {
   open.value = true
   if (section === 'options')
     showAdditionalConfigs.value = true
+  if (section === 'stylelintignore' && stylelintIgnoreDetailsEl.value)
+    stylelintIgnoreDetailsEl.value.open = true
 
   await nextTick()
 
@@ -225,6 +226,7 @@ async function scrollToSection(
     plugins: pluginsSectionEl.value,
     extends: extendsSectionEl.value,
     ignores: ignoresSectionEl.value,
+    stylelintignore: stylelintIgnoreSectionEl.value,
     rules: rulesSectionEl.value,
     options: optionsSectionEl.value,
   }[section]
@@ -280,6 +282,8 @@ async function scrollToSection(
             <code
               v-if="sourceBadge"
               border="~ base rounded-full"
+              :title="sourceBadge.title ?? sourceBadge.text"
+              class="max-w-[min(48vw,34rem)] of-hidden text-ellipsis ws-nowrap"
               px2
               py0.2
               text-xs
@@ -305,6 +309,15 @@ async function scrollToSection(
               title="ignoreFiles"
               :clickable="!!config.ignores?.length"
               @click="scrollToSection('ignores')"
+            />
+            <SummarizeItem
+              v-if="stylelintIgnoreInfo?.patterns.length"
+              icon="i-ph-file-x-duotone"
+              :number="stylelintIgnoreInfo.patterns.length"
+              color="text-fuchsia5 dark:text-fuchsia4"
+              title=".stylelintignore"
+              clickable
+              @click="scrollToSection('stylelintignore')"
             />
             <SummarizeItem
               icon="i-ph-sliders-duotone"
@@ -368,6 +381,7 @@ async function scrollToSection(
               :key="idx"
               :glob="glob"
               popup="files"
+              variant="files"
               :active="matchedGlobs?.includes(glob)"
             />
           </div>
@@ -385,62 +399,27 @@ async function scrollToSection(
         <div flex="~ col gap-2">
           <div flex="~ gap-2 items-center wrap">
             <span>Plugins ({{ pluginEntries.length }})</span>
-            <button
-              v-if="hasLocalPluginFilter"
-              btn-action-sm
-              @click="clearPluginFilter"
-            >
-              <div i-ph-x />
-              Clear local rule filter
-            </button>
+          </div>
+          <div v-if="!configRulePlugins.size" text-sm op65>
+            No plugin-scoped rules are declared in this config item; these plugins likely augment core rules, syntax, or metadata.
           </div>
           <div flex="~ gap-2 items-center wrap">
-            <button
-              v-if="filterablePlugins.length"
-              class="badge border border-base px-2 py-0.5 text-xs transition"
-              :class="[
-                !hasLocalPluginFilter
-                  ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
-                  : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
-              ]"
-              @click="clearPluginFilter"
-            >
-              All plugins
-            </button>
-            <button
+            <code
               v-for="entry of pluginEntries"
               :key="entry.name"
               class="badge border border-transparent rounded-full px-2.5 py-0.5 text-sm leading-4"
               :class="[
-                entry.filter && isPluginSelected(entry.filter)
-                  ? 'ring-1 ring-violet/40 shadow-sm'
-                  : hasLocalPluginFilter
-                    ? 'opacity-55 hover:opacity-85'
-                    : '',
+                entry.hasPluginScopedRules ? 'ring-1 ring-teal/25 shadow-sm' : 'opacity-80',
+                entry.isSelected ? 'ring-2 ring-violet/45 shadow-sm' : '',
               ]"
               :style="entry.style"
               font-mono
-              :title="entry.filter
-                ? `Filter this config item to ${entry.filter} rules`
-                : 'No plugin-scoped rules detected in this config item'"
-              @click="togglePluginFilter(entry.filter)"
+              :title="entry.hasPluginScopedRules
+                ? `Plugin-scoped rules detected here under ${entry.filter}`
+                : 'No plugin-scoped rule names detected in this config item'"
             >
               {{ entry.name }}
-            </button>
-          </div>
-          <div
-            v-if="hasLocalPluginFilter"
-            class="flex flex-wrap items-center gap-2 text-sm"
-          >
-            <span op60>Showing plugin rules for</span>
-            <code
-              v-for="pluginLabel in selectedPluginLabels"
-              :key="pluginLabel"
-              class="config-plugin-filter-pill"
-            >
-              {{ pluginLabel }}
             </code>
-            <span op60>in this config item only</span>
           </div>
         </div>
       </div>
@@ -508,25 +487,68 @@ async function scrollToSection(
               v-for="(glob, idx) of config.ignores"
               :key="idx"
               :glob="glob"
+              variant="ignore-files"
               :active="matchedGlobs?.includes(glob)"
             />
           </div>
         </div>
       </div>
+      <details
+        v-if="stylelintIgnoreInfo?.patterns.length"
+        ref="stylelintIgnoreDetailsEl"
+        class="border border-fuchsia/18 rounded-lg bg-fuchsia/5 p3"
+      >
+        <summary
+          ref="stylelintIgnoreSectionEl"
+          flex="~ gap-2 items-center wrap"
+          cursor-pointer
+          select-none
+        >
+          <div i-ph-file-x-duotone flex-none text-fuchsia5 />
+          <span font-medium>.stylelintignore</span>
+          <code class="rounded-full bg-fuchsia:10 px3 py0.5 text-fuchsia7 font-mono dark:text-fuchsia3">
+            {{ stylelintIgnoreInfo.path }}
+          </code>
+          <span text-sm op60>
+            {{ stylelintIgnoreInfo.patterns.length }} patterns
+          </span>
+          <div i-ph-caret-right class="[details[open]_&]:rotate-90" op50 transition />
+        </summary>
+        <div mt3 flex="~ gap-2 items-start">
+          <div i-ph-eye-slash-duotone my1 flex-none text-fuchsia5 />
+          <div flex="~ col gap-2">
+            <div text-sm op65>
+              Workspace-level ignore patterns loaded from <code>.stylelintignore</code>.
+            </div>
+            <div flex="~ gap-2 items-center wrap">
+              <GlobItem
+                v-for="(glob, idx) of stylelintIgnoreInfo.patterns"
+                :key="idx"
+                :glob="glob"
+                variant="stylelintignore"
+                :active="matchedGlobs?.includes(glob)"
+              />
+            </div>
+          </div>
+        </div>
+      </details>
       <div v-if="config.rules && Object.keys(config.rules).length" ref="rulesSectionEl">
         <div flex="~ gap-2 items-center wrap">
           <div i-ph-list-dashes-duotone my1 flex-none />
           <div>
             Rules
-            <template v-if="hasLocalPluginFilter">
+            <template v-if="hasActiveRuleScopedPluginFilter">
               ({{ filteredRuleCount }} / {{ totalRuleCount }})
             </template>
             <template v-else>
               ({{ totalRuleCount }})
             </template>
           </div>
-          <div v-if="hasLocalPluginFilter" text-sm op60>
-            filtered locally by plugin
+          <div v-if="hasActiveRuleScopedPluginFilter" text-sm op60>
+            filtered by the page plugin filter
+          </div>
+          <div v-else-if="hasGlobalPluginFilter" text-sm op60>
+            selected plugin package has no plugin-scoped rules here
           </div>
         </div>
         <RuleList

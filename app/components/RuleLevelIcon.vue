@@ -37,7 +37,7 @@ const icon = computed(
 </script>
 
 <template>
-  <div relative :class="[color, props.class]" :title="title">
+  <div relative inline-flex items-center justify-center leading-none :class="[color, props.class]" :title="title">
     <div :class="icon" />
     <div
       v-if="hasOptions"

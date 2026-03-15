@@ -130,6 +130,9 @@ export function getRuleStates(name: string): RuleConfigStates | undefined {
 export function resolvePayload(payload: Payload): ResolvedPayload {
   const ruleToState = new Map<string, RuleConfigStates>()
   const globToConfigs = new Map<string, FlatConfigItem[]>()
+  const extendsInfoMap = new Map(
+    (payload.extendsInfo ?? []).map(entry => [entry.specifier, entry] as const),
+  )
 
   payload.configs.forEach((config, index) => {
     // Rule Level
@@ -175,6 +178,7 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
     ...payload,
     configsIgnoreOnly: payload.configs.filter(i => isIgnoreOnlyConfig(i)),
     configsGeneral: payload.configs.filter(i => isGeneralConfig(i)),
+    extendsInfoMap,
     ruleToState,
     globToConfigs,
     filesResolved: resolveFiles(payload),

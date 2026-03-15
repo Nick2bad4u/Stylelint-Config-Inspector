@@ -217,6 +217,108 @@ describe('stylelint adapter', () => {
     })
   })
 
+  it('reads .stylelintignore metadata into payload meta', async () => {
+    const cwd = await createTempProject(
+      `
+      export default {
+        rules: {
+          "color-no-invalid-hex": true
+        }
+      }
+    `,
+      {
+        '.stylelintignore': `
+dist/**
+# ignore build outputs
+coverage/**
+        `.trim(),
+      },
+    )
+
+    const result = await readConfig({
+      cwd,
+      chdir: false,
+      globMatchedFiles: false,
+      targetFilePath: 'src/styles.css',
+    })
+
+    expect(result.payload.meta.stylelintIgnore).toEqual({
+      path: '.stylelintignore',
+      patterns: ['dist/**', 'coverage/**'],
+    })
+  })
+
+  it('collects structured metadata for extended configs', async () => {
+    const cwd = await createTempProject(
+      `
+      export default {
+        extends: ['./stylelint.base.mjs'],
+        rules: {
+          "color-no-invalid-hex": true
+        }
+      }
+    `,
+      {
+        'stylelint.base.mjs': `
+          export default {
+            extends: ['./stylelint.shared.mjs'],
+            plugins: [{
+              ruleName: 'demo/example-rule',
+              rule: () => () => {}
+            }],
+            customSyntax: 'postcss-scss',
+            rules: {
+              'color-no-invalid-hex': true
+            }
+          }
+        `,
+        'stylelint.shared.mjs': 'export default { rules: {} }',
+      },
+    )
+
+    const result = await readConfig({
+      cwd,
+      chdir: false,
+      globMatchedFiles: false,
+      targetFilePath: 'src/styles.css',
+    })
+
+    expect(result.payload.extendsInfo).toContainEqual({
+      specifier: './stylelint.base.mjs',
+      source: 'local',
+      directExtends: ['./stylelint.shared.mjs'],
+      plugins: ['demo'],
+      customSyntax: 'postcss-scss',
+      ruleCount: 1,
+      rules: ['color-no-invalid-hex'],
+      usedByConfigIndexes: [0],
+    })
+  })
+
+  it('uses clearer placeholder examples in generated rule descriptions', async () => {
+    const cwd = await createTempProject(`
+      export default {
+        rules: {
+          "time-min-milliseconds": 100
+        },
+      }
+    `)
+
+    const result = await readConfig({
+      cwd,
+      chdir: false,
+      globMatchedFiles: false,
+      targetFilePath: 'src/styles.css',
+    })
+
+    expect(
+      result.payload.rules['time-min-milliseconds']?.docs?.description,
+    ).toContain('foo')
+    expect(
+      result.payload.rules['time-min-milliseconds']?.docs?.description,
+    ).not.toContain('a value')
+  })
+
   it('resolves matched workspace files when globMatchedFiles is enabled', async () => {
     const cwd = await createTempProject(
       `
@@ -449,7 +551,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(result.payload.rules['acme/templated-rule']?.docs?.description).toBe(
-      'Unexpected token "a value" for acme/templated-rule',
+      'Unexpected token "‹foo›" for acme/templated-rule',
     )
     expect(
       result.payload.rules['acme/templated-rule']?.messages?.rejected,
@@ -581,7 +683,7 @@ describe('stylelint adapter', () => {
     })
 
     expect(result.payload.rules['scales/sizes']?.docs?.description).toBe(
-      'Expected "a value" to be one of "a value"',
+      'Expected "‹foo›" to be one of "‹bar›"',
     )
   })
 
