@@ -36,6 +36,9 @@
     "release:check": "npm run check",
     "start": "node bin.mjs",
     "test": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
     "typecheck": "nuxt typecheck"
   },
   "peerDependencies": {
@@ -217,6 +220,7 @@
     "@nodelib/fs.walk": "^3.0.1",
     "@nuxt/eslint": "^1.15.2",
     "@nuxt/eslint-plugin": "^1.15.2",
+    "@playwright/test": "^1.58.2",
     "@shikijs/langs-precompiled": "^4.0.2",
     "@shikijs/transformers": "^4.0.2",
     "@softonus/prettier-plugin-duplicate-remover": "^1.1.2",

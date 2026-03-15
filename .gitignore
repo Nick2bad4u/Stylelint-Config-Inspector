@@ -879,3 +879,6 @@ public/fonts
 .github/hooks/logs/
 .github/hooks/audit.jsonl
 temp/
+
+# Playwright
+/playwright/.auth/
