@@ -20,7 +20,7 @@ Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md)
 2. Install dependencies from the repository root:
 
    ```bash
-  npm ci
+  npm ci --force
    ```
 
 3. Run the main quality gate:

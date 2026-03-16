@@ -67,7 +67,7 @@ jobs:
                   cache-dependency-path: package-lock.json
             - name: Install dependencies
               run: |
-                  npm ci --force
+                  npm ci --force --force
             - name: Verify package
               run: npm run release:check
             - name: Pack tarball
@@ -302,7 +302,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm ci --force
+        run: npm ci --force --force
 
       - name: Install ESLint
         run: npm install --no-save --force eslint@${{ matrix.eslint-version }} @eslint/js@${{ matrix.eslint-version }}
