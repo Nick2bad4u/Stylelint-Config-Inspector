@@ -4,6 +4,8 @@
   "private": false,
   "description": "A visual tool for inspecting and understanding your Stylelint configs",
   "keywords": [
+    "@stylelint",
+    "@stylelint/config-inspector",
     "stylelint",
     "stylelint-plugin",
     "stylelint-config",
