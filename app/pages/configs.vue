@@ -37,6 +37,8 @@ definePageMeta({
 })
 
 const input = ref(filters.filepath)
+const autoCompleteIndex = ref(0)
+const autoCompleteOpen = ref(false)
 
 function expandAll() {
   configsOpenState.value = configsOpenState.value.map(() => true)
@@ -109,6 +111,10 @@ const pluginOptions = computed(() => {
 })
 
 const hasSelectedPlugin = computed(() => filters.plugins.length > 0)
+const hasActiveConfigFilters = computed(() =>
+  !!(filters.filepath || filters.rule || filters.plugins.length),
+)
+const hasSummaryChips = computed(() => !!(filters.filepath || filters.rule))
 
 function isPluginSelected(pluginName: string): boolean {
   return filters.plugins.includes(pluginName)
@@ -127,6 +133,19 @@ function togglePluginSelection(pluginName: string): void {
 
 function clearPluginSelection(): void {
   filters.plugins = []
+}
+
+function clearFilepathFilter(): void {
+  filters.filepath = ''
+  input.value = ''
+  autoCompleteOpen.value = false
+  autoCompleteIndex.value = 0
+}
+
+function clearConfigFilters(): void {
+  clearFilepathFilter()
+  filters.rule = ''
+  clearPluginSelection()
 }
 
 watchEffect(() => {
@@ -159,9 +178,6 @@ const autoCompleteFuse = computed(() => {
 const autoCompleteFiles = computed(() => {
   return autoCompleteFuse.value.search(filters.filepath || '')
 })
-
-const autoCompleteIndex = ref(0)
-const autoCompleteOpen = ref(false)
 
 function autoCompleteConfirm(idx = autoCompleteIndex.value) {
   if (!autoCompleteOpen.value)
@@ -365,7 +381,7 @@ onMounted(async () => {
         </div>
       </div>
       <div
-        v-if="filters.filepath || filters.rule || filters.plugins.length"
+        v-if="hasSummaryChips"
         flex="~ gap-2 items-center wrap"
         mb2
       >
@@ -403,10 +419,7 @@ onMounted(async () => {
               text-sm
               op25
               hover:op100
-              @click="
-                filters.filepath = '';
-                input = ''
-              "
+              @click="clearFilepathFilter()"
             />
           </div>
         </div>
@@ -428,29 +441,6 @@ onMounted(async () => {
               op25
               hover:op100
               @click="filters.rule = ''"
-            />
-          </div>
-        </div>
-        <div v-if="filters.plugins.length">
-          <div
-            flex="~ gap-2 items-center wrap"
-            border="~ teal/20 rounded-full"
-            bg-teal:10
-            px3
-            py1
-          >
-            <div i-ph-plug-duotone text-teal5 />
-            <span op50>Plugin rules</span>
-            <code
-              v-for="pluginName in filters.plugins"
-              :key="pluginName"
-            >{{ pluginName }}</code>
-            <button
-              i-ph-x
-              text-sm
-              op25
-              hover:op100
-              @click="clearPluginSelection()"
             />
           </div>
         </div>
@@ -562,27 +552,38 @@ onMounted(async () => {
           <span op50>Show Specific Rules Only</span>
         </label>
         <div flex-auto />
-        <div flex="~ gap-1">
+        <div flex="~ items-center gap-1">
           <button
+            v-if="hasActiveConfigFilters"
             btn-action
-            :class="{
-              'btn-action-active': stateStorage.viewType === 'list',
-            }"
-            @click="stateStorage.viewType = 'list'"
+            px3
+            @click="clearConfigFilters"
           >
-            <div i-ph-list-duotone />
-            List
+            <div i-ph-funnel-duotone />
+            Clear filters
           </button>
-          <button
-            btn-action
-            :class="{
-              'btn-action-active': stateStorage.viewType === 'grid',
-            }"
-            @click="stateStorage.viewType = 'grid'"
-          >
-            <div i-ph-grid-four-duotone />
-            Grid
-          </button>
+          <div flex="~ gap-1">
+            <button
+              btn-action
+              :class="{
+                'btn-action-active': stateStorage.viewType === 'list',
+              }"
+              @click="stateStorage.viewType = 'list'"
+            >
+              <div i-ph-list-duotone />
+              List
+            </button>
+            <button
+              btn-action
+              :class="{
+                'btn-action-active': stateStorage.viewType === 'grid',
+              }"
+              @click="stateStorage.viewType = 'grid'"
+            >
+              <div i-ph-grid-four-duotone />
+              Grid
+            </button>
+          </div>
         </div>
         <button btn-action px3 @click="expandAll">
           Expand All

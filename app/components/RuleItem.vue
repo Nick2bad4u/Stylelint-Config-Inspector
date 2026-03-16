@@ -8,6 +8,7 @@ import {
   getRuleOptions,
   getRulePrimaryOption,
 } from '~~/shared/rules'
+import { getPluginColor } from '~/composables/color'
 import { deepCompareOptions } from '~/composables/options'
 import { getRuleDefaultOptions } from '~/composables/payload'
 
@@ -239,7 +240,19 @@ const dimRuleClass = computed(() =>
 const hasRuleStates = computed(() => (props.ruleStates?.length ?? 0) > 0)
 const hasLocalValue = computed(() => props.value !== undefined)
 
+const isCoreStylelintRule = computed(() => {
+  if (props.rule.plugin === 'stylelint')
+    return true
+
+  return props.rule.name.startsWith('stylelint/')
+})
+
+const builtInRuleHint = 'Built-in stylelint rule: Do not use a prefix in your config.'
+
 const pluginPackageName = computed(() => {
+  if (isCoreStylelintRule.value)
+    return 'stylelint'
+
   if (props.rule.pluginPackageName)
     return props.rule.pluginPackageName
 
@@ -249,26 +262,47 @@ const pluginPackageName = computed(() => {
   return undefined
 })
 
+const pluginSourceLabel = computed(() =>
+  isCoreStylelintRule.value ? 'Rule source' : 'Plugin package',
+)
+
+const pluginDisplayName = computed(() => {
+  if (pluginPackageName.value)
+    return pluginPackageName.value
+
+  if (props.rule.plugin)
+    return props.rule.plugin
+
+  return 'unknown'
+})
+
+const pluginColorStyle = computed(() => {
+  const key = pluginPackageName.value || props.rule.plugin || 'stylelint'
+  const color = getPluginColor(key)
+
+  return {
+    color,
+    borderColor: getPluginColor(key, 0.5),
+    backgroundColor: getPluginColor(key, 0.1),
+  }
+})
+
 const pluginPrefixHint = computed(() => {
   const [scope] = props.rule.name.split('/')
   if (scope !== 'plugin')
     return undefined
 
   if (!pluginPackageName.value) {
-    return 'This rule uses a generic plugin/ prefix from its upstream plugin package.'
+    return {
+      firstLineBeforePrefix: 'This rule uses a generic',
+      firstLineAfterPrefix: 'prefix from its upstream package.',
+    }
   }
 
-  return `This rule is published with a generic plugin/ prefix by ${pluginPackageName.value}. Use ${props.rule.name} in config.`
-})
-
-const ruleNameTooltip = computed(() => {
-  if (!pluginPrefixHint.value)
-    return `Rule name: ${props.rule.name}`
-
-  return [
-    `Rule name: ${props.rule.name}`,
-    pluginPrefixHint.value,
-  ].join('\n')
+  return {
+    firstLineBeforePrefix: `This rule is published with a generic`,
+    firstLineAfterPrefix: 'prefix.',
+  }
 })
 </script>
 
@@ -316,17 +350,15 @@ const ruleNameTooltip = computed(() => {
   <div :class="[props.class, dimRuleClass]" relative min-w-0 pr2>
     <VDropdown>
       <div min-w-0 w-full inline-flex items-center gap-1>
-        <button
-          v-if="pluginPrefixHint"
-          v-tooltip="pluginPrefixHint"
-          class="flex-none rounded-full p0.5 text-violet6 transition hover:bg-violet:12 dark:text-violet3"
-          type="button"
-          title="Plugin prefix note"
+        <span
+          v-if="isCoreStylelintRule"
+          v-tooltip="builtInRuleHint"
+          class="inline-flex flex-none cursor-help items-center text-violet6 op75 dark:text-violet3"
+          :title="builtInRuleHint"
         >
-          <span i-ph-info-duotone text-sm />
-        </button>
+          <span i-ph-asterisk class="text-3 leading-none" />
+        </span>
         <ColorizedRuleName
-          v-tooltip="{ content: ruleNameTooltip }"
           :name="rule.name"
           :prefix="rule.plugin"
           :deprecated="rule.deprecated"
@@ -341,7 +373,7 @@ const ruleNameTooltip = computed(() => {
         />
       </div>
       <template #popper="{ shown }">
-        <div v-if="shown" max-h="50vh" min-w="min(32rem,82vw)">
+        <div v-if="shown" max-h="50vh" min-w="min(32rem,82vw)" text-sm leading-5>
           <div flex="~ items-center gap-2" p3>
             <NuxtLink
               v-if="!rule.invalid && rule.docs?.url"
@@ -366,20 +398,46 @@ const ruleNameTooltip = computed(() => {
             </button>
             <slot name="popup-actions" />
           </div>
-          <div border="t base" px3 pb2 pt2 text-xs>
+          <div border="t base" px3 pb3 pt2.5>
             <div flex="~ items-center gap-1.5 wrap">
-              <span op65>Rule name</span>
+              <span text-sm op70>Rule name</span>
               <code font-mono>
                 {{ rule.name }}
               </code>
             </div>
+            <div class="wrap mt2 flex items-center gap-2">
+              <span text-sm font-medium op80>{{ pluginSourceLabel }}</span>
+              <code
+                class="inline-flex items-center border rounded-full px2 py0.5 text-sm font-mono"
+                :style="pluginColorStyle"
+              >
+                {{ pluginDisplayName }}
+              </code>
+              <span
+                v-if="isCoreStylelintRule"
+                class="inline-flex border border-violet/30 rounded-full bg-violet/8 px2 py0.5 text-xs text-violet7 dark:text-violet3"
+              >
+                Built-in rule · omit
+                <span class="mx1 text-violet8 font-mono dark:text-violet2">stylelint/</span>
+                in config
+              </span>
+            </div>
             <div
               v-if="pluginPrefixHint"
-              class="mt1 inline-flex items-start gap-1.5 text-xs op75"
+              class="mt2 inline-flex items-start gap-1.5 text-sm op80"
             >
               <span i-ph-info-duotone mt0.25 text-sm />
-              <span>
-                Published by <code>{{ pluginPackageName ?? 'unknown package' }}</code> with a generic <code>plugin/</code> prefix.
+              <span class="inline-flex flex-col gap-0.5">
+                <span>
+                  {{ pluginPrefixHint.firstLineBeforePrefix }}
+                  <span class="mx0.5 text-violet7 font-mono dark:text-violet3">plugin/</span>
+                  {{ pluginPrefixHint.firstLineAfterPrefix }}
+                </span>
+                <span>
+                  Keep the
+                  <span class="mx0.5 text-violet7 font-mono dark:text-violet3">plugin/</span>
+                  prefix in your config.
+                </span>
               </span>
             </div>
           </div>

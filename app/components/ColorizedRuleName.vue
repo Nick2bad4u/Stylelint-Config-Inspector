@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { getPluginColor } from '~/composables/color'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   name: string
   prefix?: string
   url?: string
@@ -16,7 +16,10 @@ const props = defineProps<{
   borderless?: boolean
   break?: boolean
   hoverReveal?: boolean
-}>()
+  hideCorePrefix?: boolean
+}>(), {
+  hideCorePrefix: true,
+})
 
 const LEADING_SLASHES_RE = /^\/+/
 
@@ -48,6 +51,10 @@ const displayScope = computed(() => {
   if (!parsed.value.scope) {
     return undefined
   }
+
+  if (props.hideCorePrefix && parsed.value.scope === 'stylelint')
+    return undefined
+
   return parsed.value.scope
 })
 
@@ -76,12 +83,12 @@ const scopeColor = computed(() => getPluginColor(scopeColorKey.value))
     ]"
   >
     <span
-      v-if="parsed.scope"
+      v-if="displayScope"
       class="flex-none"
       :style="{ color: scopeColor }"
     >{{ displayScope }}</span>
-    <span v-if="parsed.scope" class="flex-none" op30>/</span>
-    <br v-if="parsed.scope && props.break">
+    <span v-if="displayScope" class="flex-none" op30>/</span>
+    <br v-if="displayScope && props.break">
     <span class="colorized-rule-name__name" op75>{{ parsed.name }}</span>
   </component>
 </template>

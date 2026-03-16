@@ -14,6 +14,24 @@ async function filterToRule(page: import('@playwright/test').Page, name: string)
 }
 
 test.describe('rules page regressions', () => {
+  test('built-in rules hide stylelint prefix and show built-in/source details in popup', async ({ page }) => {
+    await openRulesPage(page)
+
+    const coreRuleRow = page.locator('div').filter({ has: page.locator('.colorized-rule-name[title="stylelint/color-hex-length"]') }).first()
+    const coreRuleBadge = coreRuleRow.locator('.colorized-rule-name[title="stylelint/color-hex-length"]').first()
+    await expect(coreRuleBadge).toBeVisible()
+    await expect(coreRuleBadge).toContainText('color-hex-length')
+    await expect(coreRuleBadge).not.toContainText('stylelint/')
+    await expect(coreRuleBadge).not.toContainText('/color-hex-length')
+
+    await coreRuleBadge.click()
+    const popup = page.locator('.v-popper--theme-dropdown .v-popper__inner').filter({ hasText: 'Copy name' }).first()
+    await expect(popup).toContainText('Rule source')
+    await expect(popup).toContainText('stylelint')
+    await expect(popup).toContainText('Built-in rule · omit')
+    await expect(popup).not.toContainText('stylelint-stylelint')
+  })
+
   test('plugin chips can narrow rule list and reset back to all plugins', async ({ page }) => {
     await openRulesPage(page)
 
@@ -56,24 +74,20 @@ test.describe('rules page regressions', () => {
     await expect(page.locator('.colorized-rule-name').filter({ hasText: pluginRuleName })).toBeVisible()
   })
 
-  test('plugin-prefixed rules expose clear provenance in tooltip and popup', async ({ page }) => {
+  test('plugin-prefixed rules expose clear provenance in popup metadata', async ({ page }) => {
     await openRulesPage(page)
     await filterToRule(page, pluginRuleName)
 
     const ruleBadgeButton = page.locator('.colorized-rule-name').filter({ hasText: pluginRuleName }).first()
-    const prefixHintButton = ruleBadgeButton.locator('xpath=preceding-sibling::button[1]')
-
-    await expect(prefixHintButton).toBeVisible()
-
-    await prefixHintButton.hover()
-    const hintTooltip = page.locator('.v-popper--theme-tooltip .v-popper__inner').first()
-    await expect(hintTooltip).toContainText('generic plugin/ prefix')
 
     await ruleBadgeButton.click()
 
     const rulePopup = page.locator('.v-popper--theme-dropdown .v-popper__inner').filter({ hasText: 'Copy name' }).first()
     await expect(rulePopup).toBeVisible()
     await expect(rulePopup).toContainText('Rule name')
+    await expect(rulePopup).toContainText('Plugin package')
+    await expect(rulePopup).toContainText('stylelint-no-unsupported-browser-features')
+    await expect(rulePopup).toContainText('generic plugin/ prefix')
     await expect(rulePopup.locator('code').filter({ hasText: pluginRuleName })).toBeVisible()
   })
 
@@ -98,28 +112,14 @@ test.describe('rules page regressions', () => {
     expect(css.paddingLeft).toBe('0px')
   })
 
-  test('rule-name tooltip wraps long content and uses multiline styling', async ({ page }) => {
+  test('rule-name hover no longer opens a tooltip', async ({ page }) => {
     await openRulesPage(page)
     await filterToRule(page, pluginRuleName)
 
     const ruleBadgeButton = page.locator('.colorized-rule-name').filter({ hasText: pluginRuleName }).first()
     await ruleBadgeButton.hover()
 
-    const tooltip = page.locator('.v-popper--theme-tooltip .v-popper__inner').first()
-    await expect(tooltip).toBeVisible()
-
-    const tooltipStyles = await tooltip.evaluate((element) => {
-      const style = getComputedStyle(element)
-      return {
-        whiteSpace: style.whiteSpace,
-        overflowWrap: style.overflowWrap,
-        maxInlineSize: style.maxInlineSize,
-      }
-    })
-
-    expect(tooltipStyles.whiteSpace).toBe('pre-line')
-    expect(tooltipStyles.overflowWrap).toBe('anywhere')
-    expect(tooltipStyles.maxInlineSize).not.toBe('none')
+    await expect(page.locator('.v-popper--theme-tooltip .v-popper__inner')).toHaveCount(0)
   })
 
   test('plugin filter chips visibly react on hover (clickable affordance)', async ({ page }) => {

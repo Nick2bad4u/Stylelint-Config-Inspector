@@ -59,6 +59,34 @@ test.describe('navigation and page regressions', () => {
     expect(slotCounts).toEqual([configSummarySlotCount, configSummarySlotCount, configSummarySlotCount])
   })
 
+  test('configs clear filters resets filepath and plugin filters together', async ({ page }) => {
+    await mockPayload(page)
+    await page.goto('/configs')
+
+    const filepathInput = page.getByPlaceholder('Test matching with filepath...')
+    const pluginChip = page.locator('.plugin-filter-button', { hasText: 'stylelint-no-unsupported-browser-features' })
+    const listButton = page.getByRole('button', { name: 'List' })
+    const gridButton = page.getByRole('button', { name: 'Grid' })
+    const controlsRow = page.locator('div').filter({ has: listButton }).filter({ has: gridButton }).first()
+    const clearFiltersButton = controlsRow.getByRole('button', { name: 'Clear filters' })
+    const allPluginsButton = page.locator('.plugin-filter-button', { hasText: 'All plugins' })
+
+    await filepathInput.fill('src/example.css')
+    await pluginChip.click()
+
+    await expect(clearFiltersButton).toBeVisible()
+    const clearFiltersBounds = await clearFiltersButton.boundingBox()
+    const listButtonBounds = await listButton.boundingBox()
+    expect(clearFiltersBounds).not.toBeNull()
+    expect(listButtonBounds).not.toBeNull()
+    expect(clearFiltersBounds!.x).toBeLessThan(listButtonBounds!.x)
+    await clearFiltersButton.click()
+
+    await expect(filepathInput).toHaveValue('')
+    await expect(clearFiltersButton).toHaveCount(0)
+    await expect(allPluginsButton).toHaveClass(/bg-violet-100/)
+  })
+
   test('files page supports collapsible matched-file sections', async ({ page }) => {
     await mockPayload(page)
     await page.goto('/files')
@@ -109,8 +137,8 @@ test.describe('navigation and page regressions', () => {
     await page.goto('/extends')
 
     await expect(page.getByTestId(testIds.extends.specifierButton).filter({ hasText: extendSpecifier }).first()).toBeVisible()
-    await expect(page.getByText('stylelint/color-hex-length').first()).toBeVisible()
-    await expect(page.getByText('stylelint/alpha-value-notation').first()).toBeVisible()
+    await expect(page.locator('.colorized-rule-name[title="stylelint/color-hex-length"]').first()).toBeVisible()
+    await expect(page.locator('.colorized-rule-name[title="stylelint/alpha-value-notation"]').first()).toBeVisible()
 
     const rulesListContainer = page.getByTestId(testIds.extends.rulesListContainer)
 
@@ -133,8 +161,8 @@ test.describe('navigation and page regressions', () => {
     await secondaryButton.click()
 
     await expect(secondaryButton).toHaveClass(/bg-active/)
-    await expect(rulesListContainer.getByText('stylelint/at-rule-no-unknown')).toBeVisible()
-    await expect(rulesListContainer.getByText('stylelint/color-hex-length')).toHaveCount(0)
+    await expect(rulesListContainer.locator('.colorized-rule-name[title="stylelint/at-rule-no-unknown"]')).toBeVisible()
+    await expect(rulesListContainer.locator('.colorized-rule-name[title="stylelint/color-hex-length"]')).toHaveCount(0)
     await expect(page.locator('a[href="/configs?index=2"]').first()).toBeVisible()
   })
 
