@@ -2,6 +2,7 @@
 import type { FilesGroup, FlatConfigItem } from '~~/shared/types'
 import { useRouter } from '#app/composables/router'
 import { computed, ref, watchEffect } from 'vue'
+import { testIds } from '~~/shared/test-ids'
 
 const props = defineProps<{
   index: number
@@ -126,7 +127,7 @@ const groupIdentity = computed(() => {
         <div flex flex-auto flex-col gap-3 md:flex-row>
           <span flex-auto flex="~ gap-2 items-center">
             <template v-if="groupName?.type === 'config'">
-              <span flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
+              <span :data-testid="testIds.files.groupIdentityLabel" flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
                 <div :class="groupIdentity.icon" flex-none />
                 <span op85>{{ groupIdentity.label }}</span>
               </span>
@@ -137,7 +138,7 @@ const groupIdentity = computed(() => {
               />
             </template>
             <template v-else-if="groupName?.type === 'glob'">
-              <span flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
+              <span :data-testid="testIds.files.groupIdentityLabel" flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
                 <div :class="groupIdentity.icon" flex-none />
                 <span op85>{{ groupIdentity.label }}</span>
               </span>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { testIds } from '~~/shared/test-ids'
 import { payload } from '~/composables/payload'
 import { fileGroupsOpenState, stateStorage } from '../composables/state'
 
@@ -29,6 +30,7 @@ function collapseAll() {
                 ? 'btn-action-active'
                 : 'op50'
             "
+            :data-testid="testIds.files.viewListButton"
             btn-action
             border-none
             @click="stateStorage.viewFilesTab = 'list'"
@@ -43,6 +45,7 @@ function collapseAll() {
                 ? 'btn-action-active'
                 : 'op50'
             "
+            :data-testid="testIds.files.viewGroupsButton"
             btn-action
             border-none
             @click="stateStorage.viewFilesTab = 'group'"
@@ -72,8 +75,8 @@ function collapseAll() {
         />
       </div>
       <div v-else>
-        <details :open="listFilesOpen" class="border border-base rounded-xl bg-black:4 p3 dark:bg-white:3" @toggle="listFilesOpen = ($event.target as HTMLDetailsElement).open">
-          <summary flex="~ gap-2 items-center wrap" cursor-pointer select-none>
+        <details :open="listFilesOpen" :data-testid="testIds.files.matchedListDetails" class="border border-base rounded-xl bg-black:4 p3 dark:bg-white:3" @toggle="listFilesOpen = ($event.target as HTMLDetailsElement).open">
+          <summary :data-testid="testIds.files.matchedListSummary" flex="~ gap-2 items-center wrap" cursor-pointer select-none>
             <div class="[details[open]_&]:rotate-90" i-ph-caret-right op50 transition />
             <div i-ph-files-duotone flex-none text-sky5 />
             <div>

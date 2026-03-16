@@ -14,6 +14,48 @@ async function filterToRule(page: import('@playwright/test').Page, name: string)
 }
 
 test.describe('rules page regressions', () => {
+  test('plugin chips can narrow rule list and reset back to all plugins', async ({ page }) => {
+    await openRulesPage(page)
+
+    const allPluginsButton = page.locator('.plugin-filter-button', { hasText: 'All plugins' })
+    const pluginChip = page.locator('.plugin-filter-button', { hasText: 'no-unsupported-browser-features' })
+
+    await expect(pluginChip).toBeVisible()
+    await pluginChip.click()
+
+    await expect(page.locator('.colorized-rule-name')).toHaveCount(1)
+    await expect(page.locator('.colorized-rule-name').filter({ hasText: pluginRuleName })).toBeVisible()
+
+    await allPluginsButton.click()
+    await expect(page.locator('.colorized-rule-name')).toHaveCount(4)
+  })
+
+  test('clear filter resets text search and restores default filtered-state messaging', async ({ page }) => {
+    await openRulesPage(page)
+
+    const search = page.getByPlaceholder('Search rules...')
+    await search.fill(pluginRuleName)
+
+    await expect(page.getByRole('button', { name: /clear filter/i })).toBeVisible()
+    await expect(page.locator('.colorized-rule-name')).toHaveCount(1)
+
+    await page.getByRole('button', { name: /clear filter/i }).click()
+
+    await expect(search).toHaveValue('')
+    await expect(page.locator('.colorized-rule-name')).toHaveCount(4)
+    await expect(page.getByText('rules in use')).toBeVisible()
+  })
+
+  test('search is case-insensitive for rule names', async ({ page }) => {
+    await openRulesPage(page)
+
+    const search = page.getByPlaceholder('Search rules...')
+    await search.fill(pluginRuleName.toUpperCase())
+
+    await expect(page.locator('.colorized-rule-name')).toHaveCount(1)
+    await expect(page.locator('.colorized-rule-name').filter({ hasText: pluginRuleName })).toBeVisible()
+  })
+
   test('plugin-prefixed rules expose clear provenance in tooltip and popup', async ({ page }) => {
     await openRulesPage(page)
     await filterToRule(page, pluginRuleName)

@@ -3,6 +3,7 @@ import process from 'node:process'
 
 export const pluginRuleName = 'plugin/no-unsupported-browser-features'
 export const extendSpecifier = 'stylelint-config-recommended'
+export const secondaryExtendSpecifier = '@scope/stylelint-config-team'
 
 export const MOCK_PAYLOAD = {
   meta: {
@@ -37,6 +38,7 @@ export const MOCK_PAYLOAD = {
       rules: {
         'stylelint/alpha-value-notation': 'percentage',
       },
+      extends: [secondaryExtendSpecifier],
     },
     {
       index: 2,
@@ -102,13 +104,13 @@ export const MOCK_PAYLOAD = {
   files: [
     {
       filepath: 'src/example.css',
-      globs: ['**/*.css'],
-      configs: [0, 1],
+      globs: ['**/*.css', 'src/**/*.css'],
+      configs: [1],
     },
     {
       filepath: 'src/legacy.css',
-      globs: ['**/*.css'],
-      configs: [0],
+      globs: ['**/*.css', 'src/**/*.css'],
+      configs: [1],
     },
   ],
   extendsInfo: [
@@ -116,19 +118,30 @@ export const MOCK_PAYLOAD = {
       specifier: extendSpecifier,
       source: 'package',
       packageName: 'stylelint-config-recommended',
+      docsUrl: 'https://example.com/stylelint-config-recommended',
+      docsUrlSource: 'meta',
       ruleCount: 2,
       rules: ['stylelint/color-hex-length', 'stylelint/alpha-value-notation'],
       usedByConfigIndexes: [0],
     },
+    {
+      specifier: secondaryExtendSpecifier,
+      source: 'package',
+      packageName: '@scope/stylelint-config-team',
+      description: 'Team conventions for stylelint baselines.',
+      ruleCount: 1,
+      rules: ['stylelint/at-rule-no-unknown'],
+      usedByConfigIndexes: [1],
+    },
   ],
 }
 
-export async function mockPayload(page: Page): Promise<void> {
+export async function mockPayload(page: Page, payload = MOCK_PAYLOAD): Promise<void> {
   await page.route('**/api/payload.json**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify(MOCK_PAYLOAD),
+      body: JSON.stringify(payload),
     })
   })
 }

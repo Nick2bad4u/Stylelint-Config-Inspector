@@ -4,6 +4,7 @@ import { useTimeAgo } from '@vueuse/core'
 import { Dropdown as VDropdown } from 'floating-vue'
 import { computed } from 'vue'
 import { version } from '~~/package.json'
+import { testIds } from '~~/shared/test-ids'
 import { toggleDark } from '~/composables/dark'
 import { isFetching, payload } from '~/composables/payload'
 import { filtersRules as filters, stateStorage } from '~/composables/state'
@@ -117,9 +118,10 @@ function showDeprecated() {
         Fetching updates...
       </div>
     </div>
-    <div flex="~ gap-3 items-center wrap" py4>
+    <div :data-testid="testIds.nav.tabs" flex="~ gap-3 items-center wrap" py4>
       <NuxtLink
         to="/configs"
+        :data-testid="testIds.nav.configsLink"
         btn-action
         px3
         py1
@@ -131,6 +133,7 @@ function showDeprecated() {
       </NuxtLink>
       <NuxtLink
         to="/rules"
+        :data-testid="testIds.nav.rulesLink"
         btn-action
         px3
         py1
@@ -142,6 +145,7 @@ function showDeprecated() {
       </NuxtLink>
       <NuxtLink
         to="/extends"
+        :data-testid="testIds.nav.extendsLink"
         btn-action
         px3
         py1
@@ -154,6 +158,7 @@ function showDeprecated() {
       </NuxtLink>
       <NuxtLink
         to="/files"
+        :data-testid="testIds.nav.filesLink"
         btn-action
         px3
         py1
@@ -166,6 +171,7 @@ function showDeprecated() {
       </NuxtLink>
       <NuxtLink
         to="/dev"
+        :data-testid="testIds.nav.devLink"
         btn-action
         px3
         py1

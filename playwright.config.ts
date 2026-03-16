@@ -1,6 +1,8 @@
 import process from 'node:process'
 import { defineConfig, devices } from '@playwright/test'
 
+const isCI = Boolean(process.env.CI)
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -15,16 +17,14 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './tests/e2e',
   testIgnore: ['**/fixtures/**'],
-  forbidOnly: !!process.env.CI,
+  forbidOnly: isCI,
   timeout: 45_000,
   expect: {
     timeout: 10_000,
   },
   fullyParallel: false,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
-  forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: isCI ? 2 : 0,
+  workers: isCI ? 1 : undefined,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',
@@ -39,6 +39,14 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    ...(isCI
+      ? [
+          {
+            name: 'firefox',
+            use: { ...devices['Desktop Firefox'] },
+          },
+        ]
+      : []),
   ],
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1 --port 4173',

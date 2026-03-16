@@ -11,6 +11,7 @@ import {
   getRuleOptions,
   getRulePrimaryOption,
 } from '~~/shared/rules'
+import { testIds } from '~~/shared/test-ids'
 import { getPluginColor } from '~/composables/color'
 import { payload } from '~/composables/payload'
 import { stateStorage } from '~/composables/state'
@@ -379,10 +380,11 @@ async function scrollToSection(
             </code>
           </span>
 
-          <div class="grid grid-cols-7 items-center justify-items-end gap-2">
+          <div :data-testid="testIds.configs.summaryGrid" class="grid grid-cols-7 items-center justify-items-end gap-2">
             <SummarizeItem
               v-for="item of summaryItems"
               :key="item.key"
+              :data-testid="testIds.configs.summaryItem"
               class="w-14 justify-between"
               :icon="item.icon"
               :number="item.number"

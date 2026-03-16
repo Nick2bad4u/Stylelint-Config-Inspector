@@ -55,4 +55,50 @@ describe('normalizeCliInspectorOptions', () => {
 
     expect(normalizeCliInspectorOptions({}).target).toBe('src/legacy.css')
   })
+
+  it('falls back to legacy env var when primary stylelint env var is empty', () => {
+    vi.stubEnv('STYLELINT_TARGET', '')
+    vi.stubEnv('ESLINT_TARGET', 'src/legacy-fallback.css')
+
+    expect(normalizeCliInspectorOptions({}).target).toBe('src/legacy-fallback.css')
+  })
+
+  it('keeps explicit target even when env vars for config/basePath are present', () => {
+    vi.stubEnv('STYLELINT_CONFIG', 'stylelint.config.mjs')
+    vi.stubEnv('STYLELINT_BASE_PATH', 'packages/ui')
+    vi.stubEnv('STYLELINT_TARGET', 'src/env.css')
+
+    const normalized = normalizeCliInspectorOptions({
+      target: 'src/explicit.css',
+    })
+
+    expect(normalized.target).toBe('src/explicit.css')
+    expect(normalized.config).toBe('stylelint.config.mjs')
+    expect(normalized.basePath).toBe('packages/ui')
+  })
+
+  it('keeps explicit config/basePath values over env fallbacks', () => {
+    vi.stubEnv('STYLELINT_CONFIG', 'stylelint.config.from-env.mjs')
+    vi.stubEnv('STYLELINT_BASE_PATH', 'packages/from-env')
+
+    const normalized = normalizeCliInspectorOptions({
+      config: 'stylelint.config.explicit.mjs',
+      basePath: 'packages/explicit',
+    })
+
+    expect(normalized.config).toBe('stylelint.config.explicit.mjs')
+    expect(normalized.basePath).toBe('packages/explicit')
+  })
+
+  it('falls back to legacy config/basePath env vars when primary vars are empty', () => {
+    vi.stubEnv('STYLELINT_CONFIG', '')
+    vi.stubEnv('ESLINT_CONFIG', 'eslint.compat.config.mjs')
+    vi.stubEnv('STYLELINT_BASE_PATH', '')
+    vi.stubEnv('ESLINT_BASE_PATH', 'packages/legacy')
+
+    const normalized = normalizeCliInspectorOptions({})
+
+    expect(normalized.config).toBe('eslint.compat.config.mjs')
+    expect(normalized.basePath).toBe('packages/legacy')
+  })
 })

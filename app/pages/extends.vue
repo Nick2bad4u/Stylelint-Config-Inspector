@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect } from 'vue'
+import { testIds } from '~~/shared/test-ids'
 import { getRuleFromName, payload } from '~/composables/payload'
 
 const extendsEntries = computed(() => payload.value.extendsInfo ?? [])
@@ -63,6 +64,7 @@ const activeRules = computed(() => {
         <button
           v-for="entry in extendsEntries"
           :key="entry.specifier"
+          :data-testid="testIds.extends.specifierButton"
           border="~ base rounded-full"
           px3
           py1
@@ -222,7 +224,7 @@ const activeRules = computed(() => {
             <span text-sm font-medium>Rules from this extends entry</span>
             <span op60>({{ activeRules.length }})</span>
           </div>
-          <div v-if="activeRules.length" mt3>
+          <div v-if="activeRules.length" :data-testid="testIds.extends.rulesListContainer" mt3>
             <RuleList
               :grid-view="false"
               :rules="activeRules"

@@ -1,5 +1,43 @@
 import { describe, expect, it } from 'vitest'
-import { matchFile } from '../shared/configs'
+import {
+  buildConfigArray,
+  getMatchedGlobs,
+  isGeneralConfig,
+  isIgnoreOnlyConfig,
+  matchFile,
+} from '../shared/configs'
+
+describe('config shape helpers', () => {
+  it('treats ignore-only config with metadata as ignore-only and general', () => {
+    const config = {
+      index: 0,
+      name: 'stylelint/root',
+      ignores: ['dist/**'],
+    }
+
+    expect(isIgnoreOnlyConfig(config)).toBe(true)
+    expect(isGeneralConfig(config)).toBe(true)
+  })
+
+  it('treats configs with files constraints as non-general', () => {
+    const config = {
+      index: 1,
+      files: ['**/*.css'],
+      rules: {
+        'color-no-invalid-hex': true,
+      },
+    }
+
+    expect(isIgnoreOnlyConfig(config)).toBe(false)
+    expect(isGeneralConfig(config)).toBe(false)
+  })
+
+  it('matches both positive and negated globs in declaration order', () => {
+    expect(
+      getMatchedGlobs('src/styles/app.css', ['**/*.css', '!src/**']),
+    ).toEqual(['**/*.css', '!src/**'])
+  })
+})
 
 describe('matchFile', () => {
   describe('global ignored', () => {
@@ -82,6 +120,27 @@ describe('matchFile', () => {
   })
 
   describe('config matching', () => {
+    it('matches general configs without explicit files globs', () => {
+      const result = matchFile(
+        'src/styles/app.css',
+        [
+          {
+            index: 0,
+            rules: {
+              'color-no-invalid-hex': true,
+            },
+          },
+        ],
+        process.cwd(),
+      )
+
+      expect(result).toEqual({
+        filepath: 'src/styles/app.css',
+        globs: [],
+        configs: [0],
+      })
+    })
+
     it('should match a basic config', () => {
       const result = matchFile(
         'tests/folder/foo.test.ts',
@@ -205,5 +264,62 @@ describe('matchFile', () => {
         7,
       ])
     })
+  })
+})
+
+describe('buildConfigArray', () => {
+  it('accumulates matched config indexes into an ordered index array', () => {
+    const configArray = buildConfigArray(
+      [
+        {
+          index: 0,
+          files: ['**/*.css'],
+          rules: {
+            'stylelint/color-hex-length': 'short',
+          },
+        },
+        {
+          index: 1,
+          files: ['src/**/*.css'],
+          rules: {
+            'stylelint/alpha-value-notation': 'percentage',
+          },
+        },
+      ],
+      process.cwd(),
+    )
+
+    const merged = configArray.getConfig('src/app.css')
+    const mergedIndexes = (merged?.index ?? []).filter(
+      (index): index is number => typeof index === 'number',
+    )
+
+    expect(mergedIndexes).toEqual([0, 1])
+  })
+
+  it('returns undefined when no config entry matches a file path', () => {
+    const configArray = buildConfigArray(
+      [
+        {
+          index: 0,
+          files: ['src/**/*.css'],
+          rules: {
+            'stylelint/color-hex-length': 'short',
+          },
+        },
+        {
+          index: 1,
+          files: ['src/**/*.scss'],
+          rules: {
+            'stylelint/alpha-value-notation': 'percentage',
+          },
+        },
+      ],
+      process.cwd(),
+    )
+
+    const outsideSrc = configArray.getConfig('test/fixture.css')
+
+    expect(outsideSrc).toBeUndefined()
   })
 })
