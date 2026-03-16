@@ -59,7 +59,7 @@ export default await nuxt()
       'vitest.stryker.config.ts',
     ],
     rules: {
-      "jsonc/sort-keys": 'off',
+      'jsonc/sort-keys': 'off',
       'antfu/if-newline': 'off',
       'e18e/prefer-static-regex': 'off',
       'jsdoc/require-returns-description': 'off',
