@@ -1,3 +1,5 @@
+/// <reference path="../shared/stylelint-config-recommended.d.ts" />
+
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
@@ -73,6 +75,31 @@ async function createTempProject(
 async function readConfigFormatFixture(filename: string): Promise<string> {
   const fixtureFilename = fixtureFilenameMap.get(filename) ?? filename
   return await readFile(join(configFormatFixturesDir, fixtureFilename), 'utf-8')
+}
+
+function withStylelintConfigStandardStub(
+  extraFiles: Record<string, string> = {},
+): Record<string, string> {
+  return {
+    'node_modules/stylelint-config-standard/package.json': JSON.stringify(
+      {
+        name: 'stylelint-config-standard',
+        private: true,
+        version: '0.0.0-test',
+        main: 'index.cjs',
+      },
+      null,
+      2,
+    ),
+    'node_modules/stylelint-config-standard/index.cjs': `
+      module.exports = {
+        rules: {
+          'color-no-invalid-hex': true,
+        },
+      }
+    `,
+    ...extraFiles,
+  }
 }
 
 describe('stylelint adapter', () => {
@@ -984,7 +1011,7 @@ coverage/**
             },
           }
         `,
-        undefined,
+        withStylelintConfigStandardStub(),
         {
           configFilename: 'stylelint.config.cjs',
         },
@@ -1054,16 +1081,19 @@ coverage/**
     })
 
     it('loads .stylelintrc.yml inspired by bandlab/stylelint-config-bandlab', async () => {
-      const cwd = await createTempProject(undefined, {
-        '.stylelintrc.yml': [
-          'extends: stylelint-config-standard',
-          'customSyntax: postcss-scss',
-          'rules:',
-          '  selector-class-pattern: null',
-          '  color-no-invalid-hex: true',
-          '',
-        ].join('\n'),
-      })
+      const cwd = await createTempProject(
+        undefined,
+        withStylelintConfigStandardStub({
+          '.stylelintrc.yml': [
+            'extends: stylelint-config-standard',
+            'customSyntax: postcss-scss',
+            'rules:',
+            '  selector-class-pattern: null',
+            '  color-no-invalid-hex: true',
+            '',
+          ].join('\n'),
+        }),
+      )
 
       const result = await readConfig({
         cwd,
@@ -1079,23 +1109,26 @@ coverage/**
     })
 
     it('loads package.json stylelint property (documented Stylelint format)', async () => {
-      const cwd = await createTempProject(undefined, {
-        'package.json': JSON.stringify(
-          {
-            name: 'format-fixture',
-            private: true,
-            stylelint: {
-              extends: 'stylelint-config-standard',
-              rules: {
-                'alpha-value-notation': 'number',
-                'selector-class-pattern': null,
+      const cwd = await createTempProject(
+        undefined,
+        withStylelintConfigStandardStub({
+          'package.json': JSON.stringify(
+            {
+              name: 'format-fixture',
+              private: true,
+              stylelint: {
+                extends: 'stylelint-config-standard',
+                rules: {
+                  'alpha-value-notation': 'number',
+                  'selector-class-pattern': null,
+                },
               },
             },
-          },
-          null,
-          2,
-        ),
-      })
+            null,
+            2,
+          ),
+        }),
+      )
 
       const result = await readConfig({
         cwd,
