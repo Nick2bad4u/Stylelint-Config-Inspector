@@ -6,9 +6,9 @@ A visual tool for inspecting and understanding your Stylelint configuration.
 
 ## Screenshot
 
-![Stylelint Config Inspector screenshot placeholder](./docs/assets/screenshot-placeholder.svg)
-
-> Replace `docs/assets/screenshot-placeholder.svg` with a real app screenshot (for example: `docs/assets/screenshot.png`) when ready.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Nick2bad4u/Stylelint-Config-Inspector/refs/heads/main/docs/assets/stylelint-inspector-screenshot.svg" alt="Stylelint Config Inspector">
+</p>
 
 ## Usage
 
