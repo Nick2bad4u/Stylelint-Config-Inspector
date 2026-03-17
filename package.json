@@ -6,15 +6,16 @@
   "keywords": [
     "@stylelint",
     "@stylelint/config-inspector",
-    "stylelint",
-    "stylelint-plugin",
-    "stylelint-config",
-    "stylelint-inspector",
-    "eslint-inspector",
     "config",
+    "eslint-inspector",
     "inspector",
-    "visualization",
-    "tool"
+    "stylelint",
+    "stylelint-config",
+    "stylelint-config-inspector",
+    "stylelint-inspector",
+    "stylelint-plugin",
+    "tool",
+    "visualization"
   ],
   "homepage": "https://github.com/Nick2bad4u/Stylelint-Config-Inspector#readme",
   "bugs": "https://github.com/Nick2bad4u/Stylelint-Config-Inspector/issues",
@@ -34,8 +35,8 @@
   ],
   "type": "module",
   "bin": {
-    "@stylelint/config-inspector": "./bin.mjs",
-    "stylelint-config-inspector": "./bin.mjs"
+    "stylelint-config-inspector": "bin.mjs",
+    "config-inspector": "bin.mjs"
   },
   "files": [
     "*.mjs",
@@ -89,7 +90,7 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^7.7.2",
+    "@antfu/eslint-config": "^7.7.3",
     "@arethetypeswrong/cli": "^0.18.2",
     "@csstools/stylelint-formatter-github": "^2.0.0",
     "@docusaurus/eslint-plugin": "^3.9.2",
@@ -158,7 +159,7 @@
     "minimatch": "^10.2.4",
     "mlly": "^1.8.1",
     "mrmime": "^2.0.1",
-    "npm-check-updates": "^19.6.3",
+    "npm-check-updates": "^19.6.5",
     "npm-package-json-lint": "^9.1.0",
     "nuxt": "^4.4.2",
     "nuxt-eslint-auto-explicit-import": "^0.1.1",

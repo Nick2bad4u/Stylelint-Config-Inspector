@@ -15,7 +15,7 @@ A visual tool for inspecting and understanding your Stylelint configuration.
 From a project that contains a Stylelint config (`stylelint.config.*` or `.stylelintrc*`), run:
 
 ```bash
-npx @stylelint/config-inspector@latest
+npx stylelint-config-inspector@latest
 ```
 
 Then open http://localhost:8888/.
@@ -25,7 +25,7 @@ Then open http://localhost:8888/.
 Use a target file so Stylelint resolves context-sensitive options (`overrides`, `customSyntax`, etc.):
 
 ```bash
-npx @stylelint/config-inspector --file src/styles/app.css
+npx stylelint-config-inspector --file src/styles/app.css
 ```
 
 If you do not provide `--file` or `--target`, the inspector resolves your config against a synthetic file named `stylelint-inspector-target.css` relative to the resolved base path.
@@ -37,7 +37,7 @@ If you do not provide `--file` or `--target`, the inspector resolves your config
 To generate a static inspector snapshot:
 
 ```bash
-npx @stylelint/config-inspector build
+npx stylelint-config-inspector build
 ```
 
 This emits a single-page app in `.stylelint-config-inspector`.
@@ -47,7 +47,7 @@ This emits a single-page app in `.stylelint-config-inspector`.
 When inspecting a package inside a monorepo, set the base path for file glob matching and target resolution:
 
 ```bash
-npx @stylelint/config-inspector --config stylelint.config.mjs --basePath packages/web --file src/app.css
+npx stylelint-config-inspector --config stylelint.config.mjs --basePath packages/web --file src/app.css
 ```
 
 Environment aliases are also supported:
@@ -55,7 +55,7 @@ Environment aliases are also supported:
 - `STYLELINT_BASE_PATH` (or legacy `ESLINT_BASE_PATH`)
 - `STYLELINT_TARGET` (or legacy `ESLINT_TARGET`)
 
-Run `npx @stylelint/config-inspector --help` for all options.
+Run `npx stylelint-config-inspector --help` for all options.
 
 ## License
 

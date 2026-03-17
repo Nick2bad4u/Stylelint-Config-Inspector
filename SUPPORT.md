@@ -1,12 +1,12 @@
 # Support
 
-Thanks for using `@stylelint/config-inspector`.
+Thanks for using `stylelint-config-inspector`.
 
 ## How to get help
 
 1. Check project docs first:
    - [README.md](./README.md)
-   - `npx @stylelint/config-inspector --help`
+   - `npx stylelint-config-inspector --help`
 2. Search existing issues:
    - <https://github.com/Nick2bad4u/Stylelint-Config-Inspector/issues>
 3. Open a new issue if needed:
@@ -18,7 +18,7 @@ Please include:
 
 - Node.js version
 - Stylelint version
-- `@stylelint/config-inspector` version
+- `stylelint-config-inspector` version
 - Minimal reproduction repository or snippet
 - Expected behavior and actual behavior
 

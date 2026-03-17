@@ -1,4 +1,4 @@
-# Releasing `@stylelint/config-inspector`
+# Releasing `stylelint-config-inspector`
 
 This document is maintainer-focused and complements the end-user README.
 
@@ -7,7 +7,7 @@ This document is maintainer-focused and complements the end-user README.
 Releases are handled by `.github/workflows/release.yml`.
 
 - Trigger: push a tag matching `v*` or manually via `workflow_dispatch`
-- Publish target: npm (`@stylelint/config-inspector`)
+- Publish target: npm (`stylelint-config-inspector`)
 - GitHub Release: generated from `git-cliff` release notes output
 
 ## Prerequisites
