@@ -8,6 +8,7 @@ import { getPort } from 'get-port-please'
 import open from 'open'
 import { relative, resolve } from 'pathe'
 import { glob } from 'tinyglobby'
+import { rewriteStaticHtmlWithBase } from './build-static-html'
 import { normalizeCliInspectorOptions } from './cli-options'
 import { readConfig } from './configs'
 import { MARK_CHECK, MARK_INFO } from './constants'
@@ -16,7 +17,6 @@ import { ConfigInspectorError } from './errors'
 import { createHostServer } from './server'
 
 const RE_CONSECUTIVE_SLASHES = /\/+/g
-const RE_ABSOLUTE_ASSET_ATTR = /\s(href|src)="\//g
 
 const cli = cac('stylelint-config-inspector')
 
@@ -92,9 +92,7 @@ cli
         if (!file)
           continue
         const content = await fs.readFile(resolve(distDir, file), 'utf-8')
-        const newContent = content
-          .replaceAll(RE_ABSOLUTE_ASSET_ATTR, ` $1="${baseURL}`)
-          .replaceAll('baseURL:"/"', `baseURL:"${baseURL}"`)
+        const newContent = rewriteStaticHtmlWithBase(content, baseURL)
         await fs.writeFile(resolve(outDir, file), newContent, 'utf-8')
       }
     }
