@@ -1152,7 +1152,7 @@ coverage/**
       const fixtureFilenames = fixtureEntries
         .filter(entry => entry.isFile())
         .map(entry => entry.name)
-        .sort()
+        .sort((left, right) => left.localeCompare(right))
 
       const expectedFixtureFilenames = [...new Set(fixtureFilenamesForSupportedConfigs)]
         .toSorted()
