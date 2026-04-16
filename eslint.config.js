@@ -12,7 +12,9 @@ export default await nuxt()
                     "vue/html-closing-bracket-newline": "off",
                     "vue/html-indent": "off",
                     "vue/html-self-closing": "off",
+                    "vue/multiline-html-element-content-newline": "off",
                     "vue/no-extra-parens": "off",
+                    "vue/singleline-html-element-content-newline": "off",
                 },
             },
         })
