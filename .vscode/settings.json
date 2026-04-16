@@ -7,9 +7,6 @@
 
     "editor.formatOnSave": false,
 
-    // Enable the ESLint flat config support
-    "eslint.useFlatConfig": true,
-
     // Reduce noisy formatting-style diagnostics in the IDE; Prettier handles formatting.
     "eslint.rules.customizations": [
         { "rule": "*-indent", "severity": "off" },
@@ -21,6 +18,9 @@
         { "rule": "*quotes", "severity": "off" },
         { "rule": "*semi", "severity": "off" }
     ],
+
+    // Enable the ESLint flat config support
+    "eslint.useFlatConfig": true,
 
     // Enable eslint for all supported languages
     "eslint.validate": [
