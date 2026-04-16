@@ -518,7 +518,9 @@ async function readJsonFile(path: string): Promise<unknown> {
 async function readPackageManifest(
   packageRoot: string,
 ): Promise<Record<string, unknown> | undefined> {
-  const packageJson = await readJsonFile(resolve(packageRoot, 'package.json'))
+  const packageJson = await readJsonFile(
+    resolve(packageRoot, 'package.json'),
+  )
   return isRecord(packageJson) ? packageJson : undefined
 }
 
@@ -541,11 +543,13 @@ async function resolveExtendsSpecifier(
   workspaceBasePath: string,
 ): Promise<ResolvedExtendsSpecifier> {
   const packageName = toPackageNameFromSpecifier(specifier)
-  const searchPaths = [...new Set([
-    configBasePath,
-    workspaceBasePath,
-    process.cwd(),
-  ])]
+  const searchPaths = [
+    ...new Set([
+      configBasePath,
+      workspaceBasePath,
+      process.cwd(),
+    ]),
+  ]
 
   let resolvedPath: string | undefined
 
@@ -569,14 +573,14 @@ async function resolveExtendsSpecifier(
 
   return {
     specifier,
-    packageName,
-    packageRoot,
-    resolvedPath,
+    ...(packageName !== undefined && { packageName }),
+    ...(packageRoot !== undefined && { packageRoot }),
+    ...(resolvedPath !== undefined && { resolvedPath }),
     source: packageName
       ? 'package'
-      : (specifier.startsWith('.') || isAbsolute(specifier))
-          ? 'local'
-          : 'unknown',
+      : specifier.startsWith('.') || isAbsolute(specifier)
+        ? 'local'
+        : 'unknown',
   }
 }
 
@@ -585,11 +589,16 @@ async function resolvePackageEntryPath(
 ): Promise<string | undefined> {
   const packageJson = await readPackageManifest(packageRoot)
   const entryCandidates = [
-    typeof packageJson?.main === 'string' ? packageJson.main : undefined,
+    typeof packageJson?.main === 'string'
+      ? packageJson.main
+      : undefined,
     'index.js',
     'index.cjs',
     'index.mjs',
-  ].filter((candidate): candidate is string => typeof candidate === 'string' && candidate.length > 0)
+  ].filter(
+    (candidate): candidate is string =>
+      typeof candidate === 'string' && candidate.length > 0,
+  )
 
   for (const candidate of entryCandidates) {
     const entryPath = resolve(packageRoot, candidate)
@@ -604,10 +613,11 @@ async function loadExtendsConfig(
   resolvedSpecifier: ResolvedExtendsSpecifier,
   configBasePath: string,
 ): Promise<StylelintConfigLike | undefined> {
-  const entryPath = resolvedSpecifier.resolvedPath
-    ?? (resolvedSpecifier.packageRoot
-      ? await resolvePackageEntryPath(resolvedSpecifier.packageRoot)
-      : undefined)
+  const entryPath
+    = resolvedSpecifier.resolvedPath
+      ?? (resolvedSpecifier.packageRoot
+        ? await resolvePackageEntryPath(resolvedSpecifier.packageRoot)
+        : undefined)
 
   if (!entryPath)
     return undefined
@@ -638,23 +648,27 @@ async function readExtendsPackageMetadata(
     ? await readPackageManifest(packageRoot)
     : undefined
 
-  const description = typeof packageJson?.description === 'string'
-    ? packageJson.description.trim() || undefined
-    : undefined
+  const description
+    = typeof packageJson?.description === 'string'
+      ? packageJson.description.trim() || undefined
+      : undefined
   const homepageUrl = normalizeAbsoluteUrl(
     typeof packageJson?.homepage === 'string'
       ? packageJson.homepage
       : undefined,
   )
   const repositoryUrl = normalizeRepositoryUrl(packageJson?.repository)
-  const docsUrl = homepageUrl
-    ?? repositoryUrl
-    ?? (packageName ? `https://www.npmjs.com/package/${packageName}` : undefined)
+  const docsUrl
+    = homepageUrl
+      ?? repositoryUrl
+      ?? (packageName
+        ? `https://www.npmjs.com/package/${packageName}`
+        : undefined)
 
   return {
-    description,
-    docsUrl,
-    docsUrlSource: docsUrl ? 'inferred' : undefined,
+    ...(description !== undefined && { description }),
+    ...(docsUrl !== undefined && { docsUrl }),
+    ...(docsUrl ? { docsUrlSource: 'inferred' as const } : {}),
   }
 }
 
@@ -687,32 +701,49 @@ async function buildExtendsInfo(
 
       const normalizedPlugins = toPluginRecord(loadedConfig?.plugins)
       const directExtends = toStringArray(loadedConfig?.extends)
-      const customSyntax = typeof loadedConfig?.customSyntax === 'string'
-        ? loadedConfig.customSyntax
-        : undefined
+      const customSyntax
+        = typeof loadedConfig?.customSyntax === 'string'
+          ? loadedConfig.customSyntax
+          : undefined
       const rules = toRulesRecord(loadedConfig?.rules)
       const ruleNames = rules
-        ? Object.keys(rules).toSorted((left, right) => left.localeCompare(right))
+        ? Object.keys(rules).toSorted((left, right) =>
+            left.localeCompare(right),
+          )
         : undefined
 
       return {
         specifier,
-        packageName: resolvedSpecifier.packageName,
-        description: packageMetadata.description,
-        docsUrl: packageMetadata.docsUrl,
-        docsUrlSource: packageMetadata.docsUrlSource,
+        ...(resolvedSpecifier.packageName !== undefined && {
+          packageName: resolvedSpecifier.packageName,
+        }),
+        ...(packageMetadata.description !== undefined && {
+          description: packageMetadata.description,
+        }),
+        ...(packageMetadata.docsUrl !== undefined && {
+          docsUrl: packageMetadata.docsUrl,
+        }),
+        ...(packageMetadata.docsUrlSource !== undefined && {
+          docsUrlSource: packageMetadata.docsUrlSource,
+        }),
         source: resolvedSpecifier.source,
         ...(directExtends ? { directExtends } : {}),
-        ...(normalizedPlugins ? { plugins: Object.keys(normalizedPlugins) } : {}),
+        ...(normalizedPlugins
+          ? { plugins: Object.keys(normalizedPlugins) }
+          : {}),
         ...(customSyntax ? { customSyntax } : {}),
         ...(rules ? { ruleCount: Object.keys(rules).length } : {}),
         ...(ruleNames ? { rules: ruleNames } : {}),
-        usedByConfigIndexes: [...indexes].toSorted((left, right) => left - right),
+        usedByConfigIndexes: [...indexes].toSorted(
+          (left, right) => left - right,
+        ),
       } satisfies ExtendsInfo
     }),
   )
 
-  return entries.toSorted((left, right) => left.specifier.localeCompare(right.specifier))
+  return entries.toSorted((left, right) =>
+    left.specifier.localeCompare(right.specifier),
+  )
 }
 
 async function readStylelintIgnoreInfo(
@@ -744,7 +775,9 @@ function toStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value))
     return undefined
 
-  const items = value.filter((item): item is string => typeof item === 'string')
+  const items = value.filter(
+    (item): item is string => typeof item === 'string',
+  )
   return items.length ? items : undefined
 }
 
@@ -808,7 +841,9 @@ function toRuleMeta(value: unknown): RuleMetaLike | undefined {
 }
 
 function toRuleFunction(value: unknown): RuleFunctionLike | undefined {
-  return typeof value === 'function' ? (value as RuleFunctionLike) : undefined
+  return typeof value === 'function'
+    ? (value as RuleFunctionLike)
+    : undefined
 }
 
 function getRuleNameFromUnknown(value: unknown): string | undefined {
@@ -836,11 +871,16 @@ function toRuleDefinition(
     if (!ruleName)
       return undefined
 
+    const meta = toRuleMeta(functionValue.meta)
+    const messages = toUnknownRecord(functionValue.messages)
+    const primaryOptionArray = toUnknownArray(
+      functionValue.primaryOptionArray,
+    )
     return {
       ruleName,
-      meta: toRuleMeta(functionValue.meta),
-      messages: toUnknownRecord(functionValue.messages),
-      primaryOptionArray: toUnknownArray(functionValue.primaryOptionArray),
+      ...(meta !== undefined && { meta }),
+      ...(messages !== undefined && { messages }),
+      ...(primaryOptionArray !== undefined && { primaryOptionArray }),
     }
   }
 
@@ -858,14 +898,18 @@ function toRuleDefinition(
   if (!ruleName)
     return undefined
 
+  const meta = toRuleMeta(value.meta) ?? toRuleMeta(nestedRule?.meta)
+  const messages
+    = toUnknownRecord(value.messages)
+      ?? toUnknownRecord(nestedRule?.messages)
+  const primaryOptionArray
+    = toUnknownArray(value.primaryOptionArray)
+      ?? toUnknownArray(nestedRule?.primaryOptionArray)
   return {
     ruleName,
-    meta: toRuleMeta(value.meta) ?? toRuleMeta(nestedRule?.meta),
-    messages:
-      toUnknownRecord(value.messages) ?? toUnknownRecord(nestedRule?.messages),
-    primaryOptionArray:
-      toUnknownArray(value.primaryOptionArray)
-      ?? toUnknownArray(nestedRule?.primaryOptionArray),
+    ...(meta !== undefined && { meta }),
+    ...(messages !== undefined && { messages }),
+    ...(primaryOptionArray !== undefined && { primaryOptionArray }),
   }
 }
 
@@ -916,7 +960,9 @@ function normalizeRuleMessages(
       const text = resolveMessageText(value)
       return text ? ([key, text] as const) : undefined
     })
-    .filter((entry): entry is readonly [string, string] => entry !== undefined)
+    .filter(
+      (entry): entry is readonly [string, string] => entry !== undefined,
+    )
 
   return entries.length ? Object.fromEntries(entries) : undefined
 }
@@ -969,7 +1015,10 @@ function sanitizeDescription(ruleName: string, description: string): string {
       return acc
 
     return acc
-      .replace(new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, 'i'), '')
+      .replace(
+        new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, 'i'),
+        '',
+      )
       .trim()
   }, sanitized)
 
@@ -1005,14 +1054,18 @@ function sanitizeDescription(ruleName: string, description: string): string {
   }
 
   const shortRuleName = ruleName.split('/').at(-1) ?? ruleName
-  const trailingRuleReference = normalizedDescription.match(TRAILING_RULE_REFERENCE_RE)
+  const trailingRuleReference = normalizedDescription.match(
+    TRAILING_RULE_REFERENCE_RE,
+  )
   if (trailingRuleReference?.[1]) {
     const referencedRule = trailingRuleReference[1].trim().toLowerCase()
     if (
       referencedRule === ruleName.toLowerCase()
       || referencedRule === shortRuleName.toLowerCase()
     ) {
-      return normalizedDescription.slice(0, trailingRuleReference.index).trim()
+      return normalizedDescription
+        .slice(0, trailingRuleReference.index)
+        .trim()
     }
   }
 
@@ -1112,7 +1165,10 @@ function normalizeRuleDeprecated(
     return deprecated
 
   if (isRecord(deprecated)) {
-    return deprecated as Exclude<RuleInfo['deprecated'], boolean | undefined>
+    return deprecated as Exclude<
+      RuleInfo['deprecated'],
+            boolean | undefined
+    >
   }
 
   return undefined
@@ -1156,7 +1212,9 @@ function buildRuleInfo(
     docs: {
       description: description.text,
       descriptionSource: description.source,
-      ...(description.missingDescription ? { descriptionMissing: true } : {}),
+      ...(description.missingDescription
+        ? { descriptionMissing: true }
+        : {}),
       ...(isRecommended ? { recommended: true } : {}),
       ...(docsUrl ? { url: docsUrl } : {}),
       ...(docsUrl && docsUrlSource ? { urlSource: docsUrlSource } : {}),
@@ -1218,7 +1276,9 @@ async function resolveCoreRuleDefinition(
   if (!ruleEntry)
     return undefined
 
-  const resolvedRule = await Promise.resolve(ruleEntry).catch(() => undefined)
+  const resolvedRule = await Promise.resolve(ruleEntry).catch(
+    () => undefined,
+  )
   return toRuleDefinition(resolvedRule, ruleName)
 }
 
@@ -1323,9 +1383,15 @@ async function resolvePluginRuleDefinitions(
       definitions.set(definition.ruleName, {
         definition,
         sourcePlugin,
-        sourcePackageName: packageDocsMetadata?.packageName,
-        sourceDocsUrl: packageDocsMetadata?.docsUrl,
-        sourceDocsUrlSource: packageDocsMetadata?.docsUrlSource,
+        ...(packageDocsMetadata?.packageName !== undefined && {
+          sourcePackageName: packageDocsMetadata.packageName,
+        }),
+        ...(packageDocsMetadata?.docsUrl !== undefined && {
+          sourceDocsUrl: packageDocsMetadata.docsUrl,
+        }),
+        ...(packageDocsMetadata?.docsUrlSource !== undefined && {
+          sourceDocsUrlSource: packageDocsMetadata.docsUrlSource,
+        }),
       })
     })
   })
@@ -1414,7 +1480,10 @@ function extractConfigs(
 
   const configs: FlatConfigItem[] = [
     normalizeConfigItem(
-      mergeConfigForDisplay(rootConfig, sourceConfig ? sourceRootConfig : undefined),
+      mergeConfigForDisplay(
+        rootConfig,
+        sourceConfig ? sourceRootConfig : undefined,
+      ),
       0,
       'stylelint/root',
     ),
@@ -1580,7 +1649,9 @@ async function resolveMatchedFiles(
   }
 
   const generalConfigIndexes = configs
-    .filter(config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config))
+    .filter(
+      config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config),
+    )
     .map(config => config.index)
 
   const files = discoveredFiles
@@ -1730,13 +1801,15 @@ class StylelintInspectorAdapter implements InspectorAdapter {
 
     return {
       basePath,
-      configPath,
+      ...(configPath !== undefined && { configPath }),
     }
   }
 
   async readConfig(options: ReadConfigOptions): Promise<InspectorReadResult> {
-    const { chdir = true, globMatchedFiles: shouldGlobMatchedFiles = true }
-      = options
+    const {
+      chdir = true,
+      globMatchedFiles: shouldGlobMatchedFiles = true,
+    } = options
 
     const { basePath, configPath } = await this.resolveConfigPath(options)
     const configPathRelative = configPath
@@ -1749,7 +1822,10 @@ class StylelintInspectorAdapter implements InspectorAdapter {
     const targetFilePath = normalize(
       resolve(basePath, options.targetFilePath ?? DEFAULT_TARGET_FILE),
     )
-    const targetFilepathRelative = getRelativeFilepath(basePath, targetFilePath)
+    const targetFilepathRelative = getRelativeFilepath(
+      basePath,
+      targetFilePath,
+    )
 
     console.log(
       MARK_INFO,
@@ -1787,14 +1863,19 @@ class StylelintInspectorAdapter implements InspectorAdapter {
 
     if (config) {
       resolveOptions.config = config
-      resolveOptions.configBasedir = configPath ? dirname(configPath) : basePath
+      resolveOptions.configBasedir = configPath
+        ? dirname(configPath)
+        : basePath
     }
     if (options.customSyntax)
       resolveOptions.customSyntax = options.customSyntax
 
     let resolved: StylelintConfig | undefined
     try {
-      resolved = await stylelint.resolveConfig(targetFilePath, resolveOptions)
+      resolved = await stylelint.resolveConfig(
+        targetFilePath,
+        resolveOptions,
+      )
     }
     catch (error) {
       if (!isNoConfigError(error))
@@ -1834,11 +1915,12 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       config as StylelintConfigLike | undefined,
     )
     const configBasePath = configPath ? dirname(configPath) : basePath
-    const [rules, stylelintIgnore, extendsInfo] = await Promise.all([
-      buildRuleCatalog(
-        configs,
-        resolved as StylelintConfigLike,
-      ),
+    const [
+      rules,
+      stylelintIgnore,
+      extendsInfo,
+    ] = await Promise.all([
+      buildRuleCatalog(configs, resolved as StylelintConfigLike),
       readStylelintIgnoreInfo(basePath),
       buildExtendsInfo(configs, basePath, configBasePath),
     ])
@@ -1863,7 +1945,7 @@ class StylelintInspectorAdapter implements InspectorAdapter {
       configs,
       rules,
       diagnostics,
-      files,
+      ...(files !== undefined && { files }),
       extendsInfo,
       meta: {
         engine: this.engine,

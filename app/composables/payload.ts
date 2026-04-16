@@ -24,11 +24,22 @@ import { configsOpenState, fileGroupsOpenState } from './state'
 
 const LOG_NAME = '[Config Inspector]'
 
-const data = ref<Payload>({
+/**
+ * Initial skeleton payload used before the first fetch completes. All required
+ * fields of {@link Payload} and {@link PayloadMeta} are satisfied with empty/zero
+ * values so we never need to cast.
+ */
+const INITIAL_PAYLOAD: Payload = {
   rules: {},
   configs: [],
-  meta: {} as any,
-})
+  meta: {
+    lastUpdate: 0,
+    basePath: '',
+    configPath: '',
+  },
+}
+
+const data = ref<Payload>(INITIAL_PAYLOAD)
 
 /**
  * State of initial loading
@@ -106,7 +117,7 @@ export function ensureDataFetch() {
 }
 
 export const payload = computed(() =>
-  Object.freeze(resolvePayload(data.value!)),
+  Object.freeze(resolvePayload(data.value)),
 )
 
 export function getRuleFromName(name: string): RuleInfo {
@@ -119,7 +130,7 @@ export function getRuleFromName(name: string): RuleInfo {
   )
 }
 
-export function getRuleDefaultOptions(name: string): any[] {
+export function getRuleDefaultOptions(name: string): unknown[] {
   return payload.value.rules[name]?.defaultOptions ?? []
 }
 
@@ -131,7 +142,9 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
   const ruleToState = new Map<string, RuleConfigStates>()
   const globToConfigs = new Map<string, FlatConfigItem[]>()
   const extendsInfoMap = new Map(
-    (payload.extendsInfo ?? []).map(entry => [entry.specifier, entry] as const),
+    (payload.extendsInfo ?? []).map(
+      entry => [entry.specifier, entry] as const,
+    ),
   )
 
   payload.configs.forEach((config, index) => {
@@ -218,7 +231,9 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     const specialConfigs = file.configs.filter(
       i => !isGeneralConfig(payload.configs[i]!),
     )
-    const displayConfigs = [...new Set(file.configs)].toSorted((a, b) => a - b)
+    const displayConfigs = [...new Set(file.configs)].toSorted(
+      (a, b) => a - b,
+    )
     const positiveGlobs = file.globs
       .filter(glob => !glob.startsWith('!'))
       .toSorted((a, b) => a.localeCompare(b))
@@ -242,7 +257,9 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
   for (const [configIndex, config] of payload.configs.entries()) {
     const declaredPositiveGlobs = (config.files ?? [])
       .flat()
-      .filter(glob => typeof glob === 'string' && !glob.startsWith('!'))
+      .filter(
+        glob => typeof glob === 'string' && !glob.startsWith('!'),
+      )
 
     for (const glob of declaredPositiveGlobs) {
       if (!globToFiles.has(glob))
@@ -303,7 +320,9 @@ function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
     fileToConfigs: new Map(
       Array.from(fileToConfigs.entries(), ([file, configs]) => [
         file,
-        [...configs].toSorted((a, b) => a - b).map(i => payload.configs[i]!),
+        [...configs]
+          .toSorted((a, b) => a - b)
+          .map(i => payload.configs[i]!),
       ]),
     ),
     configToFiles,

@@ -1,6 +1,6 @@
 import c from 'ansis'
 
-export const stylelintConfigFilenames = [
+export const stylelintConfigFilenames: readonly string[] = [
   'stylelint.config.js',
   'stylelint.config.mjs',
   'stylelint.config.cjs',
@@ -9,7 +9,7 @@ export const stylelintConfigFilenames = [
   'stylelint.config.cts',
 ]
 
-export const stylelintLegacyConfigFilenames = [
+export const stylelintLegacyConfigFilenames: readonly string[] = [
   '.stylelintrc',
   '.stylelintrc.js',
   '.stylelintrc.mjs',
@@ -19,10 +19,11 @@ export const stylelintLegacyConfigFilenames = [
   '.stylelintrc.json',
 ]
 
-export const configFilenames = stylelintConfigFilenames
-export const legacyConfigFilenames = stylelintLegacyConfigFilenames
+export const configFilenames: readonly string[] = stylelintConfigFilenames
+export const legacyConfigFilenames: readonly string[]
+  = stylelintLegacyConfigFilenames
 export const DEFAULT_TARGET_FILE = 'stylelint-inspector-target.css'
 
-export const MARK_CHECK = c.green('✔')
-export const MARK_INFO = c.blue('ℹ')
-export const MARK_ERROR = c.red('✖')
+export const MARK_CHECK: string = c.green('✔')
+export const MARK_INFO: string = c.blue('ℹ')
+export const MARK_ERROR: string = c.red('✖')

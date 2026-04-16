@@ -2,6 +2,7 @@ import type {
   InspectorReadResult,
   ReadConfigOptions,
   ResolveConfigPathOptions,
+  ResolvedConfigPath,
 } from './inspectors/contracts'
 import { createStylelintInspectorAdapter } from './inspectors/stylelint'
 
@@ -17,15 +18,17 @@ export type InspectorConfig = InspectorReadResult
 /**
  * Search and resolve the Stylelint config location metadata.
  */
-export async function resolveConfigPath(options: ResolveConfigPathOptions) {
-  return await adapter.resolveConfigPath(options)
+export function resolveConfigPath(
+  options: ResolveConfigPathOptions,
+): Promise<ResolvedConfigPath> {
+  return adapter.resolveConfigPath(options)
 }
 
 /**
  * Read and normalize the Stylelint config into inspector payload.
  */
-export async function readConfig(
+export function readConfig(
   options: ReadConfigOptions,
 ): Promise<InspectorReadResult> {
-  return await adapter.readConfig(options)
+  return adapter.readConfig(options)
 }

@@ -13,7 +13,7 @@ export function nth(n: number) {
   return `${n}th`
 }
 
-export function stringifyOptions(object: any) {
+export function stringifyOptions(object: unknown): string {
   /**
    * Replaces all occurrences of the pattern: `['--', value, '--']`
    *
@@ -28,7 +28,7 @@ export function stringifyOptions(object: any) {
   )
 }
 
-export function stringifyUnquoted(obj: any) {
+export function stringifyUnquoted(obj: unknown): string {
   return JSON.stringify(obj, null, 2)
     .replace(JSON_KEY_RE, '$1:')
     .replace(DOUBLE_QUOTE_RE, '\'')

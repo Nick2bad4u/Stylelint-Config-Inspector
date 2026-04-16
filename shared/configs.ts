@@ -3,7 +3,7 @@ import type { FlatConfigItem, MatchedFile } from './types'
 import { ConfigArray } from '@eslint/config-array'
 import { Minimatch } from 'minimatch'
 
-export const DEFAULT_WORKSPACE_SCAN_GLOBS = [
+export const DEFAULT_WORKSPACE_SCAN_GLOBS: readonly string[] = [
   '**/*.{css,scss,sass,less,pcss,sss,styl,stylus,vue,svelte,astro,html}',
 ]
 
@@ -11,7 +11,9 @@ const minimatchOpts: MinimatchOptions = { dot: true }
 const _matchInstances = new Map<string, Minimatch>()
 
 function minimatch(file: string, pattern: string) {
-  const normalizedPattern = pattern.startsWith('!') ? pattern.slice(1) : pattern
+  const normalizedPattern = pattern.startsWith('!')
+    ? pattern.slice(1)
+    : pattern
 
   let m = _matchInstances.get(normalizedPattern)
   if (!m) {
@@ -21,7 +23,7 @@ function minimatch(file: string, pattern: string) {
   return m.match(file)
 }
 
-export function getMatchedGlobs(file: string, globs: string[]) {
+export function getMatchedGlobs(file: string, globs: string[]): string[] {
   return globs.filter(glob => minimatch(file, glob))
 }
 
@@ -73,7 +75,7 @@ const META_KEYS = new Set(['name', 'index'])
 /**
  * Config with only `ignores` property
  */
-export function isIgnoreOnlyConfig(config: FlatConfigItem) {
+export function isIgnoreOnlyConfig(config: FlatConfigItem): boolean {
   const keys = Object.keys(config).filter(i => !META_KEYS.has(i))
   return keys.length === 1 && keys[0] === 'ignores'
 }
@@ -82,17 +84,15 @@ export function isIgnoreOnlyConfig(config: FlatConfigItem) {
  * Config without `files` and `ignores` properties or with only `ignores`
  * property
  */
-export function isGeneralConfig(config: FlatConfigItem) {
+export function isGeneralConfig(config: FlatConfigItem): boolean {
   return (!config.files && !config.ignores) || isIgnoreOnlyConfig(config)
 }
 
 export function matchFile(
   filepath: string,
   configs: FlatConfigItem[],
-  basePath: string,
+  _basePath: string,
 ): MatchedFile {
-  void basePath
-
   const result: MatchedFile = {
     filepath,
     globs: [],
@@ -109,7 +109,9 @@ export function matchFile(
 
   configs.forEach((config) => {
     if (isIgnoreOnlyConfig(config)) {
-      result.globs.push(...getMatchedGlobs(filepath, config.ignores ?? []))
+      result.globs.push(
+        ...getMatchedGlobs(filepath, config.ignores ?? []),
+      )
       return
     }
 
@@ -123,7 +125,8 @@ export function matchFile(
     const hasNoFilesConstraint = !config.files?.length
     const matchesByFiles = hasNoFilesConstraint || positive.length > 0
 
-    const isMatched = !isGloballyIgnored && matchesByFiles && !isIgnoredByConfig
+    const isMatched
+      = !isGloballyIgnored && matchesByFiles && !isIgnoredByConfig
 
     if (isMatched) {
       result.configs.push(config.index)
@@ -181,7 +184,7 @@ const FLAT_CONFIG_NOOP_SCHEMA = {
 export function buildConfigArray(
   configs: Array<Record<string, unknown>>,
   basePath: string,
-) {
+): ConfigArray {
   return new ConfigArray(configs, {
     basePath,
     schema: FLAT_CONFIG_NOOP_SCHEMA as unknown as never,

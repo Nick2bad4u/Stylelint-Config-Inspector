@@ -1,4 +1,4 @@
-import type { RuleConfigState, RuleEntry } from './types'
+import type { RuleConfigState, RuleEntry, RuleLevel } from './types'
 
 export function isRuleConfigured(
   states: RuleConfigState[] | undefined,
@@ -32,7 +32,7 @@ export function getRulePrimaryOption(level: RuleEntry | undefined): unknown {
   return isDisabledRuleValue(primary) ? undefined : primary
 }
 
-export function getRuleLevel(level: RuleEntry | undefined) {
+export function getRuleLevel(level: RuleEntry | undefined): RuleLevel {
   const first = Array.isArray(level) ? level[0] : level
 
   if (first === undefined)

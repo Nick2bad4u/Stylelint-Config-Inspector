@@ -1,3 +1,4 @@
+import type { Server } from 'node:http'
 import type { CreateWsServerOptions } from './ws'
 import { readFile, stat } from 'node:fs/promises'
 import { createServer } from 'node:http'
@@ -10,7 +11,9 @@ import { createWsServer } from './ws'
 
 const LEADING_SLASHES_RE = /^\/+/
 
-export async function createHostServer(options: CreateWsServerOptions) {
+export async function createHostServer(
+  options: CreateWsServerOptions,
+): Promise<Server> {
   const app = createApp()
 
   const ws = await createWsServer(options)
@@ -63,7 +66,11 @@ export async function createHostServer(options: CreateWsServerOptions) {
       const indexHtml = await readCachedFile(join(distDir, 'index.html'))
 
       if (event.path === '/' && indexHtml) {
-        setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
+        setResponseHeader(
+          event,
+          'Content-Type',
+          'text/html; charset=UTF-8',
+        )
         return indexHtml
       }
 
@@ -91,8 +98,9 @@ export async function createHostServer(options: CreateWsServerOptions) {
           if (!stats || !stats.isFile())
             return
 
+          const mimeType = lookup(resolved.relative)
           return {
-            type: lookup(resolved.relative),
+            ...(mimeType !== undefined && { type: mimeType }),
             size: stats.size,
             mtime: stats.mtimeMs,
           }
@@ -101,7 +109,11 @@ export async function createHostServer(options: CreateWsServerOptions) {
 
       if (!result && shouldServeIndexFallback(event.path)) {
         if (indexHtml) {
-          setResponseHeader(event, 'Content-Type', 'text/html; charset=UTF-8')
+          setResponseHeader(
+            event,
+            'Content-Type',
+            'text/html; charset=UTF-8',
+          )
         }
         return indexHtml
       }

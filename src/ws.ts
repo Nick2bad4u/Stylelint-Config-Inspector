@@ -1,4 +1,5 @@
-import type { WebSocket } from 'ws'
+import type { FSWatcher } from 'chokidar'
+import type { WebSocket, WebSocketServer as WebSocketServerType } from 'ws'
 import type { Payload } from '~~/shared/types'
 import type { ReadConfigOptions } from './configs'
 import process from 'node:process'
@@ -16,7 +17,16 @@ https://stylelint.io/user-guide/configure`
 
 export interface CreateWsServerOptions extends ReadConfigOptions {}
 
-export async function createWsServer(options: CreateWsServerOptions) {
+export interface WsServerHandle {
+  port: number
+  wss: WebSocketServerType
+  watcher: FSWatcher
+  getData: () => Promise<Payload | undefined>
+}
+
+export async function createWsServer(
+  options: CreateWsServerOptions,
+): Promise<WsServerHandle> {
   let payload: Payload | undefined
   const port = await getPort({ port: 7811, random: true })
   const wss = new WebSocketServer({
@@ -52,7 +62,8 @@ export async function createWsServer(options: CreateWsServerOptions) {
   }
 
   function createErrorPayload(error: unknown): Payload {
-    const diagnostic = error instanceof Error ? error.message : String(error)
+    const diagnostic
+      = error instanceof Error ? error.message : String(error)
 
     return {
       configs: [],
@@ -61,7 +72,9 @@ export async function createWsServer(options: CreateWsServerOptions) {
       meta: {
         wsPort: port,
         engine: 'stylelint',
-        targetFilePath: options.targetFilePath,
+        ...(options.targetFilePath !== undefined && {
+          targetFilePath: options.targetFilePath,
+        }),
         lastUpdate: Date.now(),
         basePath,
         configPath: resolvedConfigPath.configPath

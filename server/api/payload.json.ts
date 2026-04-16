@@ -6,7 +6,7 @@ export default lazyEventHandler(async () => {
     cwd: process.cwd(),
   })
 
-  return defineEventHandler(async () => {
-    return await ws.getData()
+  return defineEventHandler(() => {
+    return ws.getData()
   })
 })

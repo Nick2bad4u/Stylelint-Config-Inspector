@@ -2,7 +2,7 @@ import c from 'ansis'
 import { MARK_ERROR } from './constants'
 
 export class ConfigInspectorError extends Error {
-  prettyPrint() {
+  prettyPrint(): void {
     console.error(MARK_ERROR, this.message)
   }
 }
@@ -12,12 +12,12 @@ export class ConfigPathError extends ConfigInspectorError {
 
   constructor(
     public basePath: string,
-    public configFilenames: string[],
+    public configFilenames: readonly string[],
   ) {
     super('Cannot find Stylelint config file')
   }
 
-  override prettyPrint() {
+  override prettyPrint(): void {
     console.error(
       MARK_ERROR,
       this.message,
@@ -40,7 +40,7 @@ export class ConfigPathLegacyError extends ConfigInspectorError {
     super('Found legacy Stylelint config file')
   }
 
-  override prettyPrint() {
+  override prettyPrint(): void {
     console.error(
       MARK_ERROR,
       this.message,

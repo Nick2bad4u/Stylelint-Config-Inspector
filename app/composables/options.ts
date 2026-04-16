@@ -11,7 +11,7 @@ let hasRedundantOptions: boolean
  * The '--' markers provide something that a regex replace can easily later
  * match on. (See transformDiff() in ./strings.ts)
  */
-function redundantOption(option: any) {
+function redundantOption(option: unknown): unknown[] {
   hasRedundantOptions = true
   return [
     '--',
@@ -20,8 +20,8 @@ function redundantOption(option: any) {
   ]
 }
 
-function deepCompareOption(option: any, defaultOption: any) {
-  if (defaultOption === void 0)
+function deepCompareOption(option: unknown, defaultOption: unknown): unknown {
+  if (defaultOption === undefined)
     return option
   if (typeof option !== typeof defaultOption)
     return option
@@ -29,7 +29,11 @@ function deepCompareOption(option: any, defaultOption: any) {
   if (option === defaultOption)
     return redundantOption(option)
 
-  if (typeof option === 'object' && option !== null && defaultOption !== null) {
+  if (
+    typeof option === 'object'
+    && option !== null
+    && defaultOption !== null
+  ) {
     if (
       Array.isArray(option)
       && Array.isArray(defaultOption)
@@ -37,29 +41,40 @@ function deepCompareOption(option: any, defaultOption: any) {
     ) {
       if (option.length === 0)
         return redundantOption(option)
-      return option.map((value: any, index: number): any[] =>
-        deepCompareOption(value, defaultOption[index]),
+      return (option as unknown[]).map((value: unknown, index: number) =>
+        deepCompareOption(value, (defaultOption as unknown[])[index]),
       )
     }
     else if (!Array.isArray(option) && !Array.isArray(defaultOption)) {
-      const optionKeys = Object.keys(option)
+      const optionRecord = option as Record<string, unknown>
+      const defaultRecord = defaultOption as Record<string, unknown>
+      const optionKeys = Object.keys(optionRecord)
 
-      return optionKeys.reduce((comparedKeys: Record<string, any>, key) => {
-        comparedKeys[key] = deepCompareOption(option[key], defaultOption[key])
-        return comparedKeys
-      }, {})
+      return optionKeys.reduce(
+        (comparedKeys: Record<string, unknown>, key) => {
+          comparedKeys[key] = deepCompareOption(
+            optionRecord[key],
+            defaultRecord[key],
+          )
+          return comparedKeys
+        },
+        {},
+      )
     }
   }
 
   return option
 }
 
-export function deepCompareOptions(options: any[], defaultOptions: any[]) {
+export function deepCompareOptions(
+  options: unknown[],
+  defaultOptions: unknown[],
+): { options: unknown[], hasRedundantOptions: boolean } {
   hasRedundantOptions = false
   const comparedOptions = options.map((value, index) =>
     deepCompareOption(
       value,
-      index < defaultOptions.length ? defaultOptions[index] : void 0,
+      index < defaultOptions.length ? defaultOptions[index] : undefined,
     ),
   )
 

@@ -20,11 +20,10 @@ const RE_CONSECUTIVE_SLASHES = /\/+/g
 
 const cli = cac('stylelint-config-inspector')
 
-cli
-  .command(
-    'build',
-    'Build inspector with current config file for static hosting',
-  )
+cli.command(
+  'build',
+  'Build inspector with current config file for static hosting',
+)
   .option('--config <configFile>', 'Config file path')
   .option('--files', 'Include matched file paths in payload', {
     default: true,
@@ -38,12 +37,12 @@ cli
     '--basePath <basePath>',
     'Base directory for globs to resolve. Default to directory of config file if not provided',
   )
-  // Build specific options
+// Build specific options
   .option('--base <baseURL>', 'Base URL for deployment', { default: '/' })
   .option('--outDir <dir>', 'Output directory', {
     default: '.stylelint-config-inspector',
   })
-  // Action
+// Action
   .action(async (rawOptions) => {
     const options = normalizeCliInspectorOptions(rawOptions)
 
@@ -91,7 +90,10 @@ cli
       for (const file of htmlFiles) {
         if (!file)
           continue
-        const content = await fs.readFile(resolve(distDir, file), 'utf-8')
+        const content = await fs.readFile(
+          resolve(distDir, file),
+          'utf-8',
+        )
         const newContent = rewriteStaticHtmlWithBase(content, baseURL)
         await fs.writeFile(resolve(outDir, file), newContent, 'utf-8')
       }
@@ -113,8 +115,7 @@ cli
     )
   })
 
-cli
-  .command('', 'Start dev inspector')
+cli.command('', 'Start dev inspector')
   .option('--config <configFile>', 'Config file path')
   .option('--files', 'Include matched file paths in payload', {
     default: true,
@@ -128,13 +129,13 @@ cli
     '--basePath <basePath>',
     'Base directory for globs to resolve. Default to directory of config file if not provided',
   )
-  // Dev specific options
+// Dev specific options
   .option('--host <host>', 'Host', {
     default: process.env.HOST || '127.0.0.1',
   })
   .option('--port <port>', 'Port', { default: process.env.PORT || 8888 })
   .option('--open', 'Open browser', { default: true })
-  // Action
+// Action
   .action(async (rawOptions) => {
     const options = normalizeCliInspectorOptions(rawOptions)
 
