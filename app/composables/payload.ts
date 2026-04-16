@@ -3,6 +3,7 @@ import type {
     ErrorInfo,
     FilesGroup,
     FlatConfigItem,
+    MatchedFile,
     Payload,
     ResolvedPayload,
     RuleConfigStates,
@@ -144,6 +145,15 @@ function ensureMappedArrayValue<K, V>(map: Map<K, V[]>, key: K): V[] {
     return created;
 }
 
+function ensureMappedSetValue<K, V>(map: Map<K, Set<V>>, key: K): Set<V> {
+    const existing = map.get(key);
+    if (existing) return existing;
+
+    const created = new Set<V>();
+    map.set(key, created);
+    return created;
+}
+
 function appendRuleStatesForConfig(
     config: FlatConfigItem,
     configIndex: number,
@@ -212,47 +222,73 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
     };
 }
 
-function resolveFiles(payload: Payload): ResolvedPayload["filesResolved"] {
-    if (!payload.files) return undefined;
+// ─── FileIndexes ──────────────────────────────────────────────────────────────
 
+interface FileIndexes {
+    files: string[];
+    globToFiles: Map<string, Set<string>>;
+    fileToGlobs: Map<string, Set<string>>;
+    fileToConfigs: Map<string, Set<number>>;
+    configToFiles: Map<number, Set<string>>;
+}
+
+/**
+ * Iterates {@link Payload.files} once and builds all four cross-index maps plus
+ * the flat file list. Each iteration is O(globs + configs) per file.
+ */
+function buildFileIndexes(payload: Payload): FileIndexes {
     const files: string[] = [];
     const globToFiles = new Map<string, Set<string>>();
     const fileToGlobs = new Map<string, Set<string>>();
     const fileToConfigs = new Map<string, Set<number>>();
     const configToFiles = new Map<number, Set<string>>();
-    const filesGroupMap = new Map<string, FilesGroup>();
 
-    for (const file of payload.files) {
+    for (const file of payload.files ?? []) {
         files.push(file.filepath);
         for (const glob of file.globs) {
-            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
-            globToFiles.get(glob)!.add(file.filepath);
-            if (!fileToGlobs.has(file.filepath))
-                fileToGlobs.set(file.filepath, new Set());
-            fileToGlobs.get(file.filepath)!.add(glob);
+            ensureMappedSetValue(globToFiles, glob).add(file.filepath);
+            ensureMappedSetValue(fileToGlobs, file.filepath).add(glob);
         }
         for (const configIndex of file.configs) {
-            if (!configToFiles.has(configIndex))
-                configToFiles.set(configIndex, new Set());
-            configToFiles.get(configIndex)!.add(file.filepath);
-            if (!fileToConfigs.has(file.filepath))
-                fileToConfigs.set(file.filepath, new Set());
-            fileToConfigs.get(file.filepath)!.add(configIndex);
+            ensureMappedSetValue(configToFiles, configIndex).add(file.filepath);
+            ensureMappedSetValue(fileToConfigs, file.filepath).add(configIndex);
         }
+    }
 
-        const specialConfigs = file.configs.filter(
-            (i) => !isGeneralConfig(payload.configs[i]!)
-        );
-        const displayConfigs = [...new Set(file.configs)].toSorted(
-            (a, b) => a - b
-        );
-        const positiveGlobs = file.globs
-            .filter((glob) => !glob.startsWith("!"))
-            .toSorted((a, b) => a.localeCompare(b));
-        const groupId = specialConfigs.length
-            ? `configs:${specialConfigs.join("-")}`
-            : `globs:${positiveGlobs.join("|") || "<general>"}`;
+    return { files, globToFiles, fileToGlobs, fileToConfigs, configToFiles };
+}
+
+/**
+ * Computes the stable group ID for a matched file. Files that share the same
+ * set of special configs (or the same sorted positive globs when there are
+ * none) land in the same display group.
+ */
+function computeMatchedGroupId(payload: Payload, file: MatchedFile): string {
+    const specialConfigs = file.configs.filter(
+        (i) => !isGeneralConfig(payload.configs[i]!)
+    );
+    if (specialConfigs.length > 0) return `configs:${specialConfigs.join("-")}`;
+
+    const positiveGlobs = file.globs
+        .filter((glob) => !glob.startsWith("!"))
+        .toSorted((a, b) => a.localeCompare(b));
+    return `globs:${positiveGlobs.join("|") || "<general>"}`;
+}
+
+/**
+ * Populates {@link filesGroupMap} with a "matched" group entry for every file in
+ * {@link Payload.files}.
+ */
+function buildMatchedFileGroups(
+    payload: Payload,
+    filesGroupMap: Map<string, FilesGroup>
+): void {
+    for (const file of payload.files ?? []) {
+        const groupId = computeMatchedGroupId(payload, file);
         if (!filesGroupMap.has(groupId)) {
+            const displayConfigs = [...new Set(file.configs)].toSorted(
+                (a, b) => a - b
+            );
             filesGroupMap.set(groupId, {
                 id: groupId,
                 kind: "matched",
@@ -263,60 +299,123 @@ function resolveFiles(payload: Payload): ResolvedPayload["filesResolved"] {
         }
         const group = filesGroupMap.get(groupId)!;
         group.files.push(file.filepath);
-        file.globs.forEach((i) => group.globs.add(i));
+        file.globs.forEach((g) => group.globs.add(g));
     }
+}
 
-    for (const [configIndex, config] of payload.configs.entries()) {
+/**
+ * Handles a single declared positive glob that belongs to a config but has no
+ * matched files. Creates or updates a "declared" group in
+ * {@link filesGroupMap}.
+ */
+function processUnmatchedDeclaredGlob(
+    glob: string,
+    config: FlatConfigItem,
+    globToFiles: Map<string, Set<string>>,
+    filesGroupMap: Map<string, FilesGroup>
+): void {
+    ensureMappedSetValue(globToFiles, glob);
+    if ((globToFiles.get(glob)?.size ?? 0) > 0) return;
+
+    const groupId = `declared-glob:${glob}`;
+    if (!filesGroupMap.has(groupId)) {
+        filesGroupMap.set(groupId, {
+            id: groupId,
+            kind: "declared",
+            files: [],
+            configs: [],
+            globs: new Set<string>([glob]),
+        });
+    }
+    const group = filesGroupMap.get(groupId)!;
+    if (!group.configs.includes(config)) group.configs.push(config);
+}
+
+/**
+ * Iterates every config's declared positive globs and, for those without any
+ * matched files, adds a "declared" group entry via
+ * {@link processUnmatchedDeclaredGlob}.
+ */
+function buildDeclaredGlobGroups(
+    payload: Payload,
+    globToFiles: Map<string, Set<string>>,
+    filesGroupMap: Map<string, FilesGroup>
+): void {
+    for (const config of payload.configs) {
         const declaredPositiveGlobs = (config.files ?? [])
             .flat()
             .filter(
                 (glob) => typeof glob === "string" && !glob.startsWith("!")
             );
-
-        for (const glob of declaredPositiveGlobs) {
-            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
-
-            if ((globToFiles.get(glob)?.size ?? 0) > 0) continue;
-
-            const groupId = `declared-glob:${glob}`;
-            if (!filesGroupMap.has(groupId)) {
-                filesGroupMap.set(groupId, {
-                    id: groupId,
-                    kind: "declared",
-                    files: [],
-                    configs: [],
-                    globs: new Set<string>([glob]),
-                });
-            }
-
-            const group = filesGroupMap.get(groupId)!;
-            if (!group.configs.includes(config))
-                group.configs.push(payload.configs[configIndex]!);
-        }
+        for (const glob of declaredPositiveGlobs)
+            processUnmatchedDeclaredGlob(
+                glob,
+                config,
+                globToFiles,
+                filesGroupMap
+            );
     }
+}
 
+/**
+ * For each default workspace-scan glob that has no matched files, adds a
+ * "default" group entry referencing all general (non-ignore-only) configs.
+ */
+function buildDefaultScanGroups(
+    payload: Payload,
+    globToFiles: Map<string, Set<string>>,
+    filesGroupMap: Map<string, FilesGroup>
+): void {
     const generalConfigs = payload.configs.filter(
         (config) => isGeneralConfig(config) && !isIgnoreOnlyConfig(config)
     );
+    if (!generalConfigs.length) return;
 
-    if (generalConfigs.length) {
-        for (const glob of DEFAULT_WORKSPACE_SCAN_GLOBS) {
-            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
+    for (const glob of DEFAULT_WORKSPACE_SCAN_GLOBS) {
+        ensureMappedSetValue(globToFiles, glob);
+        if ((globToFiles.get(glob)?.size ?? 0) > 0) continue;
 
-            if ((globToFiles.get(glob)?.size ?? 0) > 0) continue;
-
-            const groupId = `default-scan:${glob}`;
-            if (!filesGroupMap.has(groupId)) {
-                filesGroupMap.set(groupId, {
-                    id: groupId,
-                    kind: "default",
-                    files: [],
-                    configs: [...generalConfigs],
-                    globs: new Set<string>([glob]),
-                });
-            }
+        const groupId = `default-scan:${glob}`;
+        if (!filesGroupMap.has(groupId)) {
+            filesGroupMap.set(groupId, {
+                id: groupId,
+                kind: "default",
+                files: [],
+                configs: [...generalConfigs],
+                globs: new Set<string>([glob]),
+            });
         }
     }
+}
+
+/**
+ * Converts the raw {@link Set}<number> config-index map to the final sorted
+ * {@link FlatConfigItem}[] map expected by {@link ResolvedPayload}.
+ */
+function buildFinalFileToConfigs(
+    fileToConfigs: Map<string, Set<number>>,
+    payload: Payload
+): Map<string, FlatConfigItem[]> {
+    return new Map(
+        Array.from(fileToConfigs.entries(), ([file, configs]) => [
+            file,
+            [...configs]
+                .toSorted((a, b) => a - b)
+                .map((i) => payload.configs[i]!),
+        ])
+    );
+}
+
+function resolveFiles(payload: Payload): ResolvedPayload["filesResolved"] {
+    if (!payload.files) return undefined;
+
+    const { files, globToFiles, fileToGlobs, fileToConfigs, configToFiles } =
+        buildFileIndexes(payload);
+
+    const filesGroupMap = new Map<string, FilesGroup>();
+    buildMatchedFileGroups(payload, filesGroupMap);
+    buildDeclaredGlobGroups(payload, globToFiles, filesGroupMap);
+    buildDefaultScanGroups(payload, globToFiles, filesGroupMap);
 
     const groups = [...filesGroupMap.values()];
     fileGroupsOpenState.value = groups.map(() => true);
@@ -325,14 +424,7 @@ function resolveFiles(payload: Payload): ResolvedPayload["filesResolved"] {
         list: files,
         globToFiles,
         fileToGlobs,
-        fileToConfigs: new Map(
-            Array.from(fileToConfigs.entries(), ([file, configs]) => [
-                file,
-                [...configs]
-                    .toSorted((a, b) => a - b)
-                    .map((i) => payload.configs[i]!),
-            ])
-        ),
+        fileToConfigs: buildFinalFileToConfigs(fileToConfigs, payload),
         configToFiles,
         groups,
     };
