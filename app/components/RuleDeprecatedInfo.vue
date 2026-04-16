@@ -96,7 +96,12 @@ function getLinkClass(url: string | undefined) {
                     </template>
                 </p>
                 <p mt2>
-                    <a text-red underline :href="deprecatedInfo.url"
+                    <a
+                        text-red
+                        underline
+                        :href="deprecatedInfo.url"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         >Learn more</a
                     >
                 </p>
