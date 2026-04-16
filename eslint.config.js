@@ -9,6 +9,9 @@ export default await nuxt()
             unocss: true,
             vue: {
                 overrides: {
+                    "vue/html-closing-bracket-newline": "off",
+                    "vue/html-indent": "off",
+                    "vue/html-self-closing": "off",
                     "vue/no-extra-parens": "off",
                 },
             },
@@ -54,8 +57,10 @@ export default await nuxt()
             "stryker.config.mjs",
             "stylelint.config.mjs",
             "tsconfig.build.json",
+            "tsconfig.cli.json",
             "tsconfig.eslint.json",
             "tsconfig.js.json",
+            "tsconfig.json",
             "tsdoc.json",
             "vite.config.ts",
             "vitest.stryker.config.ts",
