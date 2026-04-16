@@ -179,7 +179,7 @@ function appendGlobMappingsForConfig(
 
 function syncConfigsOpenState(configCount: number): void {
     const isCollapsedByDefault = configCount >= 10;
-    configsOpenState.value = Array.from({ length: configCount }).fill(
+    configsOpenState.value = Array.from<boolean>({ length: configCount }).fill(
         !isCollapsedByDefault
     );
 }
