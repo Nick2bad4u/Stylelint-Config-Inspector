@@ -60,7 +60,7 @@
     "scripts": {
         "build": "nuxt build && tsdown",
         "changelog:release-notes": "git-cliff --config cliff.toml --current --strip all",
-        "check": "npm run lint && npm run typecheck && npm run test -- --run && npm run build",
+        "check": "npm run lint && npm run typecheck && npm run test && npm run build",
         "contrib": "all-contributors",
         "contrib:add": "all-contributors add",
         "contrib:check": "all-contributors check",
