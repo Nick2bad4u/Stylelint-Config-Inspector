@@ -135,6 +135,55 @@ export function getRuleStates(name: string): RuleConfigStates | undefined {
     return payload.value.ruleToState.get(name);
 }
 
+function ensureMappedArrayValue<K, V>(map: Map<K, V[]>, key: K): V[] {
+    const existing = map.get(key);
+    if (existing) return existing;
+
+    const created: V[] = [];
+    map.set(key, created);
+    return created;
+}
+
+function appendRuleStatesForConfig(
+    config: FlatConfigItem,
+    configIndex: number,
+    ruleToState: Map<string, RuleConfigStates>
+): void {
+    if (!config.rules) return;
+
+    for (const [name, raw] of Object.entries(config.rules)) {
+        const level = getRuleLevel(raw);
+        if (!level) continue;
+
+        ensureMappedArrayValue(ruleToState, name).push({
+            name,
+            configIndex,
+            level,
+            primaryOption: getRulePrimaryOption(raw),
+            options: getRuleOptions(raw),
+        });
+    }
+}
+
+function appendGlobMappingsForConfig(
+    config: FlatConfigItem,
+    globToConfigs: Map<string, FlatConfigItem[]>
+): void {
+    const globs = [
+        ...(config.files?.flat() ?? []),
+        ...(config.ignores?.flat() ?? []),
+    ];
+    for (const glob of globs)
+        ensureMappedArrayValue(globToConfigs, glob).push(config);
+}
+
+function syncConfigsOpenState(configCount: number): void {
+    const isCollapsedByDefault = configCount >= 10;
+    configsOpenState.value = Array.from({ length: configCount }).fill(
+        !isCollapsedByDefault
+    );
+}
+
 export function resolvePayload(payload: Payload): ResolvedPayload {
     const ruleToState = new Map<string, RuleConfigStates>();
     const globToConfigs = new Map<string, FlatConfigItem[]>();
@@ -145,41 +194,12 @@ export function resolvePayload(payload: Payload): ResolvedPayload {
     );
 
     payload.configs.forEach((config, index) => {
-        // Rule Level
-        if (config.rules) {
-            Object.entries(config.rules).forEach(([name, raw]) => {
-                const value = getRuleLevel(raw);
-                if (value) {
-                    const primaryOption = getRulePrimaryOption(raw);
-                    const options = getRuleOptions(raw);
-                    if (!ruleToState.has(name)) ruleToState.set(name, []);
-                    ruleToState.get(name)!.push({
-                        name,
-                        configIndex: index,
-                        level: value,
-                        primaryOption,
-                        options,
-                    });
-                }
-            });
-        }
-
-        // Globs
-        for (const glob of config.files?.flat() || []) {
-            if (!globToConfigs.has(glob)) globToConfigs.set(glob, []);
-            globToConfigs.get(glob)!.push(config);
-        }
-        for (const glob of config.ignores?.flat() || []) {
-            if (!globToConfigs.has(glob)) globToConfigs.set(glob, []);
-            globToConfigs.get(glob)!.push(config);
-        }
+        appendRuleStatesForConfig(config, index, ruleToState);
+        appendGlobMappingsForConfig(config, globToConfigs);
     });
 
-    // collapse all if there are too many items
-    configsOpenState.value =
-        payload.configs.length >= 10
-            ? payload.configs.map(() => false)
-            : payload.configs.map(() => true);
+    // Collapse all if there are too many items.
+    syncConfigsOpenState(payload.configs.length);
 
     return {
         ...payload,

@@ -1,4 +1,4 @@
-import type { FilesGroup, Payload, ResolvedPayload } from "../shared/types";
+import type { FilesGroup, Payload } from "../shared/types";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import { DEFAULT_WORKSPACE_SCAN_GLOBS } from "../shared/configs";
@@ -300,7 +300,7 @@ describe("resolvePayload", () => {
             ],
         };
 
-        const resolved = resolvePayload(payload) as ResolvedPayload;
+        const resolved = resolvePayload(payload);
         const groupsById = new Map(
             (resolved.filesResolved?.groups ?? []).map(
                 (group) => [group.id, group] as const
