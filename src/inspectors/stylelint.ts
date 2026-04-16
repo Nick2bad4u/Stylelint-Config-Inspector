@@ -390,8 +390,8 @@ function normalizeRepositoryUrl(repository: unknown): string | undefined {
     if (typeof repository === 'string')
       return repository
 
-    if (isRecord(repository) && typeof repository.url === 'string')
-      return repository.url
+    if (isRecord(repository) && typeof repository['url'] === 'string')
+      return repository['url']
 
     return undefined
   })()
@@ -483,12 +483,12 @@ async function readPluginPackageDocsMetadata(
   }
 
   const homepageUrl = normalizeAbsoluteUrl(
-    isRecord(packageJson) && typeof packageJson.homepage === 'string'
-      ? packageJson.homepage
+    isRecord(packageJson) && typeof packageJson['homepage'] === 'string'
+      ? packageJson['homepage']
       : undefined,
   )
   const repositoryUrl = normalizeRepositoryUrl(
-    isRecord(packageJson) ? packageJson.repository : undefined,
+    isRecord(packageJson) ? packageJson['repository'] : undefined,
   )
   const docsUrl
     = homepageUrl
@@ -589,8 +589,8 @@ async function resolvePackageEntryPath(
 ): Promise<string | undefined> {
   const packageJson = await readPackageManifest(packageRoot)
   const entryCandidates = [
-    typeof packageJson?.main === 'string'
-      ? packageJson.main
+    typeof packageJson?.['main'] === 'string'
+      ? packageJson['main']
       : undefined,
     'index.js',
     'index.cjs',
@@ -649,15 +649,15 @@ async function readExtendsPackageMetadata(
     : undefined
 
   const description
-    = typeof packageJson?.description === 'string'
-      ? packageJson.description.trim() || undefined
+    = typeof packageJson?.['description'] === 'string'
+      ? packageJson['description'].trim() || undefined
       : undefined
   const homepageUrl = normalizeAbsoluteUrl(
-    typeof packageJson?.homepage === 'string'
-      ? packageJson.homepage
+    typeof packageJson?.['homepage'] === 'string'
+      ? packageJson['homepage']
       : undefined,
   )
-  const repositoryUrl = normalizeRepositoryUrl(packageJson?.repository)
+  const repositoryUrl = normalizeRepositoryUrl(packageJson?.['repository'])
   const docsUrl
     = homepageUrl
       ?? repositoryUrl
@@ -794,8 +794,8 @@ function getPluginName(entry: unknown, index: number): string {
   if (typeof entry === 'function' && entry.name)
     return entry.name
 
-  if (isRecord(entry) && typeof entry.ruleName === 'string')
-    return entry.ruleName.split('/')[0] ?? entry.ruleName
+  if (isRecord(entry) && typeof entry['ruleName'] === 'string')
+    return entry['ruleName'].split('/')[0] ?? entry['ruleName']
 
   return `plugin-${index + 1}`
 }
@@ -847,8 +847,8 @@ function toRuleFunction(value: unknown): RuleFunctionLike | undefined {
 }
 
 function getRuleNameFromUnknown(value: unknown): string | undefined {
-  if (isRecord(value) && typeof value.ruleName === 'string')
-    return value.ruleName
+  if (isRecord(value) && typeof value['ruleName'] === 'string')
+    return value['ruleName']
 
   const functionValue = toRuleFunction(value)
   if (typeof functionValue?.ruleName === 'string')
@@ -887,10 +887,10 @@ function toRuleDefinition(
   if (!isRecord(value))
     return undefined
 
-  const nestedRule = toRuleFunction(value.rule)
+  const nestedRule = toRuleFunction(value['rule'])
   const ruleName
-    = typeof value.ruleName === 'string'
-      ? value.ruleName
+    = typeof value['ruleName'] === 'string'
+      ? value['ruleName']
       : typeof nestedRule?.ruleName === 'string'
         ? nestedRule.ruleName
         : fallbackRuleName
@@ -898,12 +898,12 @@ function toRuleDefinition(
   if (!ruleName)
     return undefined
 
-  const meta = toRuleMeta(value.meta) ?? toRuleMeta(nestedRule?.meta)
+  const meta = toRuleMeta(value['meta']) ?? toRuleMeta(nestedRule?.meta)
   const messages
-    = toUnknownRecord(value.messages)
+    = toUnknownRecord(value['messages'])
       ?? toUnknownRecord(nestedRule?.messages)
   const primaryOptionArray
-    = toUnknownArray(value.primaryOptionArray)
+    = toUnknownArray(value['primaryOptionArray'])
       ?? toUnknownArray(nestedRule?.primaryOptionArray)
   return {
     ruleName,
@@ -1255,10 +1255,10 @@ async function resolveRecommendedCoreRuleNames(): Promise<Set<string>> {
     try {
       const moduleValue = await import('stylelint-config-recommended')
       const configValue = (moduleValue.default ?? moduleValue) as unknown
-      if (!isRecord(configValue) || !isRecord(configValue.rules))
+      if (!isRecord(configValue) || !isRecord(configValue['rules']))
         return new Set<string>()
 
-      return new Set(Object.keys(configValue.rules))
+      return new Set(Object.keys(configValue['rules']))
     }
     catch {
       return new Set<string>()
@@ -1325,8 +1325,8 @@ function collectPluginRuleDefinitions(value: unknown): RuleDefinitionLike[] {
     if (!isRecord(current))
       continue
 
-    if (isRecord(current.rules))
-      Object.values(current.rules).forEach(enqueue)
+    if (isRecord(current['rules']))
+      Object.values(current['rules']).forEach(enqueue)
 
     Object.values(current).forEach((entry) => {
       if (getRuleNameFromUnknown(entry))
@@ -1696,12 +1696,12 @@ async function loadConfigFromPath(
     const pkg = await readFile(configPath, 'utf-8')
     const parsed = JSON.parse(pkg) as unknown
 
-    if (!isRecord(parsed) || !isRecord(parsed.stylelint)) {
+    if (!isRecord(parsed) || !isRecord(parsed['stylelint'])) {
       throw new Error(`No "stylelint" field found in ${configPath}`)
     }
 
     return {
-      config: parsed.stylelint as StylelintConfig,
+      config: parsed['stylelint'] as StylelintConfig,
       dependencies: [configPath],
     }
   }
@@ -1754,7 +1754,7 @@ async function findDiscoveredConfigPath(
     return undefined
   }
 
-  if (isRecord(packageJson) && isRecord(packageJson.stylelint))
+  if (isRecord(packageJson) && isRecord(packageJson['stylelint']))
     return normalize(packageJsonPath)
 
   return undefined

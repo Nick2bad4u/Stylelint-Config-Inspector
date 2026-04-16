@@ -131,9 +131,9 @@ cli.command('', 'Start dev inspector')
   )
 // Dev specific options
   .option('--host <host>', 'Host', {
-    default: process.env.HOST || '127.0.0.1',
+    default: process.env['HOST'] || '127.0.0.1',
   })
-  .option('--port <port>', 'Port', { default: process.env.PORT || 8888 })
+  .option('--port <port>', 'Port', { default: process.env['PORT'] || 8888 })
   .option('--open', 'Open browser', { default: true })
 // Action
   .action(async (rawOptions) => {

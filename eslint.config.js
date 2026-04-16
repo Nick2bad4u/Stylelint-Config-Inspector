@@ -17,6 +17,7 @@ export default await nuxt()
     files: ['src/**/*.ts'],
     rules: {
       'no-console': 'off',
+      'dot-notation': 'off',
     },
   })
   .append({

@@ -1,6 +1,6 @@
-<img src="./public/favicon.svg" width="100" height="100" alt="Stylelint Config Inspector"><br>
-
 # Stylelint Config Inspector
+
+[![npm license.](https://flat.badgen.net/npm/license/stylelint-config-inspector?color=purple)](https://github.com/Nick2bad4u/stylelint-config-inspector/blob/main/LICENSE) [![npm total downloads.](https://flat.badgen.net/npm/dt/stylelint-config-inspector?color=pink)](https://www.npmjs.com/package/stylelint-config-inspector) [![latest GitHub release.](https://flat.badgen.net/github/release/Nick2bad4u/stylelint-config-inspector?color=cyan)](https://github.com/Nick2bad4u/stylelint-config-inspector/releases) [![GitHub stars.](https://flat.badgen.net/github/stars/Nick2bad4u/stylelint-config-inspector?color=yellow)](https://github.com/Nick2bad4u/stylelint-config-inspector/stargazers) [![GitHub forks.](https://flat.badgen.net/github/forks/Nick2bad4u/stylelint-config-inspector?color=green)](https://github.com/Nick2bad4u/stylelint-config-inspector/forks) [![GitHub open issues.](https://flat.badgen.net/github/open-issues/Nick2bad4u/stylelint-config-inspector?color=red)](https://github.com/Nick2bad4u/stylelint-config-inspector/issues) [![codecov.](https://flat.badgen.net/codecov/github/Nick2bad4u/stylelint-config-inspector?color=blue)](https://codecov.io/gh/Nick2bad4u/stylelint-config-inspector)
 
 A visual tool for inspecting and understanding your Stylelint configuration.
 

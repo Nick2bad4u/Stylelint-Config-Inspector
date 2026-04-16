@@ -93,19 +93,13 @@
         "prestart": "npm run build",
         "start": "node bin.mjs",
         "sync:node-version-files": "node scripts/sync-node-version-files.mjs",
-        "test": "vitest",
+        "test": "vitest --run",
+        "test:coverage": "vitest run --coverage",
         "test:e2e": "playwright test",
         "test:e2e:headed": "playwright test --headed",
         "test:e2e:ui": "playwright test --ui",
         "typecheck": "nuxt typecheck",
         "update-deps": "npx ncu -i --install never && npm install --force"
-    },
-    "overrides": {
-        "esbuild": "^0.28.0",
-        "nitropack": "^2.13.1",
-        "rolldown": "^1.0.0-rc.15",
-        "rollup": "^4.60.1",
-        "vite": "^8.0.8"
     },
     "dependencies": {
         "ansis": "^4.2.0",
@@ -166,6 +160,7 @@
         "@types/connect": "^3.4.38",
         "@unocss/eslint-config": "^66.6.8",
         "@unocss/nuxt": "^66.6.8",
+        "@vitest/coverage-v8": "^4.1.4",
         "@voxpelli/config-array-find-files": "^1.2.2",
         "@vueuse/nuxt": "^14.2.1",
         "cross-env": "^10.1.0",
@@ -189,7 +184,7 @@
         "minimatch": "^10.2.5",
         "mlly": "^1.8.2",
         "mrmime": "^2.0.1",
-        "npm-check-updates": "^21.0.0",
+        "npm-check-updates": "^21.0.1",
         "npm-package-json-lint": "^10.2.1",
         "nuxt": "^4.4.2",
         "nuxt-eslint-auto-explicit-import": "^0.1.1",
