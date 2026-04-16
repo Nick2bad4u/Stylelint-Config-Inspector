@@ -305,7 +305,7 @@ watch(
     { flush: "sync" }
 );
 
-const configEls = new Map<number, HTMLElement>();
+const CONFIG_ITEM_INDEX_ATTRIBUTE = "data-config-item-index";
 
 const route = useRoute();
 onMounted(async () => {
@@ -315,7 +315,8 @@ onMounted(async () => {
             (_, idx) => idx === index
         );
         await nextTick();
-        const configEl = configEls.get(index);
+        const selector = `[${CONFIG_ITEM_INDEX_ATTRIBUTE}="${index}"]`;
+        const configEl = document.querySelector<HTMLElement>(selector);
         if (configEl)
             configEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -753,10 +754,14 @@ onMounted(async () => {
                             "
                             :ref="
                                 (el) => {
-                                    configEls.set(
-                                        idx,
-                                        (el as ComponentPublicInstance)?.$el
-                                    );
+                                    const configEl = (
+                                        el as ComponentPublicInstance
+                                    )?.$el as HTMLElement | undefined;
+                                    if (configEl)
+                                        configEl.setAttribute(
+                                            CONFIG_ITEM_INDEX_ATTRIBUTE,
+                                            String(idx)
+                                        );
                                 }
                             "
                             v-model:open="configsOpenState[idx]"
