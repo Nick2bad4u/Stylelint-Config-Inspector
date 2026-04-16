@@ -389,8 +389,8 @@ runCommand(`npm install --save-dev --force ${devDependencies.join(" ")}`);
 // Set scripts in package.json
 console.log("\n--- Setting up package.json scripts ---");
 for (const [name, command] of Object.entries(scriptsToSet)) {
-    // Escaping double quotes for the shell command
-    const escapedCommand = command.replace(/"/g, '\\"');
+    // Escape backslashes first, then double quotes, so the shell sees the correct literal value
+    const escapedCommand = command.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     runCommand(`npm pkg set scripts.${name}="${escapedCommand}"`);
 }
 
