@@ -81,11 +81,11 @@ const RULE_STATUS_FILTER_VALUES: readonly RuleStatusFilter[] = [
     "deprecated",
 ];
 
-const FONT_SCALE_VALUES: readonly FontScale[] = [
+const FONT_SCALE_VALUES: ReadonlySet<FontScale> = new Set([
     "sm",
     "md",
     "lg",
-];
+]);
 
 const FONT_SCALE_MULTIPLIERS: Record<FontScale, string> = {
     sm: "0.9375",
@@ -195,8 +195,7 @@ function isRuleStatusFilter(value: unknown): value is RuleStatusFilter {
 
 function isFontScale(value: unknown): value is FontScale {
     return (
-        typeof value === "string" &&
-        FONT_SCALE_VALUES.includes(value as FontScale)
+        typeof value === "string" && FONT_SCALE_VALUES.has(value as FontScale)
     );
 }
 
@@ -460,7 +459,7 @@ export function setStateFilters(
 ): void {
     if (page === "configs") {
         if (key in filtersConfigs) {
-            (filtersConfigs as Record<string, unknown>)[key] = value as unknown;
+            (filtersConfigs as Record<string, unknown>)[key] = value;
         }
 
         return;

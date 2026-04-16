@@ -36,5 +36,5 @@ export function useHighlightedGlob(code: () => string) {
 }
 
 export function sanitizeHtml(html: string) {
-    return html.replace(HTML_LT_RE, "&lt;").replace(HTML_GT_RE, "&gt;");
+    return html.replaceAll(HTML_LT_RE, "&lt;").replaceAll(HTML_GT_RE, "&gt;");
 }

@@ -1228,7 +1228,7 @@ coverage/**
 
             const expectedFixtureFilenames = [
                 ...new Set(fixtureFilenamesForSupportedConfigs),
-            ].toSorted();
+            ].toSorted((left, right) => left.localeCompare(right));
 
             expect(fixtureFilenames).toEqual(expectedFixtureFilenames);
         });

@@ -27,6 +27,6 @@ export function stringifyOptions(object: unknown): string {
 
 export function stringifyUnquoted(obj: unknown): string {
     return JSON.stringify(obj, null, 2)
-        .replace(JSON_KEY_RE, "$1:")
-        .replace(DOUBLE_QUOTE_RE, "'");
+        .replaceAll(JSON_KEY_RE, "$1:")
+        .replaceAll(DOUBLE_QUOTE_RE, "'");
 }

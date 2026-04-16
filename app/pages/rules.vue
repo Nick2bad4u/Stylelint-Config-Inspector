@@ -232,8 +232,10 @@ watch(
 debouncedWatch(
     () => [filters.search, conditionalFiltered.value],
     () => {
-        if (!filters.search)
-            return (filtered.value = conditionalFiltered.value);
+        if (!filters.search) {
+            filtered.value = conditionalFiltered.value;
+            return;
+        }
         filtered.value = fuse.value.search(filters.search).map((i) => i.item);
     },
     { debounce: 200 }

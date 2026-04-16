@@ -41,7 +41,7 @@ describe("resolvePayload", () => {
     it("sets configs open state to expanded when there are fewer than ten configs", () => {
         const payload = createBasePayload(3);
 
-        const resolved = resolvePayload(payload) as ResolvedPayload;
+        const resolved = resolvePayload(payload);
 
         expect(resolved.filesResolved).toBeUndefined();
         expect(configsOpenStateMock.value).toEqual([
@@ -80,7 +80,7 @@ describe("resolvePayload", () => {
             ],
         };
 
-        const resolved = resolvePayload(payload) as ResolvedPayload;
+        const resolved = resolvePayload(payload);
 
         expect(resolved.ruleToState.get("stylelint/color-hex-length")).toEqual([
             {
@@ -140,7 +140,7 @@ describe("resolvePayload", () => {
             ],
         };
 
-        const resolved = resolvePayload(payload) as ResolvedPayload;
+        const resolved = resolvePayload(payload);
 
         expect(
             resolved.extendsInfoMap.get("stylelint-config-recommended")?.source
@@ -212,7 +212,7 @@ describe("resolvePayload", () => {
             ],
         };
 
-        const resolved = resolvePayload(payload) as ResolvedPayload;
+        const resolved = resolvePayload(payload);
         const filesResolved = resolved.filesResolved;
 
         expect(filesResolved).toBeDefined();

@@ -79,7 +79,7 @@ watchEffect(() => {
 
     if (filters.rule) {
         configs = configs.filter(
-            (config) => filters.rule! in (config.rules || {})
+            (config) => filters.rule in (config.rules || {})
         );
     }
 
@@ -315,9 +315,9 @@ onMounted(async () => {
             (_, idx) => idx === index
         );
         await nextTick();
-        configEls
-            .get(index)
-            ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const configEl = configEls.get(index);
+        if (configEl)
+            configEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 });
 </script>

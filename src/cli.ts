@@ -71,7 +71,7 @@ cli.command(
         let baseURL = options.base;
         if (!baseURL.endsWith("/")) baseURL += "/";
         if (!baseURL.startsWith("/")) baseURL = `/${baseURL}`;
-        baseURL = baseURL.replace(RE_CONSECUTIVE_SLASHES, "/");
+        baseURL = baseURL.replaceAll(RE_CONSECUTIVE_SLASHES, "/");
 
         if (existsSync(outDir)) await fs.rm(outDir, { recursive: true });
         await fs.mkdir(outDir, { recursive: true });

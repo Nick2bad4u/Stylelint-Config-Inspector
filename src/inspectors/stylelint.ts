@@ -533,16 +533,19 @@ async function resolveExtendsSpecifier(
           ? await resolvePackageRoot(packageName, searchPaths)
           : undefined;
 
+    let source: "package" | "local" | "unknown" = "unknown";
+    if (packageName) {
+        source = "package";
+    } else if (specifier.startsWith(".") || isAbsolute(specifier)) {
+        source = "local";
+    }
+
     return {
         specifier,
         ...(packageName !== undefined && { packageName }),
         ...(packageRoot !== undefined && { packageRoot }),
         ...(resolvedPath !== undefined && { resolvedPath }),
-        source: packageName
-            ? "package"
-            : specifier.startsWith(".") || isAbsolute(specifier)
-              ? "local"
-              : "unknown",
+        source,
     };
 }
 
@@ -834,12 +837,12 @@ function toRuleDefinition(
     if (!isRecord(value)) return undefined;
 
     const nestedRule = toRuleFunction(value["rule"]);
-    const ruleName =
-        typeof value["ruleName"] === "string"
-            ? value["ruleName"]
-            : typeof nestedRule?.ruleName === "string"
-              ? nestedRule.ruleName
-              : fallbackRuleName;
+    let ruleName = fallbackRuleName;
+    if (typeof value["ruleName"] === "string") {
+        ruleName = value["ruleName"];
+    } else if (typeof nestedRule?.ruleName === "string") {
+        ruleName = nestedRule.ruleName;
+    }
 
     if (!ruleName) return undefined;
 
@@ -937,7 +940,7 @@ function isUnsafeGeneratedDescription(description: string): boolean {
 }
 
 function escapeRegExp(value: string): string {
-    return value.replace(REGEXP_SPECIAL_CHARS_RE, "\\$&");
+    return value.replaceAll(REGEXP_SPECIAL_CHARS_RE, String.raw`\$&`);
 }
 
 function sanitizeDescription(ruleName: string, description: string): string {
@@ -954,7 +957,10 @@ function sanitizeDescription(ruleName: string, description: string): string {
 
         return acc
             .replace(
-                new RegExp(`^${escapeRegExp(candidate)}[\\s:/-]+`, "i"),
+                new RegExp(
+                    String.raw`^${escapeRegExp(candidate)}[\s:/-]+`,
+                    "i"
+                ),
                 ""
             )
             .trim();
@@ -975,8 +981,8 @@ function sanitizeDescription(ruleName: string, description: string): string {
             }
             return token.replaceAll("-", " ");
         })
-        .replace(QUOTED_GENERATED_PLACEHOLDER_RE, "$2")
-        .replace(MULTIPLE_WHITESPACE_RE, " ")
+        .replaceAll(QUOTED_GENERATED_PLACEHOLDER_RE, "$2")
+        .replaceAll(MULTIPLE_WHITESPACE_RE, " ")
         .trim();
 
     if (!normalizedDescription.length) return humanizeRuleName(ruleName);
@@ -990,8 +996,8 @@ function sanitizeDescription(ruleName: string, description: string): string {
     }
 
     const shortRuleName = ruleName.split("/").at(-1) ?? ruleName;
-    const trailingRuleReference = normalizedDescription.match(
-        TRAILING_RULE_REFERENCE_RE
+    const trailingRuleReference = TRAILING_RULE_REFERENCE_RE.exec(
+        normalizedDescription
     );
     if (trailingRuleReference?.[1]) {
         const referencedRule = trailingRuleReference[1].trim().toLowerCase();

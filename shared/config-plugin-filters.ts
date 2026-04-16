@@ -95,10 +95,10 @@ export function toPluginFilterCandidates(name: string): string[] {
         }
     }
 
-    if (STYLELINT_PLUGIN_PREFIX_RE.test(trimmed))
+    if (trimmed.startsWith("stylelint-plugin-"))
         candidates.add(trimmed.replace(STYLELINT_PLUGIN_PREFIX_RE, ""));
 
-    if (STYLELINT_PACKAGE_PREFIX_RE.test(trimmed) && trimmed !== "stylelint")
+    if (trimmed.startsWith("stylelint-") && trimmed !== "stylelint")
         candidates.add(trimmed.replace(STYLELINT_PACKAGE_PREFIX_RE, ""));
 
     const tail = trimmed.split("/").at(-1);
@@ -106,17 +106,17 @@ export function toPluginFilterCandidates(name: string): string[] {
         candidates.add(tail);
         const tailWithoutExt = tail.replace(FILE_EXTENSION_SUFFIX_RE, "");
         if (tailWithoutExt.length > 0) candidates.add(tailWithoutExt);
-        if (STYLELINT_PLUGIN_PREFIX_RE.test(tail))
+        if (tail.startsWith("stylelint-plugin-"))
             candidates.add(tail.replace(STYLELINT_PLUGIN_PREFIX_RE, ""));
-        if (STYLELINT_PLUGIN_PREFIX_RE.test(tailWithoutExt)) {
+        if (tailWithoutExt.startsWith("stylelint-plugin-")) {
             candidates.add(
                 tailWithoutExt.replace(STYLELINT_PLUGIN_PREFIX_RE, "")
             );
         }
-        if (STYLELINT_PACKAGE_PREFIX_RE.test(tail) && tail !== "stylelint")
+        if (tail.startsWith("stylelint-") && tail !== "stylelint")
             candidates.add(tail.replace(STYLELINT_PACKAGE_PREFIX_RE, ""));
         if (
-            STYLELINT_PACKAGE_PREFIX_RE.test(tailWithoutExt) &&
+            tailWithoutExt.startsWith("stylelint-") &&
             tailWithoutExt !== "stylelint"
         ) {
             candidates.add(

@@ -89,7 +89,7 @@ export async function createHostServer(
                     if (!resolved) return;
 
                     const stats = await stat(resolved.absolute).catch(() => {});
-                    if (!stats || !stats.isFile()) return;
+                    if (!stats?.isFile()) return;
 
                     const mimeType = lookup(resolved.relative);
                     return {
