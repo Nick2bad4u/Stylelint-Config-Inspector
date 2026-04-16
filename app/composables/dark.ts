@@ -1,7 +1,7 @@
-import { useDark } from '@vueuse/core'
+import { useDark } from "@vueuse/core";
 
-export const isDark = useDark()
+export const isDark = useDark();
 
 export function toggleDark() {
-  isDark.value = !isDark.value
+    isDark.value = !isDark.value;
 }

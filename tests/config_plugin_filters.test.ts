@@ -1,136 +1,151 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from "vitest";
 import {
-  configMatchesPluginFilters,
-  configMatchesRulePluginFilters,
-  getConfigPluginFilters,
-  getRulePluginName,
-  resolveConfigPluginFilter,
-  ruleMatchesPluginFilters,
-  toPluginFilterCandidates,
-} from '../shared/config-plugin-filters'
+    configMatchesPluginFilters,
+    configMatchesRulePluginFilters,
+    getConfigPluginFilters,
+    getRulePluginName,
+    resolveConfigPluginFilter,
+    ruleMatchesPluginFilters,
+    toPluginFilterCandidates,
+} from "../shared/config-plugin-filters";
 
-describe('config plugin filters', () => {
-  it('maps plugin package names to the corresponding rule plugin filter', () => {
-    const knownRulePlugins = new Set(['defensive-css', '@acme/layout'])
+describe("config plugin filters", () => {
+    it("maps plugin package names to the corresponding rule plugin filter", () => {
+        const knownRulePlugins = new Set(["defensive-css", "@acme/layout"]);
 
-    expect(
-      resolveConfigPluginFilter(
-        'stylelint-plugin-defensive-css',
-        knownRulePlugins,
-      ),
-    ).toBe('defensive-css')
+        expect(
+            resolveConfigPluginFilter(
+                "stylelint-plugin-defensive-css",
+                knownRulePlugins
+            )
+        ).toBe("defensive-css");
 
-    expect(
-      resolveConfigPluginFilter(
-        '@acme/stylelint-plugin-layout',
-        knownRulePlugins,
-      ),
-    ).toBe('@acme/layout')
-  })
+        expect(
+            resolveConfigPluginFilter(
+                "@acme/stylelint-plugin-layout",
+                knownRulePlugins
+            )
+        ).toBe("@acme/layout");
+    });
 
-  it('collects config plugin filters from explicit plugins and configured rule prefixes', () => {
-    const knownRulePlugins = new Set(['defensive-css', '@acme/layout'])
-    const config = {
-      index: 0,
-      plugins: {
-        'stylelint-plugin-defensive-css': {},
-        '@acme/stylelint-plugin-layout': {},
-      },
-      rules: {
-        'defensive-css/require-background-repeat': true,
-        '@acme/layout/no-gap-hack': true,
-        'color-no-invalid-hex': true,
-      },
-    }
+    it("collects config plugin filters from explicit plugins and configured rule prefixes", () => {
+        const knownRulePlugins = new Set(["defensive-css", "@acme/layout"]);
+        const config = {
+            index: 0,
+            plugins: {
+                "stylelint-plugin-defensive-css": {},
+                "@acme/stylelint-plugin-layout": {},
+            },
+            rules: {
+                "defensive-css/require-background-repeat": true,
+                "@acme/layout/no-gap-hack": true,
+                "color-no-invalid-hex": true,
+            },
+        };
 
-    expect(getConfigPluginFilters(config, knownRulePlugins)).toEqual([
-      '@acme/layout',
-      'defensive-css',
-    ])
-  })
+        expect(getConfigPluginFilters(config, knownRulePlugins)).toEqual([
+            "@acme/layout",
+            "defensive-css",
+        ]);
+    });
 
-  it('matches configs against selected plugin filters', () => {
-    const knownRulePlugins = new Set(['defensive-css'])
-    const config = {
-      index: 0,
-      plugins: {
-        'stylelint-plugin-defensive-css': {},
-      },
-      rules: {
-        'defensive-css/require-background-repeat': true,
-      },
-    }
+    it("matches configs against selected plugin filters", () => {
+        const knownRulePlugins = new Set(["defensive-css"]);
+        const config = {
+            index: 0,
+            plugins: {
+                "stylelint-plugin-defensive-css": {},
+            },
+            rules: {
+                "defensive-css/require-background-repeat": true,
+            },
+        };
 
-    expect(
-      configMatchesPluginFilters(config, ['defensive-css'], knownRulePlugins),
-    ).toBe(true)
-    expect(
-      configMatchesPluginFilters(config, ['stylelint'], knownRulePlugins),
-    ).toBe(false)
-  })
+        expect(
+            configMatchesPluginFilters(
+                config,
+                ["defensive-css"],
+                knownRulePlugins
+            )
+        ).toBe(true);
+        expect(
+            configMatchesPluginFilters(config, ["stylelint"], knownRulePlugins)
+        ).toBe(false);
+    });
 
-  it('matches rule names against selected plugin filters', () => {
-    expect(
-      ruleMatchesPluginFilters('defensive-css/require-background-repeat', ['defensive-css']),
-    ).toBe(true)
-    expect(
-      ruleMatchesPluginFilters('@acme/layout/no-gap-hack', ['@acme/layout']),
-    ).toBe(true)
-    expect(
-      ruleMatchesPluginFilters('color-no-invalid-hex', ['defensive-css']),
-    ).toBe(false)
-  })
+    it("matches rule names against selected plugin filters", () => {
+        expect(
+            ruleMatchesPluginFilters(
+                "defensive-css/require-background-repeat",
+                ["defensive-css"]
+            )
+        ).toBe(true);
+        expect(
+            ruleMatchesPluginFilters("@acme/layout/no-gap-hack", [
+                "@acme/layout",
+            ])
+        ).toBe(true);
+        expect(
+            ruleMatchesPluginFilters("color-no-invalid-hex", ["defensive-css"])
+        ).toBe(false);
+    });
 
-  it('matches config plugin filters only when the config actually declares plugin-scoped rules', () => {
-    const config = {
-      index: 0,
-      plugins: {
-        'stylelint-plugin-use-nesting': {},
-      },
-      rules: {
-        'color-no-invalid-hex': true,
-      },
-    }
+    it("matches config plugin filters only when the config actually declares plugin-scoped rules", () => {
+        const config = {
+            index: 0,
+            plugins: {
+                "stylelint-plugin-use-nesting": {},
+            },
+            rules: {
+                "color-no-invalid-hex": true,
+            },
+        };
 
-    expect(
-      configMatchesRulePluginFilters(config, ['use-nesting']),
-    ).toBe(false)
-  })
+        expect(configMatchesRulePluginFilters(config, ["use-nesting"])).toBe(
+            false
+        );
+    });
 
-  it('extracts scoped plugin names from scoped rules and keeps fallback behavior for malformed scoped names', () => {
-    expect(getRulePluginName('@acme/layout/no-gap-hack')).toBe('@acme/layout')
-    expect(getRulePluginName('@acme/no-gap-hack')).toBe('@acme')
-  })
+    it("extracts scoped plugin names from scoped rules and keeps fallback behavior for malformed scoped names", () => {
+        expect(getRulePluginName("@acme/layout/no-gap-hack")).toBe(
+            "@acme/layout"
+        );
+        expect(getRulePluginName("@acme/no-gap-hack")).toBe("@acme");
+    });
 
-  it('produces scoped plugin candidates for package names', () => {
-    const candidates = toPluginFilterCandidates('@acme/stylelint-plugin-layout')
+    it("produces scoped plugin candidates for package names", () => {
+        const candidates = toPluginFilterCandidates(
+            "@acme/stylelint-plugin-layout"
+        );
 
-    expect(candidates).toContain('@acme/layout')
-    expect(candidates).toContain('@acme')
-    expect(candidates).toContain('layout')
-  })
+        expect(candidates).toContain("@acme/layout");
+        expect(candidates).toContain("@acme");
+        expect(candidates).toContain("layout");
+    });
 
-  it('falls back to config rule plugin names when known plugins are not pre-populated', () => {
-    expect(
-      resolveConfigPluginFilter(
-        '@acme/stylelint-plugin-layout',
-        [],
-        ['@acme/layout'],
-      ),
-    ).toBe('@acme/layout')
-  })
+    it("falls back to config rule plugin names when known plugins are not pre-populated", () => {
+        expect(
+            resolveConfigPluginFilter(
+                "@acme/stylelint-plugin-layout",
+                [],
+                ["@acme/layout"]
+            )
+        ).toBe("@acme/layout");
+    });
 
-  it('treats empty plugin selection as a pass-through for config filtering', () => {
-    const config = {
-      index: 0,
-      plugins: {
-        'stylelint-plugin-defensive-css': {},
-      },
-      rules: {
-        'defensive-css/require-background-repeat': true,
-      },
-    }
+    it("treats empty plugin selection as a pass-through for config filtering", () => {
+        const config = {
+            index: 0,
+            plugins: {
+                "stylelint-plugin-defensive-css": {},
+            },
+            rules: {
+                "defensive-css/require-background-repeat": true,
+            },
+        };
 
-    expect(configMatchesPluginFilters(config, [], ['defensive-css'])).toBe(true)
-  })
-})
+        expect(configMatchesPluginFilters(config, [], ["defensive-css"])).toBe(
+            true
+        );
+    });
+});

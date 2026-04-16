@@ -14,17 +14,17 @@
  * - `.nvmrc`
  */
 
-import { readFile, writeFile } from 'node:fs/promises'
-import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { readFile, writeFile } from "node:fs/promises";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const packageJsonPath = fileURLToPath(
-  new URL('../package.json', import.meta.url),
-)
+    new URL("../package.json", import.meta.url)
+);
 const nodeVersionFilePath = fileURLToPath(
-  new URL('../.node-version', import.meta.url),
-)
-const nvmrcFilePath = fileURLToPath(new URL('../.nvmrc', import.meta.url))
+    new URL("../.node-version", import.meta.url)
+);
+const nvmrcFilePath = fileURLToPath(new URL("../.nvmrc", import.meta.url));
 
 /**
  * Normalize a Node.js version string to exact `x.y.z` form.
@@ -34,18 +34,18 @@ const nvmrcFilePath = fileURLToPath(new URL('../.nvmrc', import.meta.url))
  * @returns {string}
  */
 function normalizeNodeVersion(version) {
-  if (typeof version !== 'string')
-    throw new TypeError('Expected a string Node.js version.')
+    if (typeof version !== "string")
+        throw new TypeError("Expected a string Node.js version.");
 
-  const trimmedVersion = version.trim().replace(/^v/iu, '')
+    const trimmedVersion = version.trim().replace(/^v/iu, "");
 
-  if (!/^\d+\.\d+\.\d+$/v.test(trimmedVersion)) {
-    throw new TypeError(
-      `Expected an exact Node.js version in x.y.z form, received: ${version}`,
-    )
-  }
+    if (!/^\d+\.\d+\.\d+$/v.test(trimmedVersion)) {
+        throw new TypeError(
+            `Expected an exact Node.js version in x.y.z form, received: ${version}`
+        );
+    }
 
-  return trimmedVersion
+    return trimmedVersion;
 }
 
 /**
@@ -56,7 +56,7 @@ function normalizeNodeVersion(version) {
  * @returns {value is Record<string, unknown>}
  */
 function isRecord(value) {
-  return typeof value === 'object' && value !== null
+    return typeof value === "object" && value !== null;
 }
 
 /**
@@ -71,68 +71,70 @@ function isRecord(value) {
  * @param {readonly string[]} argumentList
  *
  * @returns {{
- *   checkOnly: boolean
- *   checkCurrent: boolean
- *   explicitVersion: string | null
+ *     checkOnly: boolean;
+ *     checkCurrent: boolean;
+ *     explicitVersion: string | null;
  * }}
  */
 function parseArguments(argumentList) {
-  /** @type {boolean} */
-  let checkOnly = false
-  /** @type {boolean} */
-  let checkCurrent = false
-  /** @type {string | null} */
-  let explicitVersion = null
+    /** @type {boolean} */
+    let checkOnly = false;
+    /** @type {boolean} */
+    let checkCurrent = false;
+    /** @type {string | null} */
+    let explicitVersion = null;
 
-  for (let index = 0; index < argumentList.length; index += 1) {
-    const argument = argumentList[index]
+    for (let index = 0; index < argumentList.length; index += 1) {
+        const argument = argumentList[index];
 
-    if (typeof argument !== 'string') {
-      throw new TypeError(
-        `Expected a string command-line argument at index ${index}.`,
-      )
+        if (typeof argument !== "string") {
+            throw new TypeError(
+                `Expected a string command-line argument at index ${index}.`
+            );
+        }
+
+        if (argument === "--check") {
+            checkOnly = true;
+            continue;
+        }
+
+        if (argument === "--check-current") {
+            checkCurrent = true;
+            continue;
+        }
+
+        if (argument === "--version") {
+            const nextArgument = argumentList[index + 1];
+
+            if (typeof nextArgument !== "string")
+                throw new TypeError("Expected a version after --version.");
+
+            explicitVersion = normalizeNodeVersion(nextArgument);
+            index += 1;
+            continue;
+        }
+
+        if (argument.startsWith("--version=")) {
+            explicitVersion = normalizeNodeVersion(
+                argument.slice("--version=".length)
+            );
+            continue;
+        }
+
+        throw new TypeError(`Unknown argument: ${argument}`);
     }
 
-    if (argument === '--check') {
-      checkOnly = true
-      continue
+    if (checkOnly && checkCurrent) {
+        throw new TypeError(
+            "Use either --check or --check-current, but not both together."
+        );
     }
 
-    if (argument === '--check-current') {
-      checkCurrent = true
-      continue
-    }
-
-    if (argument === '--version') {
-      const nextArgument = argumentList[index + 1]
-
-      if (typeof nextArgument !== 'string')
-        throw new TypeError('Expected a version after --version.')
-
-      explicitVersion = normalizeNodeVersion(nextArgument)
-      index += 1
-      continue
-    }
-
-    if (argument.startsWith('--version=')) {
-      explicitVersion = normalizeNodeVersion(argument.slice('--version='.length))
-      continue
-    }
-
-    throw new TypeError(`Unknown argument: ${argument}`)
-  }
-
-  if (checkOnly && checkCurrent) {
-    throw new TypeError(
-      'Use either --check or --check-current, but not both together.',
-    )
-  }
-
-  return {
-    checkCurrent,
-    checkOnly,
-    explicitVersion,
-  }
+    return {
+        checkCurrent,
+        checkOnly,
+        explicitVersion,
+    };
 }
 
 /**
@@ -141,11 +143,11 @@ function parseArguments(argumentList) {
  * @returns {Promise<Record<string, unknown>>}
  */
 async function readPackageJson() {
-  const packageJsonContent = await readFile(packageJsonPath, 'utf8')
+    const packageJsonContent = await readFile(packageJsonPath, "utf8");
 
-  return /** @type {Record<string, unknown>} */ (
-    JSON.parse(packageJsonContent)
-  )
+    return /** @type {Record<string, unknown>} */ (
+        JSON.parse(packageJsonContent)
+    );
 }
 
 /**
@@ -157,13 +159,13 @@ async function readPackageJson() {
  * @returns {string | null}
  */
 function resolveMinimumEngineVersion(enginesValue) {
-  if (!isRecord(enginesValue) || typeof enginesValue.node !== 'string')
-    return null
+    if (!isRecord(enginesValue) || typeof enginesValue.node !== "string")
+        return null;
 
-  const nodeEngineRange = enginesValue.node.trim()
-  const match = /^>=\s*(\d+\.\d+\.\d+)$/v.exec(nodeEngineRange)
+    const nodeEngineRange = enginesValue.node.trim();
+    const match = /^>=\s*(\d+\.\d+\.\d+)$/v.exec(nodeEngineRange);
 
-  return match?.[1] ?? null
+    return match?.[1] ?? null;
 }
 
 /**
@@ -175,22 +177,21 @@ function resolveMinimumEngineVersion(enginesValue) {
  * @returns {number}
  */
 function compareExactVersions(leftVersion, rightVersion) {
-  const leftSegments = leftVersion.split('.').map(Number)
-  const rightSegments = rightVersion.split('.').map(Number)
+    const leftSegments = leftVersion.split(".").map(Number);
+    const rightSegments = rightVersion.split(".").map(Number);
 
-  for (
-    let index = 0;
-    index < Math.max(leftSegments.length, rightSegments.length);
-    index += 1
-  ) {
-    const leftSegment = leftSegments[index] ?? 0
-    const rightSegment = rightSegments[index] ?? 0
+    for (
+        let index = 0;
+        index < Math.max(leftSegments.length, rightSegments.length);
+        index += 1
+    ) {
+        const leftSegment = leftSegments[index] ?? 0;
+        const rightSegment = rightSegments[index] ?? 0;
 
-    if (leftSegment !== rightSegment)
-      return leftSegment - rightSegment
-  }
+        if (leftSegment !== rightSegment) return leftSegment - rightSegment;
+    }
 
-  return 0
+    return 0;
 }
 
 /**
@@ -202,19 +203,21 @@ function compareExactVersions(leftVersion, rightVersion) {
  *
  * @returns {void}
  */
-function assertPreferredVersionSupported(preferredVersion, minimumEngineVersion) {
-  if (minimumEngineVersion === null)
-    return
+function assertPreferredVersionSupported(
+    preferredVersion,
+    minimumEngineVersion
+) {
+    if (minimumEngineVersion === null) return;
 
-  if (compareExactVersions(preferredVersion, minimumEngineVersion) < 0) {
-    throw new RangeError(
-      [
-        'Preferred Node.js version is below package.json engines.node.',
-        `Preferred: ${preferredVersion}.`,
-        `Minimum engine: ${minimumEngineVersion}.`,
-      ].join(' '),
-    )
-  }
+    if (compareExactVersions(preferredVersion, minimumEngineVersion) < 0) {
+        throw new RangeError(
+            [
+                "Preferred Node.js version is below package.json engines.node.",
+                `Preferred: ${preferredVersion}.`,
+                `Minimum engine: ${minimumEngineVersion}.`,
+            ].join(" ")
+        );
+    }
 }
 
 /**
@@ -225,20 +228,19 @@ function assertPreferredVersionSupported(preferredVersion, minimumEngineVersion)
  * @returns {Promise<string | null>}
  */
 async function readOptionalVersionFile(filePath) {
-  try {
-    return await readFile(filePath, 'utf8')
-  }
-  catch (error) {
-    if (
-      error instanceof Error
-      && 'code' in error
-      && error.code === 'ENOENT'
-    ) {
-      return null
-    }
+    try {
+        return await readFile(filePath, "utf8");
+    } catch (error) {
+        if (
+            error instanceof Error &&
+            "code" in error &&
+            error.code === "ENOENT"
+        ) {
+            return null;
+        }
 
-    throw error
-  }
+        throw error;
+    }
 }
 
 /**
@@ -249,12 +251,12 @@ async function readOptionalVersionFile(filePath) {
  * @returns {Promise<void>}
  */
 async function writeVersionFiles(preferredVersion) {
-  const fileContent = `${preferredVersion}\n`
+    const fileContent = `${preferredVersion}\n`;
 
-  await Promise.all([
-    writeFile(nodeVersionFilePath, fileContent, 'utf8'),
-    writeFile(nvmrcFilePath, fileContent, 'utf8'),
-  ])
+    await Promise.all([
+        writeFile(nodeVersionFilePath, fileContent, "utf8"),
+        writeFile(nvmrcFilePath, fileContent, "utf8"),
+    ]);
 }
 
 /**
@@ -265,73 +267,79 @@ async function writeVersionFiles(preferredVersion) {
  * @returns {Promise<void>}
  */
 async function validateVersionFiles({ expectedVersion }) {
-  const nodeVersionFileContent = await readOptionalVersionFile(nodeVersionFilePath)
-  const nvmrcFileContent = await readOptionalVersionFile(nvmrcFilePath)
+    const nodeVersionFileContent =
+        await readOptionalVersionFile(nodeVersionFilePath);
+    const nvmrcFileContent = await readOptionalVersionFile(nvmrcFilePath);
 
-  if (nodeVersionFileContent === null || nvmrcFileContent === null) {
-    throw new TypeError(
-      'Expected both .node-version and .nvmrc to exist in the repository root.',
-    )
-  }
+    if (nodeVersionFileContent === null || nvmrcFileContent === null) {
+        throw new TypeError(
+            "Expected both .node-version and .nvmrc to exist in the repository root."
+        );
+    }
 
-  const normalizedNodeVersionFile = normalizeNodeVersion(nodeVersionFileContent)
-  const normalizedNvmrcFile = normalizeNodeVersion(nvmrcFileContent)
+    const normalizedNodeVersionFile = normalizeNodeVersion(
+        nodeVersionFileContent
+    );
+    const normalizedNvmrcFile = normalizeNodeVersion(nvmrcFileContent);
 
-  if (normalizedNodeVersionFile !== normalizedNvmrcFile) {
-    throw new TypeError(
-      [
-        'Node version files are out of sync.',
-        `.node-version=${normalizedNodeVersionFile}`,
-        `.nvmrc=${normalizedNvmrcFile}`,
-      ].join(' '),
-    )
-  }
+    if (normalizedNodeVersionFile !== normalizedNvmrcFile) {
+        throw new TypeError(
+            [
+                "Node version files are out of sync.",
+                `.node-version=${normalizedNodeVersionFile}`,
+                `.nvmrc=${normalizedNvmrcFile}`,
+            ].join(" ")
+        );
+    }
 
-  if (
-    expectedVersion !== null
-    && normalizedNodeVersionFile !== expectedVersion
-  ) {
-    throw new TypeError(
-      [
-        'Node version files do not match the expected version.',
-        `Expected: ${expectedVersion}.`,
-        `Actual: ${normalizedNodeVersionFile}.`,
-      ].join(' '),
-    )
-  }
+    if (
+        expectedVersion !== null &&
+        normalizedNodeVersionFile !== expectedVersion
+    ) {
+        throw new TypeError(
+            [
+                "Node version files do not match the expected version.",
+                `Expected: ${expectedVersion}.`,
+                `Actual: ${normalizedNodeVersionFile}.`,
+            ].join(" ")
+        );
+    }
 
-  console.log(`Node version files are synchronized: ${normalizedNodeVersionFile}`)
+    console.log(
+        `Node version files are synchronized: ${normalizedNodeVersionFile}`
+    );
 }
 
 async function main() {
-  const { checkCurrent, checkOnly, explicitVersion } = parseArguments(
-    process.argv.slice(2),
-  )
-  const packageJson = await readPackageJson()
-  const minimumEngineVersion = resolveMinimumEngineVersion(packageJson.engines)
-  const preferredVersion
-    = explicitVersion ?? normalizeNodeVersion(process.versions.node)
+    const { checkCurrent, checkOnly, explicitVersion } = parseArguments(
+        process.argv.slice(2)
+    );
+    const packageJson = await readPackageJson();
+    const minimumEngineVersion = resolveMinimumEngineVersion(
+        packageJson.engines
+    );
+    const preferredVersion =
+        explicitVersion ?? normalizeNodeVersion(process.versions.node);
 
-  assertPreferredVersionSupported(preferredVersion, minimumEngineVersion)
+    assertPreferredVersionSupported(preferredVersion, minimumEngineVersion);
 
-  if (checkOnly) {
-    await validateVersionFiles({ expectedVersion: null })
-    return
-  }
+    if (checkOnly) {
+        await validateVersionFiles({ expectedVersion: null });
+        return;
+    }
 
-  if (checkCurrent) {
-    await validateVersionFiles({ expectedVersion: preferredVersion })
-    return
-  }
+    if (checkCurrent) {
+        await validateVersionFiles({ expectedVersion: preferredVersion });
+        return;
+    }
 
-  await writeVersionFiles(preferredVersion)
-  console.log(`Synchronized .node-version and .nvmrc to ${preferredVersion}`)
+    await writeVersionFiles(preferredVersion);
+    console.log(`Synchronized .node-version and .nvmrc to ${preferredVersion}`);
 }
 
 try {
-  await main()
-}
-catch (error) {
-  console.error('Failed to synchronize Node version files:', error)
-  process.exitCode = 1
+    await main();
+} catch (error) {
+    console.error("Failed to synchronize Node version files:", error);
+    process.exitCode = 1;
 }

@@ -1,208 +1,334 @@
-import { expect, test } from '@playwright/test'
-import { configSummarySlotCount, orderedNavLinkTestIds, testIds } from '../../shared/test-ids'
+import { expect, test } from "@playwright/test";
 import {
-  extendSpecifier,
-  MOCK_PAYLOAD,
-  mockPayload,
-  secondaryExtendSpecifier,
-} from './fixtures/mock-payload'
+    configSummarySlotCount,
+    orderedNavLinkTestIds,
+    testIds,
+} from "../../shared/test-ids";
+import {
+    extendSpecifier,
+    MOCK_PAYLOAD,
+    mockPayload,
+    secondaryExtendSpecifier,
+} from "./fixtures/mock-payload";
 
-test.describe('navigation and page regressions', () => {
-  test('navbar links navigate to each page and toggle active state', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/configs')
+test.describe("navigation and page regressions", () => {
+    test("navbar links navigate to each page and toggle active state", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/configs");
 
-    const navTargets = [
-      { testId: testIds.nav.configsLink, path: '/configs' },
-      { testId: testIds.nav.rulesLink, path: '/rules' },
-      { testId: testIds.nav.extendsLink, path: '/extends' },
-      { testId: testIds.nav.filesLink, path: '/files' },
-      { testId: testIds.nav.devLink, path: '/dev' },
-    ] as const
+        const navTargets = [
+            { testId: testIds.nav.configsLink, path: "/configs" },
+            { testId: testIds.nav.rulesLink, path: "/rules" },
+            { testId: testIds.nav.extendsLink, path: "/extends" },
+            { testId: testIds.nav.filesLink, path: "/files" },
+            { testId: testIds.nav.devLink, path: "/dev" },
+        ] as const;
 
-    for (const target of navTargets) {
-      const link = page.getByTestId(target.testId)
+        for (const target of navTargets) {
+            const link = page.getByTestId(target.testId);
 
-      await link.click()
-      await expect(page).toHaveURL(new RegExp(`${target.path}/?$`))
-      await expect(link).toHaveClass(/btn-action-active/)
-    }
-  })
+            await link.click();
+            await expect(page).toHaveURL(new RegExp(`${target.path}/?$`));
+            await expect(link).toHaveClass(/btn-action-active/);
+        }
+    });
 
-  test('navbar keeps expected tab order', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/configs')
+    test("navbar keeps expected tab order", async ({ page }) => {
+        await mockPayload(page);
+        await page.goto("/configs");
 
-    const links = orderedNavLinkTestIds.map(testId => page.getByTestId(testId).first())
+        const links = orderedNavLinkTestIds.map((testId) =>
+            page.getByTestId(testId).first()
+        );
 
-    for (const link of links)
-      await expect(link).toBeVisible()
+        for (const link of links) await expect(link).toBeVisible();
 
-    const boxes = await Promise.all(links.map(link => link.boundingBox()))
-    const xs = boxes.map(box => box?.x ?? -1)
+        const boxes = await Promise.all(
+            links.map((link) => link.boundingBox())
+        );
+        const xs = boxes.map((box) => box?.x ?? -1);
 
-    expect(xs.every(x => x >= 0)).toBe(true)
-    expect(xs).toEqual(xs.toSorted((left, right) => left - right))
-  })
+        expect(xs.every((x) => x >= 0)).toBe(true);
+        expect(xs).toEqual(xs.toSorted((left, right) => left - right));
+    });
 
-  test('configs page keeps fixed icon slots for summary alignment', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/configs')
+    test("configs page keeps fixed icon slots for summary alignment", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/configs");
 
-    const summaryRows = page.getByTestId(testIds.configs.summaryGrid)
-    await expect(summaryRows).toHaveCount(3)
+        const summaryRows = page.getByTestId(testIds.configs.summaryGrid);
+        await expect(summaryRows).toHaveCount(3);
 
-    const slotCounts = await summaryRows.evaluateAll(rows =>
-      rows.map(row => row.childElementCount),
-    )
+        const slotCounts = await summaryRows.evaluateAll((rows) =>
+            rows.map((row) => row.childElementCount)
+        );
 
-    expect(slotCounts).toEqual([configSummarySlotCount, configSummarySlotCount, configSummarySlotCount])
-  })
+        expect(slotCounts).toEqual([
+            configSummarySlotCount,
+            configSummarySlotCount,
+            configSummarySlotCount,
+        ]);
+    });
 
-  test('configs clear filters resets filepath and plugin filters together', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/configs')
+    test("configs clear filters resets filepath and plugin filters together", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/configs");
 
-    const filepathInput = page.getByPlaceholder('Test matching with filepath...')
-    const pluginChip = page.locator('.plugin-filter-button', { hasText: 'stylelint-no-unsupported-browser-features' })
-    const listButton = page.getByRole('button', { name: 'List' })
-    const gridButton = page.getByRole('button', { name: 'Grid' })
-    const controlsRow = page.locator('div').filter({ has: listButton }).filter({ has: gridButton }).first()
-    const clearFiltersButton = controlsRow.getByRole('button', { name: 'Clear filters' })
-    const allPluginsButton = page.locator('.plugin-filter-button', { hasText: 'All plugins' })
+        const filepathInput = page.getByPlaceholder(
+            "Test matching with filepath..."
+        );
+        const pluginChip = page.locator(".plugin-filter-button", {
+            hasText: "stylelint-no-unsupported-browser-features",
+        });
+        const listButton = page.getByRole("button", { name: "List" });
+        const gridButton = page.getByRole("button", { name: "Grid" });
+        const controlsRow = page
+            .locator("div")
+            .filter({ has: listButton })
+            .filter({ has: gridButton })
+            .first();
+        const clearFiltersButton = controlsRow.getByRole("button", {
+            name: "Clear filters",
+        });
+        const allPluginsButton = page.locator(".plugin-filter-button", {
+            hasText: "All plugins",
+        });
 
-    await filepathInput.fill('src/example.css')
-    await pluginChip.click()
+        await filepathInput.fill("src/example.css");
+        await pluginChip.click();
 
-    await expect(clearFiltersButton).toBeVisible()
-    const clearFiltersBounds = await clearFiltersButton.boundingBox()
-    const listButtonBounds = await listButton.boundingBox()
-    expect(clearFiltersBounds).not.toBeNull()
-    expect(listButtonBounds).not.toBeNull()
-    expect(clearFiltersBounds!.x).toBeLessThan(listButtonBounds!.x)
-    await clearFiltersButton.click()
+        await expect(clearFiltersButton).toBeVisible();
+        const clearFiltersBounds = await clearFiltersButton.boundingBox();
+        const listButtonBounds = await listButton.boundingBox();
+        expect(clearFiltersBounds).not.toBeNull();
+        expect(listButtonBounds).not.toBeNull();
+        expect(clearFiltersBounds!.x).toBeLessThan(listButtonBounds!.x);
+        await clearFiltersButton.click();
 
-    await expect(filepathInput).toHaveValue('')
-    await expect(clearFiltersButton).toHaveCount(0)
-    await expect(allPluginsButton).toHaveClass(/bg-violet-100/)
-  })
+        await expect(filepathInput).toHaveValue("");
+        await expect(clearFiltersButton).toHaveCount(0);
+        await expect(allPluginsButton).toHaveClass(/bg-violet-100/);
+    });
 
-  test('files page supports collapsible matched-file sections', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/files')
+    test("files page supports collapsible matched-file sections", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/files");
 
-    await page.getByTestId(testIds.files.viewListButton).click()
+        await page.getByTestId(testIds.files.viewListButton).click();
 
-    const groupDetails = page.getByTestId(testIds.files.matchedListDetails)
-    await expect(groupDetails).toHaveAttribute('open', '')
+        const groupDetails = page.getByTestId(testIds.files.matchedListDetails);
+        await expect(groupDetails).toHaveAttribute("open", "");
 
-    const summary = page.getByTestId(testIds.files.matchedListSummary)
-    await summary.click()
-    await expect(groupDetails).not.toHaveAttribute('open', '')
+        const summary = page.getByTestId(testIds.files.matchedListSummary);
+        await summary.click();
+        await expect(groupDetails).not.toHaveAttribute("open", "");
 
-    await summary.click()
-    await expect(groupDetails).toHaveAttribute('open', '')
-  })
+        await summary.click();
+        await expect(groupDetails).toHaveAttribute("open", "");
+    });
 
-  test('files page toggles between list and group tabs with visible active mode', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/files')
+    test("files page toggles between list and group tabs with visible active mode", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/files");
 
-    const listModeButton = page.getByTestId(testIds.files.viewListButton)
-    const groupModeButton = page.getByTestId(testIds.files.viewGroupsButton)
+        const listModeButton = page.getByTestId(testIds.files.viewListButton);
+        const groupModeButton = page.getByTestId(
+            testIds.files.viewGroupsButton
+        );
 
-    await groupModeButton.click()
-    await expect(groupModeButton).toHaveClass(/btn-action-active/)
-    await expect(page.getByTestId(testIds.files.groupIdentityLabel).first()).toBeVisible()
+        await groupModeButton.click();
+        await expect(groupModeButton).toHaveClass(/btn-action-active/);
+        await expect(
+            page.getByTestId(testIds.files.groupIdentityLabel).first()
+        ).toBeVisible();
 
-    await listModeButton.click()
-    await expect(listModeButton).toHaveClass(/btn-action-active/)
-    await expect(page.getByTestId(testIds.files.matchedListDetails)).toBeVisible()
-  })
+        await listModeButton.click();
+        await expect(listModeButton).toHaveClass(/btn-action-active/);
+        await expect(
+            page.getByTestId(testIds.files.matchedListDetails)
+        ).toBeVisible();
+    });
 
-  test('files page renders context labels for group type metadata', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/files')
+    test("files page renders context labels for group type metadata", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/files");
 
-    await page.getByTestId(testIds.files.viewGroupsButton).click()
+        await page.getByTestId(testIds.files.viewGroupsButton).click();
 
-    const groupLabels = page.getByTestId(testIds.files.groupIdentityLabel)
-    await expect(groupLabels.filter({ hasText: 'Config' }).first()).toBeVisible()
-    await expect(groupLabels.filter({ hasText: 'Workspace scan' }).first()).toBeVisible()
-    await expect(groupLabels.filter({ hasText: 'Glob' }).first()).toBeVisible()
-  })
+        const groupLabels = page.getByTestId(testIds.files.groupIdentityLabel);
+        await expect(
+            groupLabels.filter({ hasText: "Config" }).first()
+        ).toBeVisible();
+        await expect(
+            groupLabels.filter({ hasText: "Workspace scan" }).first()
+        ).toBeVisible();
+        await expect(
+            groupLabels.filter({ hasText: "Glob" }).first()
+        ).toBeVisible();
+    });
 
-  test('extends page renders rule list in list layout and includes all exported rules', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/extends')
+    test("extends page renders rule list in list layout and includes all exported rules", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/extends");
 
-    await expect(page.getByTestId(testIds.extends.specifierButton).filter({ hasText: extendSpecifier }).first()).toBeVisible()
-    await expect(page.locator('.colorized-rule-name[title="stylelint/color-hex-length"]').first()).toBeVisible()
-    await expect(page.locator('.colorized-rule-name[title="stylelint/alpha-value-notation"]').first()).toBeVisible()
+        await expect(
+            page
+                .getByTestId(testIds.extends.specifierButton)
+                .filter({ hasText: extendSpecifier })
+                .first()
+        ).toBeVisible();
+        await expect(
+            page
+                .locator(
+                    '.colorized-rule-name[title="stylelint/color-hex-length"]'
+                )
+                .first()
+        ).toBeVisible();
+        await expect(
+            page
+                .locator(
+                    '.colorized-rule-name[title="stylelint/alpha-value-notation"]'
+                )
+                .first()
+        ).toBeVisible();
 
-    const rulesListContainer = page.getByTestId(testIds.extends.rulesListContainer)
+        const rulesListContainer = page.getByTestId(
+            testIds.extends.rulesListContainer
+        );
 
-    await expect(rulesListContainer).toBeVisible()
+        await expect(rulesListContainer).toBeVisible();
 
-    await expect(rulesListContainer.locator('div[style*="grid-template-columns"]').first()).toHaveAttribute('style', /40px/)
-  })
+        await expect(
+            rulesListContainer
+                .locator('div[style*="grid-template-columns"]')
+                .first()
+        ).toHaveAttribute("style", /40px/);
+    });
 
-  test('extends page switches active extends entry and updates visible rules', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/extends')
+    test("extends page switches active extends entry and updates visible rules", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/extends");
 
-    const primaryButton = page.getByTestId(testIds.extends.specifierButton).filter({ hasText: extendSpecifier }).first()
-    const secondaryButton = page.getByTestId(testIds.extends.specifierButton).filter({ hasText: secondaryExtendSpecifier }).first()
-    const rulesListContainer = page.getByTestId(testIds.extends.rulesListContainer)
+        const primaryButton = page
+            .getByTestId(testIds.extends.specifierButton)
+            .filter({ hasText: extendSpecifier })
+            .first();
+        const secondaryButton = page
+            .getByTestId(testIds.extends.specifierButton)
+            .filter({ hasText: secondaryExtendSpecifier })
+            .first();
+        const rulesListContainer = page.getByTestId(
+            testIds.extends.rulesListContainer
+        );
 
-    await expect(primaryButton).toBeVisible()
-    await expect(secondaryButton).toBeVisible()
+        await expect(primaryButton).toBeVisible();
+        await expect(secondaryButton).toBeVisible();
 
-    await secondaryButton.click()
+        await secondaryButton.click();
 
-    await expect(secondaryButton).toHaveClass(/bg-active/)
-    await expect(rulesListContainer.locator('.colorized-rule-name[title="stylelint/at-rule-no-unknown"]')).toBeVisible()
-    await expect(rulesListContainer.locator('.colorized-rule-name[title="stylelint/color-hex-length"]')).toHaveCount(0)
-    await expect(page.locator('a[href="/configs?index=2"]').first()).toBeVisible()
-  })
+        await expect(secondaryButton).toHaveClass(/bg-active/);
+        await expect(
+            rulesListContainer.locator(
+                '.colorized-rule-name[title="stylelint/at-rule-no-unknown"]'
+            )
+        ).toBeVisible();
+        await expect(
+            rulesListContainer.locator(
+                '.colorized-rule-name[title="stylelint/color-hex-length"]'
+            )
+        ).toHaveCount(0);
+        await expect(
+            page.locator('a[href="/configs?index=2"]').first()
+        ).toBeVisible();
+    });
 
-  test('extends docs button only appears for entries with docs metadata', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/extends')
+    test("extends docs button only appears for entries with docs metadata", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/extends");
 
-    const primaryButton = page.getByTestId(testIds.extends.specifierButton).filter({ hasText: extendSpecifier }).first()
-    const secondaryButton = page.getByTestId(testIds.extends.specifierButton).filter({ hasText: secondaryExtendSpecifier }).first()
-    const docsButton = page.getByRole('link', { name: 'Docs' })
+        const primaryButton = page
+            .getByTestId(testIds.extends.specifierButton)
+            .filter({ hasText: extendSpecifier })
+            .first();
+        const secondaryButton = page
+            .getByTestId(testIds.extends.specifierButton)
+            .filter({ hasText: secondaryExtendSpecifier })
+            .first();
+        const docsButton = page.getByRole("link", { name: "Docs" });
 
-    await primaryButton.click()
-    await expect(docsButton).toBeVisible()
-    await expect(docsButton).toHaveAttribute('href', 'https://example.com/stylelint-config-recommended')
+        await primaryButton.click();
+        await expect(docsButton).toBeVisible();
+        await expect(docsButton).toHaveAttribute(
+            "href",
+            "https://example.com/stylelint-config-recommended"
+        );
 
-    await secondaryButton.click()
-    await expect(docsButton).toHaveCount(0)
-  })
+        await secondaryButton.click();
+        await expect(docsButton).toHaveCount(0);
+    });
 
-  test('extends page shows fallback metadata copy when description/plugins/syntax are missing', async ({ page }) => {
-    await mockPayload(page)
-    await page.goto('/extends')
+    test("extends page shows fallback metadata copy when description/plugins/syntax are missing", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/extends");
 
-    const primaryButton = page.getByTestId(testIds.extends.specifierButton).filter({ hasText: extendSpecifier }).first()
-    await primaryButton.click()
+        const primaryButton = page
+            .getByTestId(testIds.extends.specifierButton)
+            .filter({ hasText: extendSpecifier })
+            .first();
+        await primaryButton.click();
 
-    await expect(page.getByText('No package description metadata was found for this extended config.')).toBeVisible()
-    await expect(page.getByText('No direct extends entries were detected.')).toBeVisible()
-    await expect(page.getByText('No plugin metadata detected.')).toBeVisible()
-    await expect(page.getByText('No custom syntax metadata detected.')).toBeVisible()
-  })
+        await expect(
+            page.getByText(
+                "No package description metadata was found for this extended config."
+            )
+        ).toBeVisible();
+        await expect(
+            page.getByText("No direct extends entries were detected.")
+        ).toBeVisible();
+        await expect(
+            page.getByText("No plugin metadata detected.")
+        ).toBeVisible();
+        await expect(
+            page.getByText("No custom syntax metadata detected.")
+        ).toBeVisible();
+    });
 
-  test('extends page renders a no-extends empty state when payload has no extends info', async ({ page }) => {
-    await mockPayload(page, {
-      ...MOCK_PAYLOAD,
-      extendsInfo: [],
-    })
-    await page.goto('/extends')
+    test("extends page renders a no-extends empty state when payload has no extends info", async ({
+        page,
+    }) => {
+        await mockPayload(page, {
+            ...MOCK_PAYLOAD,
+            extendsInfo: [],
+        });
+        await page.goto("/extends");
 
-    await expect(page.getByText('No extended configs were found in the current payload.')).toBeVisible()
-    await expect(page.getByTestId(testIds.extends.specifierButton)).toHaveCount(0)
-  })
-})
+        await expect(
+            page.getByText(
+                "No extended configs were found in the current payload."
+            )
+        ).toBeVisible();
+        await expect(
+            page.getByTestId(testIds.extends.specifierButton)
+        ).toHaveCount(0);
+    });
+});

@@ -1,328 +1,363 @@
 <script setup lang="ts">
-import type { FilesGroup, FlatConfigItem } from '~~/shared/types'
-import { useRouter } from '#app/composables/router'
-import { computed, ref, watchEffect } from 'vue'
-import { testIds } from '~~/shared/test-ids'
+import type { FilesGroup, FlatConfigItem } from "~~/shared/types";
+import { useRouter } from "#app/composables/router";
+import { computed, ref, watchEffect } from "vue";
+import { testIds } from "~~/shared/test-ids";
 
 const props = defineProps<{
-  index: number
-  group: FilesGroup
-}>()
+    index: number;
+    group: FilesGroup;
+}>();
 
-const open = defineModel('open', {
-  default: true,
-})
+const open = defineModel("open", {
+    default: true,
+});
 
-const hasShown = ref(open.value)
+const hasShown = ref(open.value);
 if (!hasShown.value) {
-  const stop = watchEffect(() => {
-    if (open.value) {
-      hasShown.value = true
-      stop()
-    }
-  })
+    const stop = watchEffect(() => {
+        if (open.value) {
+            hasShown.value = true;
+            stop();
+        }
+    });
 }
 
 const groupName = computed(() => {
-  if (
-    props.group.kind !== 'matched'
-    || props.group.files.length === 0
-    || props.group.globs.size === 1
-  ) {
-    return {
-      type: 'glob',
-      globs: [...props.group.globs.values()],
-    } as const
-  }
+    if (
+        props.group.kind !== "matched" ||
+        props.group.files.length === 0 ||
+        props.group.globs.size === 1
+    ) {
+        return {
+            type: "glob",
+            globs: [...props.group.globs.values()],
+        } as const;
+    }
 
-  if (props.group.configs.length === 1) {
-    return {
-      type: 'config',
-      config: props.group.configs[0]!,
-    } as const
-  }
-  if (props.group.globs.size <= 2) {
-    return {
-      type: 'glob',
-      globs: [...props.group.globs.values()],
-    } as const
-  }
-  return undefined
-})
+    if (props.group.configs.length === 1) {
+        return {
+            type: "config",
+            config: props.group.configs[0]!,
+        } as const;
+    }
+    if (props.group.globs.size <= 2) {
+        return {
+            type: "glob",
+            globs: [...props.group.globs.values()],
+        } as const;
+    }
+    return undefined;
+});
 
-const router = useRouter()
+const router = useRouter();
 function goToConfig(idx: number) {
-  router.push(`/configs?index=${idx + 1}`)
+    router.push(`/configs?index=${idx + 1}`);
 }
 
 function getConfigFilePatterns(config: FlatConfigItem): string[] {
-  return (config.files ?? [])
-    .flat()
-    .map((pattern: string) => pattern.trim())
-    .filter(Boolean)
+    return (config.files ?? [])
+        .flat()
+        .map((pattern: string) => pattern.trim())
+        .filter(Boolean);
 }
 
-const filesOpen = ref(true)
+const filesOpen = ref(true);
 
 const groupIdentity = computed(() => {
-  if (groupName.value?.type === 'config') {
-    return {
-      label: 'Config',
-      icon: 'i-ph-stack-duotone',
-      colorClass: 'text-sky6 dark:text-sky3',
-    } as const
-  }
+    if (groupName.value?.type === "config") {
+        return {
+            label: "Config",
+            icon: "i-ph-stack-duotone",
+            colorClass: "text-sky6 dark:text-sky3",
+        } as const;
+    }
 
-  if (props.group.kind === 'default') {
-    return {
-      label: 'Workspace scan',
-      icon: 'i-ph-binoculars-duotone',
-      colorClass: 'text-fuchsia6 dark:text-fuchsia3',
-    } as const
-  }
+    if (props.group.kind === "default") {
+        return {
+            label: "Workspace scan",
+            icon: "i-ph-binoculars-duotone",
+            colorClass: "text-fuchsia6 dark:text-fuchsia3",
+        } as const;
+    }
 
-  return {
-    label: 'Glob',
-    icon: 'i-ph-file-magnifying-glass-duotone',
-    colorClass: 'text-violet6 dark:text-violet3',
-  } as const
-})
+    return {
+        label: "Glob",
+        icon: "i-ph-file-magnifying-glass-duotone",
+        colorClass: "text-violet6 dark:text-violet3",
+    } as const;
+});
 </script>
 
 <template>
-  <!-- @vue-ignore -->
-  <details
-    class="flat-config-item"
-    :open="open"
-    border="~ base rounded-lg"
-    relative
-    @toggle="open = $event.target.open"
-  >
-    <summary block>
-      <div
-        class="absolute right-[calc(100%+10px)] top-1.5"
-        text-right
-        font-mono
-        op35
-        lt-lg:hidden
-      >
-        #{{ index + 1 }}
-      </div>
-      <div
-        flex="~ gap-2 items-start wrap items-center"
-        cursor-pointer
-        select-none
-        bg-hover
-        px2
-        py2
-        text-sm
-        font-mono
-      >
-        <div
-          class="[details[open]_&]:rotate-90"
-          i-ph-caret-right
-          op50
-          transition
-        />
-        <div flex flex-auto flex-col gap-3 md:flex-row>
-          <span flex-auto flex="~ gap-2 items-center">
-            <template v-if="groupName?.type === 'config'">
-              <span :data-testid="testIds.files.groupIdentityLabel" flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
-                <div :class="groupIdentity.icon" flex-none />
-                <span op85>{{ groupIdentity.label }}</span>
-              </span>
-              <ColorizedConfigName
-                badge
-                :name="groupName.config.name"
-                :index="groupName.config.index"
-              />
-            </template>
-            <template v-else-if="groupName?.type === 'glob'">
-              <span :data-testid="testIds.files.groupIdentityLabel" flex="~ gap-1.5 items-center" :class="groupIdentity.colorClass">
-                <div :class="groupIdentity.icon" flex-none />
-                <span op85>{{ groupIdentity.label }}</span>
-              </span>
-              <GlobItem
-                v-for="(glob, idx) of groupName.globs"
-                :key="idx"
-                :glob="glob"
-              />
-            </template>
-            <span v-else op50> Files group #{{ index + 1 }} </span>
-          </span>
-
-          <div flex="~ gap-2 items-start wrap">
-            <SummarizeItem
-              icon="i-ph-files-duotone"
-              :number="group.files?.length || 0"
-              color="text-yellow5"
-              title="Files"
-            />
-            <SummarizeItem
-              icon="i-ph-stack-duotone"
-              :number="group.configs.length"
-              color="text-blue5 dark:text-blue4"
-              title="Configs"
-              mr-2
-            />
-          </div>
-        </div>
-      </div>
-    </summary>
-
-    <div
-      pointer-events-none
-      absolute
-      right-2
-      top-2
-      text-right
-      text-5em
-      font-mono
-      op5
+    <!-- @vue-ignore -->
+    <details
+        class="flat-config-item"
+        :open="open"
+        border="~ base rounded-lg"
+        relative
+        @toggle="open = $event.target.open"
     >
-      #{{ index + 1 }}
-    </div>
+        <summary block>
+            <div
+                class="absolute right-[calc(100%+10px)] top-1.5"
+                text-right
+                font-mono
+                op35
+                lt-lg:hidden
+            >
+                #{{ index + 1 }}
+            </div>
+            <div
+                flex="~ gap-2 items-start wrap items-center"
+                cursor-pointer
+                select-none
+                bg-hover
+                px2
+                py2
+                text-sm
+                font-mono
+            >
+                <div
+                    class="[details[open]_&]:rotate-90"
+                    i-ph-caret-right
+                    op50
+                    transition
+                />
+                <div flex flex-auto flex-col gap-3 md:flex-row>
+                    <span flex-auto flex="~ gap-2 items-center">
+                        <template v-if="groupName?.type === 'config'">
+                            <span
+                                :data-testid="testIds.files.groupIdentityLabel"
+                                flex="~ gap-1.5 items-center"
+                                :class="groupIdentity.colorClass"
+                            >
+                                <div :class="groupIdentity.icon" flex-none />
+                                <span op85>{{ groupIdentity.label }}</span>
+                            </span>
+                            <ColorizedConfigName
+                                badge
+                                :name="groupName.config.name"
+                                :index="groupName.config.index"
+                            />
+                        </template>
+                        <template v-else-if="groupName?.type === 'glob'">
+                            <span
+                                :data-testid="testIds.files.groupIdentityLabel"
+                                flex="~ gap-1.5 items-center"
+                                :class="groupIdentity.colorClass"
+                            >
+                                <div :class="groupIdentity.icon" flex-none />
+                                <span op85>{{ groupIdentity.label }}</span>
+                            </span>
+                            <GlobItem
+                                v-for="(glob, idx) of groupName.globs"
+                                :key="idx"
+                                :glob="glob"
+                            />
+                        </template>
+                        <span v-else op50> Files group #{{ index + 1 }} </span>
+                    </span>
 
-    <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py4>
-      <div flex="~ gap-2 items-center">
-        <div i-ph-stack-duotone flex-none />
-        <div>Configs Specific to the Files ({{ group.configs.length }})</div>
-      </div>
-
-      <div flex="~ col gap-1" ml6 mt--2>
-        <div
-          v-for="config of group.configs"
-          :key="`${config.name}:${config.index}`"
-          font-mono
-          flex="~ col gap-1"
-        >
-          <VDropdown>
-            <button badge text-start>
-              <ColorizedConfigName :name="config.name" :index="config.index" />
-            </button>
-            <template #popper="{ shown }">
-              <div v-if="shown" max-h="50vh" min-w-100>
-                <div flex="~ items-center gap-2" p3>
-                  <button
-                    btn-action-sm
-                    title="Copy"
-                    @click="goToConfig(config.index)"
-                  >
-                    <div i-ph-stack-duotone />
-                    Go to this config
-                  </button>
-                  <slot name="popup-actions" />
-                </div>
-                <div p3 border="t base">
-                  <div flex="~ gap-2 items-start">
-                    <div
-                      i-ph-file-magnifying-glass-duotone
-                      my1
-                      flex-none
-                      op75
-                    />
-                    <div flex="~ col gap-2">
-                      <div op50>
-                        Applies to files matching
-                      </div>
-                      <div flex="~ gap-2 items-center wrap">
-                        <GlobItem
-                          v-for="(glob, idx2) of config.files?.flat()"
-                          :key="idx2"
-                          :glob="glob"
-                          :active="group.globs.has(glob)"
+                    <div flex="~ gap-2 items-start wrap">
+                        <SummarizeItem
+                            icon="i-ph-files-duotone"
+                            :number="group.files?.length || 0"
+                            color="text-yellow5"
+                            title="Files"
                         />
-                      </div>
-
-                      <div
-                        v-if="config.customSyntax"
-                        rounded-md
-                        border="~ base"
-                        bg="zinc-950/35"
-                        px2
-                        py1
-                        text-2.5
-                      >
-                        customSyntax: {{ config.customSyntax }}
-                      </div>
+                        <SummarizeItem
+                            icon="i-ph-stack-duotone"
+                            :number="group.configs.length"
+                            color="text-blue5 dark:text-blue4"
+                            title="Configs"
+                            mr-2
+                        />
                     </div>
-                  </div>
                 </div>
-              </div>
-            </template>
-          </VDropdown>
-
-          <div
-            v-if="config.customSyntax || getConfigFilePatterns(config).length > 0"
-            ml7
-            flex="~ gap-1 wrap items-center"
-            text="2.5 zinc-600 dark:zinc-300/75"
-          >
-            <span
-              v-if="config.customSyntax"
-              rounded-md
-              border="~ base"
-              bg="black:8 dark:zinc-950/35"
-              px1.5
-              py0.5
-            >
-              syntax: {{ config.customSyntax }}
-            </span>
-
-            <GlobItem
-              v-for="glob in getConfigFilePatterns(config).slice(0, 3)"
-              :key="`${config.name}:${glob}`"
-              :glob="glob"
-            />
-
-            <span
-              v-if="getConfigFilePatterns(config).length > 3"
-              rounded-md
-              border="~ base"
-              bg="black:6 dark:zinc-950/25"
-              px1.5
-              py0.5
-              text="zinc-600 dark:zinc-300/70"
-            >
-              +{{ getConfigFilePatterns(config).length - 3 }} more
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div flex="~ gap-2 items-center">
-        <div i-ph-file-magnifying-glass-duotone flex-none />
-        <div>Matched Globs</div>
-      </div>
-
-      <div flex="~ gap-1 wrap" ml6 mt--2>
-        <GlobItem
-          v-for="(glob, idx2) of group.globs"
-          :key="idx2"
-          :glob="glob"
-        />
-      </div>
-
-      <details
-        :open="filesOpen"
-        class="border border-base rounded-lg bg-black:4 p3 dark:bg-white:3"
-        @toggle="filesOpen = ($event.target as HTMLDetailsElement).open"
-      >
-        <summary flex="~ gap-2 items-center wrap" cursor-pointer select-none>
-          <div class="[details[open]_&]:rotate-90" i-ph-caret-right op50 transition />
-          <div i-ph-files-duotone flex-none />
-          <div>Matched Local Files ({{ group.files.length }})</div>
+            </div>
         </summary>
 
-        <div flex="~ col gap-1" mt3>
-          <FileItem
-            v-for="file of group.files"
-            :key="file"
+        <div
+            pointer-events-none
+            absolute
+            right-2
+            top-2
+            text-right
+            text-5em
             font-mono
-            :filepath="file"
-          />
+            op5
+        >
+            #{{ index + 1 }}
         </div>
-      </details>
-    </div>
-  </details>
+
+        <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py4>
+            <div flex="~ gap-2 items-center">
+                <div i-ph-stack-duotone flex-none />
+                <div>
+                    Configs Specific to the Files ({{ group.configs.length }})
+                </div>
+            </div>
+
+            <div flex="~ col gap-1" ml6 mt--2>
+                <div
+                    v-for="config of group.configs"
+                    :key="`${config.name}:${config.index}`"
+                    font-mono
+                    flex="~ col gap-1"
+                >
+                    <VDropdown>
+                        <button badge text-start>
+                            <ColorizedConfigName
+                                :name="config.name"
+                                :index="config.index"
+                            />
+                        </button>
+                        <template #popper="{ shown }">
+                            <div v-if="shown" max-h="50vh" min-w-100>
+                                <div flex="~ items-center gap-2" p3>
+                                    <button
+                                        btn-action-sm
+                                        title="Copy"
+                                        @click="goToConfig(config.index)"
+                                    >
+                                        <div i-ph-stack-duotone />
+                                        Go to this config
+                                    </button>
+                                    <slot name="popup-actions" />
+                                </div>
+                                <div p3 border="t base">
+                                    <div flex="~ gap-2 items-start">
+                                        <div
+                                            i-ph-file-magnifying-glass-duotone
+                                            my1
+                                            flex-none
+                                            op75
+                                        />
+                                        <div flex="~ col gap-2">
+                                            <div op50>
+                                                Applies to files matching
+                                            </div>
+                                            <div
+                                                flex="~ gap-2 items-center wrap"
+                                            >
+                                                <GlobItem
+                                                    v-for="(
+                                                        glob, idx2
+                                                    ) of config.files?.flat()"
+                                                    :key="idx2"
+                                                    :glob="glob"
+                                                    :active="
+                                                        group.globs.has(glob)
+                                                    "
+                                                />
+                                            </div>
+
+                                            <div
+                                                v-if="config.customSyntax"
+                                                rounded-md
+                                                border="~ base"
+                                                bg="zinc-950/35"
+                                                px2
+                                                py1
+                                                text-2.5
+                                            >
+                                                customSyntax:
+                                                {{ config.customSyntax }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </VDropdown>
+
+                    <div
+                        v-if="
+                            config.customSyntax ||
+                            getConfigFilePatterns(config).length > 0
+                        "
+                        ml7
+                        flex="~ gap-1 wrap items-center"
+                        text="2.5 zinc-600 dark:zinc-300/75"
+                    >
+                        <span
+                            v-if="config.customSyntax"
+                            rounded-md
+                            border="~ base"
+                            bg="black:8 dark:zinc-950/35"
+                            px1.5
+                            py0.5
+                        >
+                            syntax: {{ config.customSyntax }}
+                        </span>
+
+                        <GlobItem
+                            v-for="glob in getConfigFilePatterns(config).slice(
+                                0,
+                                3
+                            )"
+                            :key="`${config.name}:${glob}`"
+                            :glob="glob"
+                        />
+
+                        <span
+                            v-if="getConfigFilePatterns(config).length > 3"
+                            rounded-md
+                            border="~ base"
+                            bg="black:6 dark:zinc-950/25"
+                            px1.5
+                            py0.5
+                            text="zinc-600 dark:zinc-300/70"
+                        >
+                            +{{ getConfigFilePatterns(config).length - 3 }} more
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div flex="~ gap-2 items-center">
+                <div i-ph-file-magnifying-glass-duotone flex-none />
+                <div>Matched Globs</div>
+            </div>
+
+            <div flex="~ gap-1 wrap" ml6 mt--2>
+                <GlobItem
+                    v-for="(glob, idx2) of group.globs"
+                    :key="idx2"
+                    :glob="glob"
+                />
+            </div>
+
+            <details
+                :open="filesOpen"
+                class="border border-base rounded-lg bg-black:4 p3 dark:bg-white:3"
+                @toggle="filesOpen = ($event.target as HTMLDetailsElement).open"
+            >
+                <summary
+                    flex="~ gap-2 items-center wrap"
+                    cursor-pointer
+                    select-none
+                >
+                    <div
+                        class="[details[open]_&]:rotate-90"
+                        i-ph-caret-right
+                        op50
+                        transition
+                    />
+                    <div i-ph-files-duotone flex-none />
+                    <div>Matched Local Files ({{ group.files.length }})</div>
+                </summary>
+
+                <div flex="~ col gap-1" mt3>
+                    <FileItem
+                        v-for="file of group.files"
+                        :key="file"
+                        font-mono
+                        :filepath="file"
+                    />
+                </div>
+            </details>
+        </div>
+    </details>
 </template>

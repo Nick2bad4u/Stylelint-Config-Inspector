@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useRouter } from '#app/composables/router'
+import { useRouter } from "#app/composables/router";
 
-const router = useRouter()
-router.replace('/configs')
+const router = useRouter();
+router.replace("/configs");
 </script>
 
 <template>
-  <div>
-    <slot />
-  </div>
+    <div>
+        <slot />
+    </div>
 </template>

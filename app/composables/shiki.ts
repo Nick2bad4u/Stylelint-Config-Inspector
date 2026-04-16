@@ -1,41 +1,40 @@
-import type { HighlighterCore } from 'shiki/core'
-import { createJavaScriptRegexEngine } from '@shikijs/engine-javascript'
-import { createHighlighterCore } from 'shiki/core'
-import { computed, shallowRef } from 'vue'
-import { isDark } from './dark'
+import type { HighlighterCore } from "shiki/core";
+import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
+import { createHighlighterCore } from "shiki/core";
+import { computed, shallowRef } from "vue";
+import { isDark } from "./dark";
 
-const HTML_LT_RE = /</g
-const HTML_GT_RE = />/g
+const HTML_LT_RE = /</g;
+const HTML_GT_RE = />/g;
 
-export const shiki = shallowRef<HighlighterCore>()
+export const shiki = shallowRef<HighlighterCore>();
 
 createHighlighterCore({
-  themes: [
-    import('@shikijs/themes/vitesse-light'),
-    import('@shikijs/themes/vitesse-dark'),
-  ],
-  langs: [
-    import('@shikijs/langs-precompiled/javascript'),
-    import('@shikijs/langs-precompiled/typescript'),
-    import('textmate-grammar-glob/grammars/glob.json') as any,
-  ],
-  engine: createJavaScriptRegexEngine(),
+    themes: [
+        import("@shikijs/themes/vitesse-light"),
+        import("@shikijs/themes/vitesse-dark"),
+    ],
+    langs: [
+        import("@shikijs/langs-precompiled/javascript"),
+        import("@shikijs/langs-precompiled/typescript"),
+        import("textmate-grammar-glob/grammars/glob.json") as any,
+    ],
+    engine: createJavaScriptRegexEngine(),
 }).then((highlighter) => {
-  shiki.value = highlighter
-})
+    shiki.value = highlighter;
+});
 
 export function useHighlightedGlob(code: () => string) {
-  return computed(() => {
-    if (!shiki.value)
-      return sanitizeHtml(code())
-    return shiki.value.codeToHtml(code(), {
-      lang: 'glob',
-      theme: isDark.value ? 'vitesse-dark' : 'vitesse-light',
-      structure: 'inline',
-    })
-  })
+    return computed(() => {
+        if (!shiki.value) return sanitizeHtml(code());
+        return shiki.value.codeToHtml(code(), {
+            lang: "glob",
+            theme: isDark.value ? "vitesse-dark" : "vitesse-light",
+            structure: "inline",
+        });
+    });
 }
 
 export function sanitizeHtml(html: string) {
-  return html.replace(HTML_LT_RE, '&lt;').replace(HTML_GT_RE, '&gt;')
+    return html.replace(HTML_LT_RE, "&lt;").replace(HTML_GT_RE, "&gt;");
 }

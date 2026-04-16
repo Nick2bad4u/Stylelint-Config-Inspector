@@ -1,54 +1,54 @@
 <script setup lang="ts">
 defineProps<{
-  options: readonly string[] | number[]
-  titles?: string[]
-  tooltips?: string[]
-  classes?: string[]
-  props?: any[]
-}>()
+    options: readonly string[] | number[];
+    titles?: string[];
+    tooltips?: string[];
+    classes?: string[];
+    props?: any[];
+}>();
 
-const value = defineModel<string | number>('modelValue', {
-  type: [String, Number],
-})
+const value = defineModel<string | number>("modelValue", {
+    type: [String, Number],
+});
 </script>
 
 <template>
-  <fieldset flex="~ inline gap-1 wrap" of-hidden text-sm>
-    <label
-      v-for="(i, idx) of options"
-      :key="i"
-      border="~ base rounded-full"
-      relative
-      px2.5
-      py0.5
-      hover:bg-hover
-      :class="[
-        i === value ? 'bg-active' : 'saturate-0 hover:saturate-100',
-        props?.[idx]?.class || '',
-      ]"
-      v-bind="props?.[idx]"
-      :title="tooltips?.[idx] ?? titles?.[idx]"
-    >
-      <div
-        :class="[
-          i === value ? '' : 'op50',
-          titles?.[idx] ? '' : 'capitalize',
-          classes?.[idx] || '',
-        ]"
-      >
-        <slot :value="i" :title="titles?.[idx]" :index="idx">
-          {{ titles?.[idx] ?? i }}
-        </slot>
-      </div>
-      <input
-        v-model="value"
-        type="radio"
-        :value="i"
-        :title="tooltips?.[idx] ?? titles?.[idx]"
-        absolute
-        inset-0
-        op-0.1
-      >
-    </label>
-  </fieldset>
+    <fieldset flex="~ inline gap-1 wrap" of-hidden text-sm>
+        <label
+            v-for="(i, idx) of options"
+            :key="i"
+            border="~ base rounded-full"
+            relative
+            px2.5
+            py0.5
+            hover:bg-hover
+            :class="[
+                i === value ? 'bg-active' : 'saturate-0 hover:saturate-100',
+                props?.[idx]?.class || '',
+            ]"
+            v-bind="props?.[idx]"
+            :title="tooltips?.[idx] ?? titles?.[idx]"
+        >
+            <div
+                :class="[
+                    i === value ? '' : 'op50',
+                    titles?.[idx] ? '' : 'capitalize',
+                    classes?.[idx] || '',
+                ]"
+            >
+                <slot :value="i" :title="titles?.[idx]" :index="idx">
+                    {{ titles?.[idx] ?? i }}
+                </slot>
+            </div>
+            <input
+                v-model="value"
+                type="radio"
+                :value="i"
+                :title="tooltips?.[idx] ?? titles?.[idx]"
+                absolute
+                inset-0
+                op-0.1
+            />
+        </label>
+    </fieldset>
 </template>

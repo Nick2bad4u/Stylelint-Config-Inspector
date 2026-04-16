@@ -1,50 +1,49 @@
-import { transformerNotationMap } from '@shikijs/transformers'
-import { computed, defineComponent, h } from 'vue'
-import { isDark } from '../composables/dark'
-import { sanitizeHtml, shiki } from '../composables/shiki'
+import { transformerNotationMap } from "@shikijs/transformers";
+import { computed, defineComponent, h } from "vue";
+import { isDark } from "../composables/dark";
+import { sanitizeHtml, shiki } from "../composables/shiki";
 
 // @unocss-include
 export default defineComponent({
-  name: 'Shiki',
-  props: {
-    code: {
-      type: String,
-      required: true,
+    name: "Shiki",
+    props: {
+        code: {
+            type: String,
+            required: true,
+        },
+        lang: {
+            type: String,
+            required: true,
+        },
     },
-    lang: {
-      type: String,
-      required: true,
-    },
-  },
-  setup(props) {
-    const highlighted = computed(() => {
-      if (!shiki.value)
-        return sanitizeHtml(props.code)
-      return shiki.value.codeToHtml(props.code, {
-        lang: props.lang,
-        theme: isDark.value ? 'vitesse-dark' : 'vitesse-light',
-        transformers: [
-          {
-            pre(node) {
-              node.properties.style = ''
-            },
-          },
-          transformerNotationMap(
-            {
-              classMap: {
-                muted: 'muted',
-              },
-            },
-            '@shikijs/transformers:notation-muted',
-          ),
-        ],
-      })
-    })
+    setup(props) {
+        const highlighted = computed(() => {
+            if (!shiki.value) return sanitizeHtml(props.code);
+            return shiki.value.codeToHtml(props.code, {
+                lang: props.lang,
+                theme: isDark.value ? "vitesse-dark" : "vitesse-light",
+                transformers: [
+                    {
+                        pre(node) {
+                            node.properties.style = "";
+                        },
+                    },
+                    transformerNotationMap(
+                        {
+                            classMap: {
+                                muted: "muted",
+                            },
+                        },
+                        "@shikijs/transformers:notation-muted"
+                    ),
+                ],
+            });
+        });
 
-    return () =>
-      h('div', {
-        class: 'filter-hue-rotate-90',
-        innerHTML: highlighted.value,
-      })
-  },
-})
+        return () =>
+            h("div", {
+                class: "filter-hue-rotate-90",
+                innerHTML: highlighted.value,
+            });
+    },
+});

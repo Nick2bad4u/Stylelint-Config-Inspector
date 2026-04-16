@@ -206,7 +206,8 @@ const config = defineConfig({
         },
         {
             /**
-             * Configuration for Vue single-file components containing CSS in<style> blocks.
+             * Configuration for Vue single-file components containing CSS
+             * in<style> blocks.
              *
              * @remarks
              * Uses postcss-html parser to extract and lint CSS from Vue SFC

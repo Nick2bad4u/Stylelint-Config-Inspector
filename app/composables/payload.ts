@@ -1,28 +1,28 @@
 /* eslint-disable no-console */
 import type {
-  ErrorInfo,
-  FilesGroup,
-  FlatConfigItem,
-  Payload,
-  ResolvedPayload,
-  RuleConfigStates,
-  RuleInfo,
-} from '~~/shared/types'
-import { $fetch } from 'ofetch'
-import { computed, ref } from 'vue'
+    ErrorInfo,
+    FilesGroup,
+    FlatConfigItem,
+    Payload,
+    ResolvedPayload,
+    RuleConfigStates,
+    RuleInfo,
+} from "~~/shared/types";
+import { $fetch } from "ofetch";
+import { computed, ref } from "vue";
 import {
-  DEFAULT_WORKSPACE_SCAN_GLOBS,
-  isGeneralConfig,
-  isIgnoreOnlyConfig,
-} from '~~/shared/configs'
+    DEFAULT_WORKSPACE_SCAN_GLOBS,
+    isGeneralConfig,
+    isIgnoreOnlyConfig,
+} from "~~/shared/configs";
 import {
-  getRuleLevel,
-  getRuleOptions,
-  getRulePrimaryOption,
-} from '~~/shared/rules'
-import { configsOpenState, fileGroupsOpenState } from './state'
+    getRuleLevel,
+    getRuleOptions,
+    getRulePrimaryOption,
+} from "~~/shared/rules";
+import { configsOpenState, fileGroupsOpenState } from "./state";
 
-const LOG_NAME = '[Config Inspector]'
+const LOG_NAME = "[Config Inspector]";
 
 /**
  * Initial skeleton payload used before the first fetch completes. All required
@@ -30,302 +30,290 @@ const LOG_NAME = '[Config Inspector]'
  * values so we never need to cast.
  */
 const INITIAL_PAYLOAD: Payload = {
-  rules: {},
-  configs: [],
-  meta: {
-    lastUpdate: 0,
-    basePath: '',
-    configPath: '',
-  },
-}
+    rules: {},
+    configs: [],
+    meta: {
+        lastUpdate: 0,
+        basePath: "",
+        configPath: "",
+    },
+};
 
-const data = ref<Payload>(INITIAL_PAYLOAD)
+const data = ref<Payload>(INITIAL_PAYLOAD);
 
 /**
  * State of initial loading
  */
-export const isLoading = ref(true)
+export const isLoading = ref(true);
 /**
  * State of fetching, used for loading indicator
  */
-export const isFetching = ref(false)
+export const isFetching = ref(false);
 /**
  * Error information
  */
-export const errorInfo = ref<ErrorInfo>()
+export const errorInfo = ref<ErrorInfo>();
 
 function isErrorInfo(payload: Payload | ErrorInfo): payload is ErrorInfo {
-  return 'error' in payload
+    return "error" in payload;
 }
 
 async function get(baseURL: string) {
-  isFetching.value = true
-  const payload = await $fetch<Payload | ErrorInfo>('/api/payload.json', {
-    baseURL,
-  })
-  if (isErrorInfo(payload)) {
-    errorInfo.value = payload
-    isLoading.value = false
-    isFetching.value = false
-    return
-  }
-  errorInfo.value = undefined
-  data.value = payload
-  isLoading.value = false
-  isFetching.value = false
-  console.log(LOG_NAME, 'Config payload', payload)
-  return payload
+    isFetching.value = true;
+    const payload = await $fetch<Payload | ErrorInfo>("/api/payload.json", {
+        baseURL,
+    });
+    if (isErrorInfo(payload)) {
+        errorInfo.value = payload;
+        isLoading.value = false;
+        isFetching.value = false;
+        return;
+    }
+    errorInfo.value = undefined;
+    data.value = payload;
+    isLoading.value = false;
+    isFetching.value = false;
+    console.log(LOG_NAME, "Config payload", payload);
+    return payload;
 }
 
-let _promise: Promise<Payload | undefined> | undefined
+let _promise: Promise<Payload | undefined> | undefined;
 
 export function init(baseURL: string) {
-  if (_promise)
-    return
-  _promise = get(baseURL).then((payload) => {
-    if (!payload)
-      return
+    if (_promise) return;
+    _promise = get(baseURL).then((payload) => {
+        if (!payload) return;
 
-    if (typeof payload.meta.wsPort === 'number') {
-      // Connect to WebSocket, listen for config changes
-      const ws = new WebSocket(
-        `ws://${location.hostname}:${payload.meta.wsPort}`,
-      )
-      ws.addEventListener('message', async (event) => {
-        console.log(LOG_NAME, 'WebSocket message', event.data)
-        const payload = JSON.parse(event.data)
-        if (payload.type === 'config-change')
-          get(baseURL)
-      })
-      ws.addEventListener('open', () => {
-        console.log(LOG_NAME, 'WebSocket connected')
-      })
-      ws.addEventListener('close', () => {
-        console.log(LOG_NAME, 'WebSocket closed')
-      })
-      ws.addEventListener('error', (error) => {
-        console.error(LOG_NAME, 'WebSocket error', error)
-      })
-    }
+        if (typeof payload.meta.wsPort === "number") {
+            // Connect to WebSocket, listen for config changes
+            const ws = new WebSocket(
+                `ws://${location.hostname}:${payload.meta.wsPort}`
+            );
+            ws.addEventListener("message", async (event) => {
+                console.log(LOG_NAME, "WebSocket message", event.data);
+                const payload = JSON.parse(event.data);
+                if (payload.type === "config-change") get(baseURL);
+            });
+            ws.addEventListener("open", () => {
+                console.log(LOG_NAME, "WebSocket connected");
+            });
+            ws.addEventListener("close", () => {
+                console.log(LOG_NAME, "WebSocket closed");
+            });
+            ws.addEventListener("error", (error) => {
+                console.error(LOG_NAME, "WebSocket error", error);
+            });
+        }
 
-    return payload
-  })
+        return payload;
+    });
 }
 
 export function ensureDataFetch() {
-  return _promise
+    return _promise;
 }
 
 export const payload = computed(() =>
-  Object.freeze(resolvePayload(data.value)),
-)
+    Object.freeze(resolvePayload(data.value))
+);
 
 export function getRuleFromName(name: string): RuleInfo {
-  return (
-    payload.value.rules[name]
-    || ({
-      name,
-      invalid: true,
-    } as RuleInfo)
-  )
+    return (
+        payload.value.rules[name] ||
+        ({
+            name,
+            invalid: true,
+        } as RuleInfo)
+    );
 }
 
 export function getRuleDefaultOptions(name: string): unknown[] {
-  return payload.value.rules[name]?.defaultOptions ?? []
+    return payload.value.rules[name]?.defaultOptions ?? [];
 }
 
 export function getRuleStates(name: string): RuleConfigStates | undefined {
-  return payload.value.ruleToState.get(name)
+    return payload.value.ruleToState.get(name);
 }
 
 export function resolvePayload(payload: Payload): ResolvedPayload {
-  const ruleToState = new Map<string, RuleConfigStates>()
-  const globToConfigs = new Map<string, FlatConfigItem[]>()
-  const extendsInfoMap = new Map(
-    (payload.extendsInfo ?? []).map(
-      entry => [entry.specifier, entry] as const,
-    ),
-  )
+    const ruleToState = new Map<string, RuleConfigStates>();
+    const globToConfigs = new Map<string, FlatConfigItem[]>();
+    const extendsInfoMap = new Map(
+        (payload.extendsInfo ?? []).map(
+            (entry) => [entry.specifier, entry] as const
+        )
+    );
 
-  payload.configs.forEach((config, index) => {
-    // Rule Level
-    if (config.rules) {
-      Object.entries(config.rules).forEach(([name, raw]) => {
-        const value = getRuleLevel(raw)
-        if (value) {
-          const primaryOption = getRulePrimaryOption(raw)
-          const options = getRuleOptions(raw)
-          if (!ruleToState.has(name))
-            ruleToState.set(name, [])
-          ruleToState.get(name)!.push({
-            name,
-            configIndex: index,
-            level: value,
-            primaryOption,
-            options,
-          })
+    payload.configs.forEach((config, index) => {
+        // Rule Level
+        if (config.rules) {
+            Object.entries(config.rules).forEach(([name, raw]) => {
+                const value = getRuleLevel(raw);
+                if (value) {
+                    const primaryOption = getRulePrimaryOption(raw);
+                    const options = getRuleOptions(raw);
+                    if (!ruleToState.has(name)) ruleToState.set(name, []);
+                    ruleToState.get(name)!.push({
+                        name,
+                        configIndex: index,
+                        level: value,
+                        primaryOption,
+                        options,
+                    });
+                }
+            });
         }
-      })
-    }
 
-    // Globs
-    for (const glob of config.files?.flat() || []) {
-      if (!globToConfigs.has(glob))
-        globToConfigs.set(glob, [])
-      globToConfigs.get(glob)!.push(config)
-    }
-    for (const glob of config.ignores?.flat() || []) {
-      if (!globToConfigs.has(glob))
-        globToConfigs.set(glob, [])
-      globToConfigs.get(glob)!.push(config)
-    }
-  })
+        // Globs
+        for (const glob of config.files?.flat() || []) {
+            if (!globToConfigs.has(glob)) globToConfigs.set(glob, []);
+            globToConfigs.get(glob)!.push(config);
+        }
+        for (const glob of config.ignores?.flat() || []) {
+            if (!globToConfigs.has(glob)) globToConfigs.set(glob, []);
+            globToConfigs.get(glob)!.push(config);
+        }
+    });
 
-  // collapse all if there are too many items
-  configsOpenState.value
-    = payload.configs.length >= 10
-      ? payload.configs.map(() => false)
-      : payload.configs.map(() => true)
+    // collapse all if there are too many items
+    configsOpenState.value =
+        payload.configs.length >= 10
+            ? payload.configs.map(() => false)
+            : payload.configs.map(() => true);
 
-  return {
-    ...payload,
-    configsIgnoreOnly: payload.configs.filter(i => isIgnoreOnlyConfig(i)),
-    configsGeneral: payload.configs.filter(i => isGeneralConfig(i)),
-    extendsInfoMap,
-    ruleToState,
-    globToConfigs,
-    filesResolved: resolveFiles(payload),
-  }
+    return {
+        ...payload,
+        configsIgnoreOnly: payload.configs.filter((i) => isIgnoreOnlyConfig(i)),
+        configsGeneral: payload.configs.filter((i) => isGeneralConfig(i)),
+        extendsInfoMap,
+        ruleToState,
+        globToConfigs,
+        filesResolved: resolveFiles(payload),
+    };
 }
 
-function resolveFiles(payload: Payload): ResolvedPayload['filesResolved'] {
-  if (!payload.files)
-    return undefined
+function resolveFiles(payload: Payload): ResolvedPayload["filesResolved"] {
+    if (!payload.files) return undefined;
 
-  const files: string[] = []
-  const globToFiles = new Map<string, Set<string>>()
-  const fileToGlobs = new Map<string, Set<string>>()
-  const fileToConfigs = new Map<string, Set<number>>()
-  const configToFiles = new Map<number, Set<string>>()
-  const filesGroupMap = new Map<string, FilesGroup>()
+    const files: string[] = [];
+    const globToFiles = new Map<string, Set<string>>();
+    const fileToGlobs = new Map<string, Set<string>>();
+    const fileToConfigs = new Map<string, Set<number>>();
+    const configToFiles = new Map<number, Set<string>>();
+    const filesGroupMap = new Map<string, FilesGroup>();
 
-  for (const file of payload.files) {
-    files.push(file.filepath)
-    for (const glob of file.globs) {
-      if (!globToFiles.has(glob))
-        globToFiles.set(glob, new Set())
-      globToFiles.get(glob)!.add(file.filepath)
-      if (!fileToGlobs.has(file.filepath))
-        fileToGlobs.set(file.filepath, new Set())
-      fileToGlobs.get(file.filepath)!.add(glob)
+    for (const file of payload.files) {
+        files.push(file.filepath);
+        for (const glob of file.globs) {
+            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
+            globToFiles.get(glob)!.add(file.filepath);
+            if (!fileToGlobs.has(file.filepath))
+                fileToGlobs.set(file.filepath, new Set());
+            fileToGlobs.get(file.filepath)!.add(glob);
+        }
+        for (const configIndex of file.configs) {
+            if (!configToFiles.has(configIndex))
+                configToFiles.set(configIndex, new Set());
+            configToFiles.get(configIndex)!.add(file.filepath);
+            if (!fileToConfigs.has(file.filepath))
+                fileToConfigs.set(file.filepath, new Set());
+            fileToConfigs.get(file.filepath)!.add(configIndex);
+        }
+
+        const specialConfigs = file.configs.filter(
+            (i) => !isGeneralConfig(payload.configs[i]!)
+        );
+        const displayConfigs = [...new Set(file.configs)].toSorted(
+            (a, b) => a - b
+        );
+        const positiveGlobs = file.globs
+            .filter((glob) => !glob.startsWith("!"))
+            .toSorted((a, b) => a.localeCompare(b));
+        const groupId = specialConfigs.length
+            ? `configs:${specialConfigs.join("-")}`
+            : `globs:${positiveGlobs.join("|") || "<general>"}`;
+        if (!filesGroupMap.has(groupId)) {
+            filesGroupMap.set(groupId, {
+                id: groupId,
+                kind: "matched",
+                files: [],
+                configs: displayConfigs.map((i) => payload.configs[i]!),
+                globs: new Set<string>(),
+            });
+        }
+        const group = filesGroupMap.get(groupId)!;
+        group.files.push(file.filepath);
+        file.globs.forEach((i) => group.globs.add(i));
     }
-    for (const configIndex of file.configs) {
-      if (!configToFiles.has(configIndex))
-        configToFiles.set(configIndex, new Set())
-      configToFiles.get(configIndex)!.add(file.filepath)
-      if (!fileToConfigs.has(file.filepath))
-        fileToConfigs.set(file.filepath, new Set())
-      fileToConfigs.get(file.filepath)!.add(configIndex)
+
+    for (const [configIndex, config] of payload.configs.entries()) {
+        const declaredPositiveGlobs = (config.files ?? [])
+            .flat()
+            .filter(
+                (glob) => typeof glob === "string" && !glob.startsWith("!")
+            );
+
+        for (const glob of declaredPositiveGlobs) {
+            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
+
+            if ((globToFiles.get(glob)?.size ?? 0) > 0) continue;
+
+            const groupId = `declared-glob:${glob}`;
+            if (!filesGroupMap.has(groupId)) {
+                filesGroupMap.set(groupId, {
+                    id: groupId,
+                    kind: "declared",
+                    files: [],
+                    configs: [],
+                    globs: new Set<string>([glob]),
+                });
+            }
+
+            const group = filesGroupMap.get(groupId)!;
+            if (!group.configs.includes(config))
+                group.configs.push(payload.configs[configIndex]!);
+        }
     }
 
-    const specialConfigs = file.configs.filter(
-      i => !isGeneralConfig(payload.configs[i]!),
-    )
-    const displayConfigs = [...new Set(file.configs)].toSorted(
-      (a, b) => a - b,
-    )
-    const positiveGlobs = file.globs
-      .filter(glob => !glob.startsWith('!'))
-      .toSorted((a, b) => a.localeCompare(b))
-    const groupId = specialConfigs.length
-      ? `configs:${specialConfigs.join('-')}`
-      : `globs:${positiveGlobs.join('|') || '<general>'}`
-    if (!filesGroupMap.has(groupId)) {
-      filesGroupMap.set(groupId, {
-        id: groupId,
-        kind: 'matched',
-        files: [],
-        configs: displayConfigs.map(i => payload.configs[i]!),
-        globs: new Set<string>(),
-      })
+    const generalConfigs = payload.configs.filter(
+        (config) => isGeneralConfig(config) && !isIgnoreOnlyConfig(config)
+    );
+
+    if (generalConfigs.length) {
+        for (const glob of DEFAULT_WORKSPACE_SCAN_GLOBS) {
+            if (!globToFiles.has(glob)) globToFiles.set(glob, new Set());
+
+            if ((globToFiles.get(glob)?.size ?? 0) > 0) continue;
+
+            const groupId = `default-scan:${glob}`;
+            if (!filesGroupMap.has(groupId)) {
+                filesGroupMap.set(groupId, {
+                    id: groupId,
+                    kind: "default",
+                    files: [],
+                    configs: [...generalConfigs],
+                    globs: new Set<string>([glob]),
+                });
+            }
+        }
     }
-    const group = filesGroupMap.get(groupId)!
-    group.files.push(file.filepath)
-    file.globs.forEach(i => group.globs.add(i))
-  }
 
-  for (const [configIndex, config] of payload.configs.entries()) {
-    const declaredPositiveGlobs = (config.files ?? [])
-      .flat()
-      .filter(
-        glob => typeof glob === 'string' && !glob.startsWith('!'),
-      )
+    const groups = [...filesGroupMap.values()];
+    fileGroupsOpenState.value = groups.map(() => true);
 
-    for (const glob of declaredPositiveGlobs) {
-      if (!globToFiles.has(glob))
-        globToFiles.set(glob, new Set())
-
-      if ((globToFiles.get(glob)?.size ?? 0) > 0)
-        continue
-
-      const groupId = `declared-glob:${glob}`
-      if (!filesGroupMap.has(groupId)) {
-        filesGroupMap.set(groupId, {
-          id: groupId,
-          kind: 'declared',
-          files: [],
-          configs: [],
-          globs: new Set<string>([glob]),
-        })
-      }
-
-      const group = filesGroupMap.get(groupId)!
-      if (!group.configs.includes(config))
-        group.configs.push(payload.configs[configIndex]!)
-    }
-  }
-
-  const generalConfigs = payload.configs.filter(
-    config => isGeneralConfig(config) && !isIgnoreOnlyConfig(config),
-  )
-
-  if (generalConfigs.length) {
-    for (const glob of DEFAULT_WORKSPACE_SCAN_GLOBS) {
-      if (!globToFiles.has(glob))
-        globToFiles.set(glob, new Set())
-
-      if ((globToFiles.get(glob)?.size ?? 0) > 0)
-        continue
-
-      const groupId = `default-scan:${glob}`
-      if (!filesGroupMap.has(groupId)) {
-        filesGroupMap.set(groupId, {
-          id: groupId,
-          kind: 'default',
-          files: [],
-          configs: [...generalConfigs],
-          globs: new Set<string>([glob]),
-        })
-      }
-    }
-  }
-
-  const groups = [...filesGroupMap.values()]
-  fileGroupsOpenState.value = groups.map(() => true)
-
-  return {
-    list: files,
-    globToFiles,
-    fileToGlobs,
-    fileToConfigs: new Map(
-      Array.from(fileToConfigs.entries(), ([file, configs]) => [
-        file,
-        [...configs]
-          .toSorted((a, b) => a - b)
-          .map(i => payload.configs[i]!),
-      ]),
-    ),
-    configToFiles,
-    groups,
-  }
+    return {
+        list: files,
+        globToFiles,
+        fileToGlobs,
+        fileToConfigs: new Map(
+            Array.from(fileToConfigs.entries(), ([file, configs]) => [
+                file,
+                [...configs]
+                    .toSorted((a, b) => a - b)
+                    .map((i) => payload.configs[i]!),
+            ])
+        ),
+        configToFiles,
+        groups,
+    };
 }
