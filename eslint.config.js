@@ -5,6 +5,7 @@ import nuxt from "./.nuxt/eslint.config.mjs";
 export default await nuxt()
     .prepend(
         await antfu({
+            stylistic: false,
             unocss: true,
             vue: {
                 overrides: {
@@ -65,11 +66,6 @@ export default await nuxt()
             "e18e/prefer-static-regex": "off",
             "jsdoc/require-returns-description": "off",
             "jsonc/indent": "off",
-            "style/indent": "off",
-            "style/member-delimiter-style": "off",
-            "style/operator-linebreak": "off",
-            "style/quotes": "off",
-            "style/semi": "off",
             "ts/consistent-type-definitions": "off",
             "yaml/indent": "off",
             "yaml/plain-scalar": "off",

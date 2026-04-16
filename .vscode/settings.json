@@ -7,12 +7,11 @@
 
     "editor.formatOnSave": false,
 
-    // Enable the ESlint flat config support
-    "eslint.experimental.useFlatConfig": true,
+    // Enable the ESLint flat config support
+    "eslint.useFlatConfig": true,
 
-    // Silent the stylistic rules in you IDE, but still auto fix them
+    // Reduce noisy formatting-style diagnostics in the IDE; Prettier handles formatting.
     "eslint.rules.customizations": [
-        { "rule": "style/*", "severity": "off" },
         { "rule": "*-indent", "severity": "off" },
         { "rule": "*-spacing", "severity": "off" },
         { "rule": "*-spaces", "severity": "off" },

@@ -70,7 +70,6 @@ const devDependencies = [
     "@stryker-mutator/vitest-runner",
     "@stylelint-types/stylelint-order",
     "@stylelint-types/stylelint-stylistic",
-    "@stylistic/eslint-plugin",
     "@stylistic/stylelint-plugin",
     "@types/eslint-plugin-jsx-a11y",
     "@types/eslint-plugin-security",
