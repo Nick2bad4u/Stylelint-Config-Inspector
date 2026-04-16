@@ -1,6 +1,6 @@
 {
     "name": "stylelint-config-inspector",
-    "version": "2.0.5",
+    "version": "2.1.0",
     "private": false,
     "description": "A visual tool for inspecting and understanding your Stylelint configs",
     "keywords": [
