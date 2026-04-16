@@ -107,6 +107,20 @@ const config = defineConfig({
     defaultSeverity: "warning",
 
     /**
+     * Language directionality for flow-relative property mapping.
+     *
+     * @remarks
+     * Enables deterministic behavior for rules that map physical properties to
+     * logical counterparts based on writing flow.
+     */
+    languageOptions: {
+        directionality: {
+            block: "top-to-bottom",
+            inline: "left-to-right",
+        },
+    },
+
+    /**
      * Baseline configuration sets that provide foundational rules and
      * standards.
      *
@@ -184,6 +198,25 @@ const config = defineConfig({
             files: ["**/*.html"],
             rules: {
                 // Relax some rules for inline CSS in HTML
+                "declaration-no-important": null,
+                "max-nesting-depth": null,
+                "selector-max-id": null,
+                "selector-max-specificity": null,
+            },
+        },
+        {
+            /**
+             * Configuration for Vue single-file components containing CSS in<style> blocks.
+             *
+             * @remarks
+             * Uses postcss-html parser to extract and lint CSS from Vue SFC
+             * style blocks while ignoring template/script sections.
+             */
+            // Vue files with <style> blocks
+            customSyntax: "postcss-html",
+            files: ["**/*.vue"],
+            rules: {
+                // Relax some rules commonly impractical in component-scoped CSS
                 "declaration-no-important": null,
                 "max-nesting-depth": null,
                 "selector-max-id": null,
@@ -682,6 +715,7 @@ const config = defineConfig({
         "csstools/use-nesting": "always",
         "csstools/value-no-unknown-custom-properties": null,
         "custom-property-no-missing-var-function": true,
+        "custom-property-pattern": null,
         "declaration-block-no-duplicate-custom-properties": true,
         "declaration-block-no-duplicate-properties": [
             true,
@@ -1010,8 +1044,10 @@ const config = defineConfig({
         "prettier/prettier": true,
         "property-allowed-list": null,
         "property-disallowed-list": null,
+        "property-layout-mappings": "flow-relative",
         "property-no-deprecated": true,
         "property-no-unknown": true,
+        "relative-selector-nesting-notation": "explicit",
 
         "rule-empty-line-before": null,
         "rule-nesting-at-rule-required-list": null,
@@ -1211,6 +1247,7 @@ const config = defineConfig({
         "selector-max-type": null,
         "selector-max-universal": null,
         "selector-nested-pattern": null,
+        "selector-no-deprecated": true,
         "selector-no-qualifying-type": null,
         "selector-not-notation": "complex",
         "selector-pseudo-class-allowed-list": null,

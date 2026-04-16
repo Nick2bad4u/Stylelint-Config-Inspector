@@ -4,6 +4,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promis
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'pathe'
+import stylelint from 'stylelint'
 import { afterEach, describe, expect, it } from 'vitest'
 import { readConfig } from '../src/configs'
 import {
@@ -173,6 +174,39 @@ describe('stylelint adapter', () => {
     expect(result.payload.meta.configNotFound).toBeUndefined()
     expect(result.payload.configs[0]?.rules).toEqual({})
     expect(Object.keys(result.payload.rules).length).toBeGreaterThan(0)
+  })
+
+  it('surfaces newly added core rules when stylelint runtime provides them', async () => {
+    const cwd = await createTempProject(`
+      export default {
+        rules: {
+          "color-no-invalid-hex": true,
+        },
+      }
+    `)
+
+    const result = await readConfig({
+      cwd,
+      chdir: false,
+      globMatchedFiles: false,
+      targetFilePath: 'src/styles.css',
+    })
+
+    const runtimeRuleNames = new Set(
+      Object.keys(stylelint.rules as Record<string, unknown>),
+    )
+    const payloadRuleNames = new Set(Object.keys(result.payload.rules))
+
+    const newlyAddedCoreRules = [
+      'property-layout-mappings',
+      'relative-selector-nesting-notation',
+      'selector-no-deprecated',
+    ] as const
+
+    for (const ruleName of newlyAddedCoreRules) {
+      if (runtimeRuleNames.has(ruleName))
+        expect(payloadRuleNames).toContain(ruleName)
+    }
   })
 
   it('normalizes extends, plugins, and customSyntax fields', async () => {

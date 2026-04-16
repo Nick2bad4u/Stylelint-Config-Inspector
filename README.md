@@ -18,7 +18,7 @@ From a project that contains a Stylelint config (`stylelint.config.*` or `.style
 npx stylelint-config-inspector@latest
 ```
 
-Then open http://localhost:8888/.
+Then open http://localhost:8888/ (If it does not open automatically) to explore your config.
 
 ### Resolve for a target file
 

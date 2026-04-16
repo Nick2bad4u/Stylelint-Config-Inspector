@@ -1,6 +1,6 @@
 html,
 body,
-#__nuxt {
+[id="__nuxt"] {
     padding: 0;
     margin: 0;
     block-size: 100dvb;
@@ -72,7 +72,7 @@ html.dark {
 }
 
 .shiki {
-    font-size: 14px;
+    font-size: 16px;
 
     & span.line.muted {
         font-style: italic;
@@ -154,6 +154,7 @@ html.dark {
 
 /* Overrides Floating Vue */
 .v-popper--theme-dropdown .v-popper__inner {
+    /* stylelint-disable-next-line scss/declaration-property-value-no-unknown -- Uno/Tailwind utility tokens are intentionally stored in this custom property. */
     --at-apply: bg-tooltip color-base font-sans rounded border border-base
         shadow dark: shadow-2xl;
     border-color: color-mix(in srgb, var(--c-fg) 18%, transparent);
@@ -170,13 +171,6 @@ html.dark {
     background: rgb(252 249 255 / 0.97);
     box-shadow: 0 10px 30px rgb(0 0 0 / 0.28);
     color: rgb(24 24 27);
-}
-
-html.dark .v-popper--theme-dropdown .v-popper__inner,
-html.dark .v-popper--theme-tooltip .v-popper__inner {
-    backdrop-filter: blur(6px);
-    background: rgb(20 16 33 / 0.97);
-    color: rgb(228 228 231);
 }
 
 .v-popper--theme-tooltip .v-popper__inner {
@@ -196,6 +190,14 @@ html.dark .v-popper--theme-tooltip .v-popper__inner {
     white-space: pre-line;
 }
 
+.v-popper--theme-tooltip[id^="popper_"] .v-popper__inner,
+.v-popper--theme-tooltip [id="popper_inner"] {
+    max-inline-size: min(34rem, 78vi);
+    overflow-wrap: anywhere;
+    text-wrap: pretty;
+    white-space: pre-line;
+}
+
 html.dark [id^="popper_"] .v-popper__inner,
 html.dark [id="popper_inner"] {
     border-color: color-mix(in srgb, #ddd6fe 30%, transparent);
@@ -203,12 +205,11 @@ html.dark [id="popper_inner"] {
     color: rgb(228 228 231);
 }
 
-.v-popper--theme-tooltip[id^="popper_"] .v-popper__inner,
-.v-popper--theme-tooltip [id="popper_inner"] {
-    max-inline-size: min(34rem, 78vi);
-    overflow-wrap: anywhere;
-    text-wrap: pretty;
-    white-space: pre-line;
+html.dark .v-popper--theme-dropdown .v-popper__inner,
+html.dark .v-popper--theme-tooltip .v-popper__inner {
+    backdrop-filter: blur(6px);
+    background: rgb(20 16 33 / 0.97);
+    color: rgb(228 228 231);
 }
 
 .v-popper--theme-tooltip .v-popper__arrow-inner,
@@ -227,14 +228,14 @@ html.dark [id="popper_inner"] {
     transition: none;
 }
 
-html:not(.dark) .text-zinc-300 {
+html:not(.dark)
+    :is(
+        .text-zinc-300,
+        .text-zinc-300\/70,
+        .text-zinc-300\/75,
+        .text-zinc-300\/85
+    ) {
     color: rgb(82 82 91);
-
-    &\/70,
-    &\/75,
-    &\/85 {
-        color: rgb(82 82 91);
-    }
 }
 
 html:not(.dark) .text-zinc-400 {

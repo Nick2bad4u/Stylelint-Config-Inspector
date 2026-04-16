@@ -95,41 +95,41 @@ const scopeColor = computed(() => getPluginColor(scopeColorKey.value))
 
 <style scoped>
 .colorized-rule-name {
+  position: relative;
   display: inline-flex;
+  overflow: hidden;
   align-items: baseline;
   inline-size: 100%;
   max-inline-size: 100%;
   min-inline-size: 0;
-  overflow: hidden;
-  position: relative;
   white-space: nowrap;
 }
 
 .colorized-rule-name--button {
+  padding: 0;
+  border: 0;
   appearance: none;
   background: transparent;
-  border: 0;
   color: inherit;
   cursor: pointer;
   font: inherit;
-  padding: 0;
-  text-align: left;
+  text-align: start;
 }
 
 .colorized-rule-name__name {
+  overflow: hidden;
   flex: 1 1 auto;
   min-inline-size: 0;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .colorized-rule-name--hoverable:hover,
 .colorized-rule-name--hoverable:focus-visible {
-  inline-size: max-content;
-  max-inline-size: min(72ch, calc(100vw - 8rem));
-  overflow: visible;
   z-index: 20;
+  overflow: visible;
+  inline-size: max-content;
+  max-inline-size: min(72ch, calc(100vi - 8rem));
 }
 
 .colorized-rule-name--hoverable:hover .colorized-rule-name__name,

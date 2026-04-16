@@ -1,12 +1,12 @@
 {
   "compilerOptions": {
+    "incremental": true,
     "tsBuildInfoFile": "./.nuxt/tsconfig.cli.tsbuildinfo",
-    "target": "ESNext",
-    "jsx": "preserve",
-    "lib": ["ESNext"],
-    "moduleDetection": "force",
+    "target": "ES2024",
+    "lib": ["ES2024"],
+    "moduleDetection": "auto",
     "useDefineForClassFields": true,
-    "module": "preserve",
+    "module": "ESNext",
     "moduleResolution": "Bundler",
     "paths": {
       "~~/*": [
@@ -23,21 +23,46 @@
       ]
     },
     "resolveJsonModule": true,
-    "allowJs": true,
+    "resolvePackageJsonExports": true,
+    "resolvePackageJsonImports": true,
+    "allowArbitraryExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "allowJs": false,
     "strict": true,
+    "alwaysStrict": true,
+    "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
     "noImplicitOverride": true,
+    "noImplicitReturns": true,
     "noImplicitThis": true,
+    "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "useUnknownInCatchVariables": true,
+    "noErrorTruncation": true,
+    "declaration": true,
+    "declarationMap": false,
     "noEmit": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
+    "isolatedDeclarations": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
   "include": [
     "./shared/**/*.d.ts",
-    "./src/"
+    "./src/**/*.ts"
+  ],
+  "exclude": [
+    "./.cache/**",
+    "./.nuxt/**",
+    "./dist/**",
+    "./node_modules/**",
+    "./playwright-report/**",
+    "./test-results/**"
   ]
 }
