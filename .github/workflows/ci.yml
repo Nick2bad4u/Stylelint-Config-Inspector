@@ -120,7 +120,7 @@ jobs:
 
             - name: Run tests with coverage and JUnit report
               if: matrix.node == 'lts/*'
-              run: npx vitest run --coverage --coverage.reporter=clover --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --silent
+              run: npx vitest run --coverage --coverage.reporter=lcovonly --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --silent
               env:
                   CI: "true"
                   MAX_THREADS: "1"
@@ -129,11 +129,11 @@ jobs:
 
             - name: Verify coverage artifact
               if: matrix.node == 'lts/*'
-              run: python -c "from datetime import datetime, timedelta, timezone; from pathlib import Path; artifact = Path('coverage/clover.xml'); assert artifact.is_file(), 'coverage/clover.xml was not generated'; modified_at = datetime.fromtimestamp(artifact.stat().st_mtime, tz=timezone.utc); assert modified_at > datetime.now(timezone.utc) - timedelta(minutes=30), 'coverage/clover.xml is stale (older than 30 minutes)'"
+              run: python -c "from datetime import datetime, timedelta, timezone; from pathlib import Path; artifact = Path('coverage/lcov.info'); assert artifact.is_file(), 'coverage/lcov.info was not generated'; modified_at = datetime.fromtimestamp(artifact.stat().st_mtime, tz=timezone.utc); assert modified_at > datetime.now(timezone.utc) - timedelta(minutes=30), 'coverage/lcov.info is stale (older than 30 minutes)'; content = artifact.read_text(encoding='utf-8'); assert len(content.strip()) > 0, 'coverage/lcov.info is empty'; assert 'SF:' in content, 'coverage/lcov.info has no source file entries'"
 
             - name: Upload Nuxt bundle analysis to Codecov
-              if: ${{ matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) && env.CODECOV_TOKEN != '' }}
-              run: npx @codecov/bundle-analyzer ./dist --bundle-name=nuxt --upload-token="${CODECOV_TOKEN}"
+              if: ${{ matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }}
+              run: npx @codecov/bundle-analyzer ./dist --bundle-name=nuxt
               env:
                   GITHUB_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
                   GITHUB_REF: ${{ github.event_name == 'pull_request' && format('refs/heads/{0}', github.head_ref) || github.ref }}
@@ -162,7 +162,7 @@ jobs:
               with:
                   use_oidc: true
                   slug: Nick2bad4u/stylelint-config-inspector
-                  files: ./coverage/clover.xml
+                  files: ./coverage/lcov.info
                   flags: ${{ steps.codecov_flags.outputs.os_flag }}
                   name: vitest-unit-coverage-${{ steps.codecov_flags.outputs.os_flag }}
                   report_type: coverage
