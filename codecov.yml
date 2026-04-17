@@ -66,17 +66,62 @@ flags:
             - plugin.mjs
             - src/
 
+    os-linux-node-20:
+        carryforward: false
+
+    os-linux-node-22:
+        carryforward: false
+
+    os-linux-node-24:
+        carryforward: false
+
+    os-linux-node-25:
+        carryforward: false
+
+    os-linux-node-lts:
+        carryforward: false
+
     os-macos:
         carryforward: true
         paths:
             - plugin.mjs
             - src/
 
+    os-macos-node-20:
+        carryforward: false
+
+    os-macos-node-22:
+        carryforward: false
+
+    os-macos-node-24:
+        carryforward: false
+
+    os-macos-node-25:
+        carryforward: false
+
+    os-macos-node-lts:
+        carryforward: false
+
     os-windows:
         carryforward: true
         paths:
             - plugin.mjs
             - src/
+
+    os-windows-node-20:
+        carryforward: false
+
+    os-windows-node-22:
+        carryforward: false
+
+    os-windows-node-24:
+        carryforward: false
+
+    os-windows-node-25:
+        carryforward: false
+
+    os-windows-node-lts:
+        carryforward: false
 
 ignore:
     - "benchmarks/**"

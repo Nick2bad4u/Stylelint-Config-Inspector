@@ -48,6 +48,9 @@ jobs:
 
     test:
         runs-on: ${{ matrix.os }}
+        permissions:
+            contents: read
+            id-token: write
 
         env:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -79,12 +82,37 @@ jobs:
             - name: Install
               run: npm install --force
 
+            - name: Compute Codecov flags
+              id: codecov_flags
+              run: |
+                  if [[ "${{ matrix.os }}" == 'ubuntu-latest' ]]; then
+                    codecov_os_flag='os-linux'
+                  elif [[ "${{ matrix.os }}" == 'windows-latest' ]]; then
+                    codecov_os_flag='os-windows'
+                  else
+                    codecov_os_flag='os-macos'
+                  fi
+
+                  if [[ "${{ matrix.node }}" == 'lts/*' ]]; then
+                    codecov_node_flag='node-lts'
+                  else
+                    codecov_node_flag="node-${{ matrix.node }}"
+                  fi
+
+                  echo "os_flag=${codecov_os_flag}" >> "$GITHUB_OUTPUT"
+                  echo "test_results_flag=${codecov_os_flag}-${codecov_node_flag}" >> "$GITHUB_OUTPUT"
+
             - name: Build
               run: npm run build
 
             - name: Test
               if: matrix.node != 'lts/*'
-              run: npm run test
+              run: npx vitest run --reporter=github-actions --reporter=dot --reporter=junit --outputFile=test-report.junit.xml --silent
+              env:
+                  CI: "true"
+                  MAX_THREADS: "1"
+                  TYPEFEST_VITEST_HANGING_PROCESS_REPORTER: "true"
+                  VITEST_HANGING_PROCESS_REPORTER: "true"
 
             - name: Run tests with coverage and JUnit report
               if: matrix.node == 'lts/*'
@@ -99,33 +127,37 @@ jobs:
               if: matrix.node == 'lts/*'
               run: python -c "from pathlib import Path; assert Path('coverage/clover.xml').is_file(), 'coverage/clover.xml was not generated'"
 
+            - name: Upload Nuxt bundle analysis to Codecov
+              if: ${{ matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest' && github.event_name == 'push' && github.ref == 'refs/heads/main' && env.CODECOV_TOKEN != '' }}
+              run: npx @codecov/bundle-analyzer ./dist --bundle-name=nuxt --upload-token="${CODECOV_TOKEN}"
+
             - name: Verify JUnit artifact
-              if: matrix.node == 'lts/*'
+              if: ${{ !cancelled() }}
               run: python -c "from pathlib import Path; assert Path('test-report.junit.xml').is_file(), 'test-report.junit.xml was not generated'"
 
             - name: Upload test results to Codecov
-              if: "!cancelled() && matrix.node == 'lts/*' && env.CODECOV_TOKEN != ''"
+              if: ${{ !cancelled() }}
               uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
               with:
-                  token: ${{ env.CODECOV_TOKEN }}
+                  use_oidc: true
                   slug: Nick2bad4u/stylelint-config-inspector
                   files: test-report.junit.xml
-                  flags: ${{ matrix.os == 'ubuntu-latest' && 'os-linux' || matrix.os == 'windows-latest' && 'os-windows' || 'os-macos' }}
-                  name: vitest-junit-${{ matrix.os == 'ubuntu-latest' && 'os-linux' || matrix.os == 'windows-latest' && 'os-windows' || 'os-macos' }}
+                  flags: ${{ steps.codecov_flags.outputs.test_results_flag }}
+                  name: vitest-junit-${{ steps.codecov_flags.outputs.test_results_flag }}
                   report_type: test_results
                   fail_ci_if_error: true
                   disable_search: true
                   verbose: true
 
             - name: Upload coverage to Codecov
-              if: "!cancelled() && matrix.node == 'lts/*' && env.CODECOV_TOKEN != ''"
+              if: ${{ !cancelled() && matrix.node == 'lts/*' }}
               uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
               with:
-                  token: ${{ env.CODECOV_TOKEN }}
+                  use_oidc: true
                   slug: Nick2bad4u/stylelint-config-inspector
                   files: ./coverage/clover.xml
-                  flags: ${{ matrix.os == 'ubuntu-latest' && 'os-linux' || matrix.os == 'windows-latest' && 'os-windows' || 'os-macos' }}
-                  name: vitest-unit-coverage-${{ matrix.os == 'ubuntu-latest' && 'os-linux' || matrix.os == 'windows-latest' && 'os-windows' || 'os-macos' }}
+                  flags: ${{ steps.codecov_flags.outputs.os_flag }}
+                  name: vitest-unit-coverage-${{ steps.codecov_flags.outputs.os_flag }}
                   report_type: coverage
                   fail_ci_if_error: true
                   disable_search: true
