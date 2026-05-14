@@ -1099,10 +1099,7 @@ function normalizeRuleDeprecated(
     if (typeof deprecated === "boolean") return deprecated;
 
     if (isRecord(deprecated)) {
-        return deprecated as Exclude<
-            RuleInfo["deprecated"],
-            boolean | undefined
-        >;
+        return deprecated;
     }
 
     return undefined;
