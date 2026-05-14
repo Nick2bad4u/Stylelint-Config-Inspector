@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { FilesGroup, FlatConfigItem } from "~~/shared/types";
-import { useRouter } from "#app/composables/router";
 import { computed, ref, watchEffect } from "vue";
 import { testIds } from "~~/shared/test-ids";
+import { useRouter } from "#app/composables/router";
 
 const props = defineProps<{
     index: number;

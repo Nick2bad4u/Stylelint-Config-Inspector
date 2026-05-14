@@ -2,7 +2,6 @@
 import type { FuseResultMatch } from "fuse.js";
 import type { ComponentPublicInstance, PropType, VNode } from "vue";
 import type { FlatConfigItem, MatchedFile, RulesRecord } from "~~/shared/types";
-import { useRoute } from "#app/composables/router";
 import { debouncedWatch } from "@vueuse/core";
 import Fuse from "fuse.js";
 import {
@@ -19,6 +18,7 @@ import {
 import {} from "~~/shared/config-plugin-filters";
 import { isIgnoreOnlyConfig, matchFile } from "~~/shared/configs";
 import { getRuleLevel } from "~~/shared/rules";
+import { useRoute } from "#app/composables/router";
 import { getPluginColor } from "~/composables/color";
 import { payload } from "~/composables/payload";
 import {

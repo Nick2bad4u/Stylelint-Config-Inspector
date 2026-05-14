@@ -1,7 +1,7 @@
 import type { Ref } from "vue";
-import { useState } from "#app/composables/state";
 import { useMediaQuery } from "@vueuse/core";
 import { computed, ref, watch } from "vue";
+import { useState } from "#app/composables/state";
 
 export type UserTheme = "auto" | "light" | "dark";
 

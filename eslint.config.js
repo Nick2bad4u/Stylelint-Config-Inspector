@@ -78,4 +78,10 @@ export default await nuxt()
             "yaml/plain-scalar": "off",
             "yaml/quotes": "off",
         },
+    })
+    .append({
+        files: ["app/composables/**/*.{c,m,}{j,t}s"],
+        rules: {
+            "unimport/auto-insert": "off",
+        },
     });

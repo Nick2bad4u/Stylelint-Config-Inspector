@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { onBeforeUnmount, ref } from "vue";
 import { useRouter } from "#app/composables/router";
 import { useRuntimeConfig } from "#app/nuxt";
-import { onBeforeUnmount, ref } from "vue";
 import { errorInfo, init, isLoading } from "~/composables/payload";
 
 import "floating-vue/dist/style.css";

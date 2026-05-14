@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useRouter } from "#app/composables/router";
 import { useTimeAgo } from "@vueuse/core";
 import { Dropdown as VDropdown } from "floating-vue";
 import { computed } from "vue";
 import { version } from "~~/package.json";
 import { testIds } from "~~/shared/test-ids";
+import { useRouter } from "#app/composables/router";
 import { toggleDark } from "~/composables/dark";
 import { isFetching, payload } from "~/composables/payload";
 import { filtersRules as filters, stateStorage } from "~/composables/state";

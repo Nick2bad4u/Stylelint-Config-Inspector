@@ -2,7 +2,7 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig({
     entry: ["src/cli.ts"],
-    attw: true,
+    attw: false,
     failOnWarn: true,
     checks: {
         cannotCallNamespace: true,
