@@ -36,5 +36,9 @@
         "yaml"
     ],
     // Disable the default formatter, use eslint instead
-    "prettier.enable": false
+    "prettier.enable": false,
+    "sonarlint.connectedMode.project": {
+        "connectionId": "nick2bad4u",
+        "projectKey": "Nick2bad4u_Stylelint-Config-Inspector"
+    }
 }

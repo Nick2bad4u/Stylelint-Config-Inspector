@@ -133,6 +133,7 @@ jobs:
 
             - name: Upload Nuxt bundle analysis to Codecov
               if: ${{ matrix.node == 'lts/*' && matrix.os == 'ubuntu-latest' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')) }}
+              continue-on-error: true
               run: npx @codecov/bundle-analyzer ./dist --bundle-name=nuxt
               env:
                   GITHUB_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
