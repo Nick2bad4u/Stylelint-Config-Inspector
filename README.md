@@ -2,7 +2,7 @@
 
 [![npm license.](https://flat.badgen.net/npm/license/stylelint-config-inspector?color=purple)](https://github.com/Nick2bad4u/stylelint-config-inspector/blob/main/LICENSE) [![npm total downloads.](https://flat.badgen.net/npm/dt/stylelint-config-inspector?color=pink)](https://www.npmjs.com/package/stylelint-config-inspector) [![latest GitHub release.](https://flat.badgen.net/github/release/Nick2bad4u/stylelint-config-inspector?color=cyan)](https://github.com/Nick2bad4u/stylelint-config-inspector/releases) [![GitHub stars.](https://flat.badgen.net/github/stars/Nick2bad4u/stylelint-config-inspector?color=yellow)](https://github.com/Nick2bad4u/stylelint-config-inspector/stargazers) [![GitHub forks.](https://flat.badgen.net/github/forks/Nick2bad4u/stylelint-config-inspector?color=green)](https://github.com/Nick2bad4u/stylelint-config-inspector/forks) [![GitHub open issues.](https://flat.badgen.net/github/open-issues/Nick2bad4u/stylelint-config-inspector?color=red)](https://github.com/Nick2bad4u/stylelint-config-inspector/issues) [![codecov.](https://flat.badgen.net/codecov/github/Nick2bad4u/stylelint-config-inspector?color=blue)](https://codecov.io/gh/Nick2bad4u/stylelint-config-inspector)
 
-A visual tool for inspecting and understanding your Stylelint configuration.
+A visual tool for inspecting and understanding your **Stylelint** configuration.
 
 ## Screenshot
 
@@ -31,6 +31,21 @@ npx stylelint-config-inspector --file src/styles/app.css
 If you do not provide `--file` or `--target`, the inspector resolves your config against a synthetic file named `stylelint-inspector-target.css` relative to the resolved base path.
 
 `--file` and `--target` are equivalent.
+
+## CLI
+
+```bash
+stylelint-config-inspector [options]
+stylelint-config-inspector build [options]
+```
+
+### Core options
+
+- `--config <configFile>`: explicit config file path
+- `--basePath <basePath>`: root path used for glob resolution
+- `--file <filePath>`: alias of `--target`
+- `--target <filePath>`: file used for effective config resolution
+- `--files`: include matched file metadata in payload (enabled by default)
 
 ### Static build
 
