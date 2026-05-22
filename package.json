@@ -1,6 +1,6 @@
 {
     "name": "stylelint-config-inspector",
-    "version": "2.1.2",
+    "version": "2.3.0",
     "private": false,
     "description": "A visual tool for inspecting and understanding your Stylelint configs",
     "keywords": [
@@ -290,6 +290,7 @@
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.59.3",
         "typesync": "^0.14.3",
+        "unrun": "^0.3.0",
         "vfile": "^6.0.3",
         "vite": "^8.0.13",
         "vite-tsconfig-paths": "^6.1.1",
