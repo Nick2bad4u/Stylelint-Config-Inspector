@@ -92,7 +92,7 @@ const groupIdentity = computed(() => {
 <template>
     <!-- @vue-ignore -->
     <details
-        class="flat-config-item"
+        class="flat-config-item inspector-panel"
         :open="open"
         border="~ base rounded-lg"
         relative
@@ -124,8 +124,22 @@ const groupIdentity = computed(() => {
                     op50
                     transition
                 />
-                <div flex flex-auto flex-col gap-3 md:flex-row>
-                    <span flex-auto flex="~ gap-2 items-center">
+                <div
+                    min-w-0
+                    flex
+                    flex-auto
+                    flex-col
+                    gap-3
+                    of-hidden
+                    md:flex-row
+                >
+                    <span
+                        max-w-full
+                        min-w-0
+                        flex-auto
+                        of-hidden
+                        flex="~ gap-2 items-center wrap"
+                    >
                         <template v-if="groupName?.type === 'config'">
                             <span
                                 :data-testid="testIds.files.groupIdentityLabel"

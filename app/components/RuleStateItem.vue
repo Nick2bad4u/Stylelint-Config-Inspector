@@ -52,7 +52,12 @@ function goto() {
 </script>
 
 <template>
-    <div min-w="min(30rem,84vw)" p3 flex="~ col gap-3">
+    <div
+        class="rule-state-panel inspector-panel"
+        min-w="min(30rem,84vw)"
+        p3
+        flex="~ col gap-3"
+    >
         <div flex="~ gap-2 items-center wrap">
             <RuleLevelIcon
                 :level="state.level"
@@ -65,10 +70,7 @@ function goto() {
             }}</span>
             <template v-if="!isLocal">
                 <span op50>in</span>
-                <button
-                    class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/4 px2 py0.5 text-sm text-inherit transition dark:bg-white/5 hover:bg-black/8 dark:hover:bg-white/10"
-                    @click="goto()"
-                >
+                <button class="rule-state-config-button" @click="goto()">
                     <ColorizedConfigName
                         v-if="config.name"
                         :name="config.name"
@@ -83,6 +85,7 @@ function goto() {
         </div>
         <div
             v-if="!isLocal"
+            class="rule-state-scope"
             rounded-lg
             border="~ base"
             bg-black:3
@@ -216,3 +219,66 @@ function goto() {
         </template>
     </div>
 </template>
+
+<style scoped>
+.rule-state-panel {
+    border-color: rgb(124 58 237 / 0.18);
+    background: rgb(255 255 255 / 0.96);
+    color: rgb(39 39 42);
+
+    html.dark & {
+        border-color: rgb(167 139 250 / 0.2);
+        background: rgb(24 24 27 / 0.96);
+        color: rgb(244 244 245);
+    }
+}
+
+.rule-state-config-button {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid rgb(124 58 237 / 0.2);
+    border-radius: 9999px;
+    background: rgb(124 58 237 / 0.07);
+    color: inherit;
+    font-size: 0.875rem;
+    gap: 0.375rem;
+    transition:
+        border-color 140ms ease,
+        background 140ms ease,
+        box-shadow 140ms ease;
+
+    @media screen and (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+
+    &:hover,
+    &:focus-visible {
+        border-color: rgb(124 58 237 / 0.36);
+        background: rgb(124 58 237 / 0.12);
+        box-shadow: 0 0 0 3px rgb(124 58 237 / 0.1);
+    }
+
+    html.dark & {
+        border-color: rgb(167 139 250 / 0.22);
+        background: rgb(124 58 237 / 0.14);
+
+        &:hover,
+        &:focus-visible {
+            border-color: rgb(167 139 250 / 0.38);
+            background: rgb(124 58 237 / 0.2);
+            box-shadow: 0 0 0 3px rgb(167 139 250 / 0.12);
+        }
+    }
+}
+
+.rule-state-scope {
+    border-color: rgb(124 58 237 / 0.14);
+    background: rgb(124 58 237 / 0.045);
+
+    html.dark & {
+        border-color: rgb(167 139 250 / 0.16);
+        background: rgb(167 139 250 / 0.07);
+    }
+}
+</style>

@@ -160,6 +160,12 @@ test.describe("rules page regressions", () => {
             .first();
         await expect(firstConfigBadge).toBeVisible();
         await expect(firstConfigBadge).toContainText("#1");
+
+        await firstConfigBadge.hover();
+        await expect(page.locator(".rule-state-panel").first()).toBeVisible();
+        await expect(
+            page.locator(".rule-state-config-button").first()
+        ).toBeVisible();
     });
 
     test("overloaded rule state rail clips to one row and expands on hover", async ({
@@ -188,31 +194,84 @@ test.describe("rules page regressions", () => {
             .fill("stylelint/color-hex-length");
 
         const stateRail = page.getByTestId("rule-state-rail").first();
-        await expect(stateRail.getByRole("img")).toHaveCount(6);
-        await expect(page.getByTestId("rule-state-overflow")).toHaveCount(0);
+        await expect(stateRail.getByRole("img")).toHaveCount(3);
+        await expect(stateRail.getByTestId("rule-state-overflow")).toHaveText(
+            "+4"
+        );
+        await expect(
+            stateRail.getByTestId("rule-state-overflow")
+        ).toHaveAttribute(
+            "aria-label",
+            "4 more config states; hover to show the full trace"
+        );
+        const ruleName = page
+            .locator('.colorized-rule-name[title="stylelint/color-hex-length"]')
+            .first();
 
-        const collapsedMetrics = await stateRail.evaluate((element) => ({
-            clientWidth: element.clientWidth,
-            renderedWidth: element.getBoundingClientRect().width,
-            scrollWidth: element.scrollWidth,
-            height: element.getBoundingClientRect().height,
-        }));
-        expect(collapsedMetrics.scrollWidth).toBeGreaterThan(
-            collapsedMetrics.clientWidth
+        const collapsedMetrics = await stateRail.evaluate((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+                renderedWidth: rect.width,
+                height: rect.height,
+            };
+        });
+        const ruleNameXBefore = await ruleName.evaluate(
+            (element) => element.getBoundingClientRect().x
         );
         expect(collapsedMetrics.height).toBeLessThan(32);
 
-        await stateRail.hover();
+        const overflowBox = await stateRail
+            .getByTestId("rule-state-overflow")
+            .boundingBox();
+        expect(overflowBox).not.toBeNull();
+        await page.mouse.move(
+            overflowBox!.x + overflowBox!.width / 2,
+            overflowBox!.y + overflowBox!.height / 2
+        );
 
-        const expandedMetrics = await stateRail.evaluate((element) => ({
-            clientWidth: element.clientWidth,
-            renderedWidth: element.getBoundingClientRect().width,
-            height: element.getBoundingClientRect().height,
-        }));
+        await expect(stateRail.getByRole("img")).toHaveCount(6);
+        await expect(stateRail.getByTestId("rule-state-overflow")).toBeHidden();
+        await expect(page.locator(".rule-state-panel").first()).toBeVisible();
+
+        const expandedMetrics = await stateRail.evaluate((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+                renderedWidth: rect.width,
+                height: rect.height,
+            };
+        });
+        const ruleNameXAfter = await ruleName.evaluate(
+            (element) => element.getBoundingClientRect().x
+        );
         expect(expandedMetrics.renderedWidth).toBeGreaterThan(
             collapsedMetrics.renderedWidth
         );
         expect(expandedMetrics.height).toBeLessThan(32);
+        expect(ruleNameXAfter).toBeCloseTo(ruleNameXBefore, 0);
+    });
+
+    test("message-derived description metadata is available in hover text only", async ({
+        page,
+    }) => {
+        const payload = structuredClone(MOCK_PAYLOAD);
+        payload.rules[pluginRuleName]!.docs = {
+            ...payload.rules[pluginRuleName]!.docs,
+            descriptionSource: "message",
+        };
+
+        await openRulesPage(page, payload);
+        await filterToRule(page, pluginRuleName);
+
+        const description = page.locator("[title]").filter({
+            hasText: "Disallow unsupported browser features.",
+        });
+        await expect(description).toHaveAttribute(
+            "title",
+            /Description derived from plugin message templates/
+        );
+        await expect(
+            page.locator("[i-ph-chat-centered-text-duotone]")
+        ).toHaveCount(0);
     });
 
     test("search is case-insensitive for rule names", async ({ page }) => {

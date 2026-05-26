@@ -68,7 +68,9 @@ const Noop = defineComponent({
     <component :is="showsPopup ? VDropdown : Noop">
         <component
             :is="showsPopup ? 'button' : 'div'"
+            class="glob-item"
             font-mono
+            :title="props.glob"
             :class="[
                 active === true
                     ? 'badge-active'
@@ -78,7 +80,10 @@ const Noop = defineComponent({
                 active === true ? '' : variantClass,
             ]"
         >
-            <span class="filter-hue-rotate-180" v-html="highlighted" />
+            <span
+                class="glob-item__content filter-hue-rotate-180"
+                v-html="highlighted"
+            />
         </component>
         <template #popper="{ shown, hide }">
             <div
@@ -132,3 +137,22 @@ const Noop = defineComponent({
         </template>
     </component>
 </template>
+
+<style scoped>
+.glob-item {
+    overflow: hidden;
+    box-sizing: border-box;
+    contain: paint;
+    max-inline-size: min(100%, 52vi, 38rem);
+    min-inline-size: 0;
+}
+
+.glob-item__content {
+    display: block;
+    overflow: hidden;
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+</style>

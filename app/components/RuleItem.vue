@@ -120,6 +120,13 @@ function applyPlaceholderGuesses(
 const resolvedRuleStates = computed<RuleConfigStates>(
     () => props.ruleStates ?? []
 );
+const hiddenRuleStateCount = computed(() =>
+    Math.max(0, resolvedRuleStates.value.length - 2)
+);
+const overflowRuleStateLabel = computed(() => {
+    const count = hiddenRuleStateCount.value;
+    return `${count} more config ${count === 1 ? "state" : "states"}; hover to show the full trace`;
+});
 
 const effectiveState = computed(() => {
     const states = resolvedRuleStates.value;
@@ -206,6 +213,21 @@ const descriptionSource = computed(() => props.rule.docs?.descriptionSource);
 const isMessageDerivedDescription = computed(
     () => descriptionSource.value === "message" && !isMissingDescription.value
 );
+const descriptionMetadataHint = computed(() => {
+    if (isMissingDescription.value)
+        return "Description metadata was missing; this fallback was generated.";
+
+    if (isMessageDerivedDescription.value)
+        return "Description derived from plugin message templates because dedicated metadata is missing.";
+
+    return undefined;
+});
+const descriptionTitle = computed(() => {
+    const metadataHint = descriptionMetadataHint.value;
+    if (!metadataHint) return resolvedDescription.value;
+
+    return `${resolvedDescription.value}\n${metadataHint}`;
+});
 const isInferredDocsUrl = computed(
     () => props.rule.docs?.urlSource === "inferred"
 );
@@ -313,22 +335,37 @@ const popoverPanelClass =
                     v-for="(s, idx) of resolvedRuleStates"
                     :key="`${s.configIndex}-${s.level}-${idx}`"
                 >
-                    <VDropdown>
-                        <RuleLevelIcon
-                            :level="s.level"
-                            :config-index="s.configIndex"
-                            :has-options="
-                                s.primaryOption !== undefined ||
-                                !!s.options?.length
-                            "
-                            :has-redundant-options="redundantOptions(s.options)"
-                            :show-config-index="!gridView"
-                        />
-                        <template #popper="{ shown }">
-                            <RuleStateItem v-if="shown" :state="s" />
-                        </template>
-                    </VDropdown>
+                    <span class="rule-state-pill inline-flex flex-none">
+                        <VDropdown :triggers="['hover', 'focus', 'click']">
+                            <RuleLevelIcon
+                                :level="s.level"
+                                :config-index="s.configIndex"
+                                :has-options="
+                                    s.primaryOption !== undefined ||
+                                    !!s.options?.length
+                                "
+                                :has-redundant-options="
+                                    redundantOptions(s.options)
+                                "
+                                :show-config-index="!gridView"
+                            />
+                            <template #popper="{ shown }">
+                                <RuleStateItem v-if="shown" :state="s" />
+                            </template>
+                        </VDropdown>
+                    </span>
                 </template>
+                <div
+                    v-if="hiddenRuleStateCount > 0 && !gridView"
+                    v-tooltip="overflowRuleStateLabel"
+                    data-testid="rule-state-overflow"
+                    class="rule-state-overflow-pill min-w-11 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-1.5 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors hover:border-violet5/55 dark:bg-zinc-950/80 dark:text-gray4 hover:text-violet6 dark:hover:border-violet3/45 dark:hover:text-violet3"
+                    :title="overflowRuleStateLabel"
+                    role="img"
+                    :aria-label="overflowRuleStateLabel"
+                >
+                    <span aria-hidden="true">+{{ hiddenRuleStateCount }}</span>
+                </div>
             </div>
         </template>
         <template v-else-if="hasLocalValue">
@@ -504,16 +541,18 @@ const popoverPanelClass =
                 v-tooltip="'✅ Recommended'"
                 class="col-start-2"
                 i-ph-check-square-duotone
-                text-green6
-                op70
+                text-emerald5
+                op95
+                dark:text-emerald3
             />
             <div
                 v-if="rule.fixable"
                 v-tooltip="'🔧 Fixable'"
                 class="col-start-3"
                 i-ph-wrench-duotone
-                text-amber6
-                op70
+                text-amber5
+                op95
+                dark:text-amber3
             />
             <div
                 v-if="rule.deprecated"
@@ -532,7 +571,7 @@ const popoverPanelClass =
         of-hidden
     >
         <div
-            :title="resolvedDescription"
+            :title="descriptionTitle"
             :class="[
                 rule.deprecated ? 'line-through' : '',
                 rule.invalid ? 'text-red' : '',
@@ -554,26 +593,6 @@ const popoverPanelClass =
                 </code>
             </template>
         </div>
-        <div
-            v-if="isMissingDescription"
-            v-tooltip="
-                'No description metadata found for this rule; showing a generated fallback.'
-            "
-            i-ph-asterisk
-            text-2.5
-            text-amber5
-            op55
-        />
-        <div
-            v-else-if="isMessageDerivedDescription"
-            v-tooltip="
-                'Description derived from plugin message templates because dedicated metadata is missing.'
-            "
-            i-ph-chat-centered-text-duotone
-            text-3
-            text-violet5
-            op55
-        />
     </div>
 
     <div
@@ -600,13 +619,17 @@ const popoverPanelClass =
                 v-if="rule.docs?.recommended"
                 v-tooltip="'✅ Recommended'"
                 i-ph-check-square-duotone
-                op50
+                text-emerald5
+                op95
+                dark:text-emerald3
             />
             <div
                 v-if="rule.fixable"
                 v-tooltip="'🔧 Fixable'"
                 i-ph-wrench-duotone
-                op50
+                text-amber5
+                op95
+                dark:text-amber3
             />
         </div>
     </div>
@@ -614,16 +637,20 @@ const popoverPanelClass =
 
 <style scoped>
 .rule-state-rail--list {
+    position: relative;
     overflow: hidden;
     border-radius: 9999px;
     max-inline-size: 100%;
     padding-block: 0.125rem;
 
+    & .rule-state-pill:nth-of-type(n + 3) {
+        display: none;
+    }
+
     &:hover,
     &:focus-within {
         position: absolute;
         z-index: 20;
-        overflow: visible;
         background: rgb(255 255 255 / 95%);
         box-shadow: 0 18px 45px rgb(0 0 0 / 18%);
         inline-size: max-content;
@@ -631,6 +658,21 @@ const popoverPanelClass =
         max-inline-size: min(42rem, 80vi);
         outline: 1px solid var(--c-border);
         padding-inline: 0.25rem;
+
+        & .rule-state-pill {
+            display: inline-flex;
+        }
+
+        & .rule-state-overflow-pill {
+            overflow: hidden;
+            border-inline-width: 0;
+            box-shadow: none;
+            min-inline-size: 0;
+            opacity: 0;
+            padding-inline: 0;
+            pointer-events: none;
+            visibility: hidden;
+        }
     }
 
     html.dark & {

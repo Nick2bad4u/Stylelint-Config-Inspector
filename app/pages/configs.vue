@@ -336,6 +336,7 @@ onMounted(async () => {
                     v-model="input"
                     placeholder="Test matching with filepath..."
                     aria-label="Test matching with filepath"
+                    class="inspector-input"
                     border="~ base rounded-full"
                     :class="input ? 'font-mono' : ''"
                     w-full
@@ -399,9 +400,8 @@ onMounted(async () => {
             <div v-if="hasSummaryChips" flex="~ gap-2 items-center wrap" mb2>
                 <div v-if="filters.filepath">
                     <div
+                        class="inspector-summary-pill inspector-summary-pill--accent"
                         flex="~ gap-2 items-center wrap"
-                        border="~ purple/20 rounded-full"
-                        bg-purple:10
                         px3
                         py1
                         :class="{ 'saturate-0': !filteredConfigs.length }"
@@ -449,9 +449,8 @@ onMounted(async () => {
                 </div>
                 <div v-if="filters.rule">
                     <div
+                        class="inspector-summary-pill inspector-summary-pill--accent"
                         flex="~ gap-2 items-center"
-                        border="~ blue/20 rounded-full"
-                        bg-violet:10
                         px3
                         py1
                     >
@@ -627,7 +626,7 @@ onMounted(async () => {
             </div>
 
             <template v-if="!filteredConfigs.length">
-                <div mt5 border="~ amber/25 rounded-lg" bg-amber:6 p4 text-sm>
+                <div mt5 class="inspector-empty-state" text-sm>
                     <div
                         flex="~ gap-2 items-center"
                         text-amber7

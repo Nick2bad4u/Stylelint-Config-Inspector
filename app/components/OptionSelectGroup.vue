@@ -23,6 +23,7 @@ const groupName = useId();
         <label
             v-for="(i, idx) of options"
             :key="i"
+            class="inspector-choice-pill"
             border="~ base rounded-full"
             relative
             px2.5

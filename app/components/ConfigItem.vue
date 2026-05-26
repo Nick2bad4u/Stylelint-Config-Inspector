@@ -348,7 +348,7 @@ function setOpenFromToggle(event: Event): void {
 
 <template>
     <details
-        class="flat-config-item"
+        class="flat-config-item inspector-panel"
         :open="open"
         border="~ rounded-lg"
         relative

@@ -62,7 +62,7 @@ const containerClass = computed(() => {
     if (resolvedGridView.value) {
         return "grid grid-cols-[repeat(auto-fill,minmax(min(100%,350px),1fr))] gap-2";
     } else {
-        return "grid max-w-full min-w-0 gap-x-2 gap-y-2 items-center";
+        return "grid max-w-full min-w-0 gap-x-2 gap-y-2 items-center overflow-x-auto pb-1";
     }
 });
 

@@ -17,10 +17,12 @@ function collapseAll() {
 
 <template>
     <div flex="~ col gap-4" my4>
-        <div text-gray:75>
-            This tab shows a preview of file matches from the workspace. This
-            feature is <span text-amber>experimental</span> and may not be 100%
-            accurate.
+        <div class="inspector-experimental-pill">
+            <div i-ph-flask-duotone flex-none />
+            <span>
+                This tab shows a preview of file matches from the workspace.
+                This feature is experimental and may not be 100% accurate.
+            </span>
         </div>
         <template v-if="payload.filesResolved">
             <div flex="~ gap-2 items-center">
@@ -92,7 +94,7 @@ function collapseAll() {
                 <details
                     :open="listFilesOpen"
                     :data-testid="testIds.files.matchedListDetails"
-                    class="border border-base rounded-xl bg-black:4 p3 dark:bg-white:3"
+                    class="inspector-panel p3"
                     @toggle="
                         listFilesOpen = ($event.target as HTMLDetailsElement)
                             .open
@@ -126,7 +128,7 @@ function collapseAll() {
                     </div>
                 </details>
             </div>
-            <div v-else rounded-lg border="~ amber/25" bg-amber:6 p4 text-sm>
+            <div v-else class="inspector-empty-state" text-sm>
                 <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
                     <div i-ph-folder-open-duotone />
                     <span font-medium>No matched files were reported</span>
@@ -137,7 +139,7 @@ function collapseAll() {
                 </div>
             </div>
         </template>
-        <div v-else rounded border="~ base" bg-gray:5 p3 text-sm>
+        <div v-else class="inspector-panel p3" text-sm>
             File matching data is unavailable in the current payload. In CLI
             mode, enable file matching with <code font-mono>--files</code> to
             populate this tab.

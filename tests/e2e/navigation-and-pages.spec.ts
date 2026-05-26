@@ -331,4 +331,166 @@ test.describe("navigation and page regressions", () => {
             page.getByTestId(testIds.extends.specifierButton)
         ).toHaveCount(0);
     });
+
+    test("primary page controls use shared inspector UI styling contracts", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+
+        await page.goto("/configs");
+        await expect(
+            page.getByPlaceholder("Test matching with filepath...")
+        ).toHaveClass(/inspector-input/);
+        await expect(
+            page.locator(".flat-config-item.inspector-panel").first()
+        ).toBeVisible();
+
+        await page.goto("/rules");
+        await expect(page.getByPlaceholder("Search rules...")).toHaveClass(
+            /inspector-input/
+        );
+        expect(
+            await page.locator(".inspector-summary-pill").count()
+        ).toBeGreaterThanOrEqual(2);
+
+        await page.goto("/extends");
+        await expect(
+            page.getByPlaceholder("Search extended configs...")
+        ).toHaveClass(/inspector-input/);
+        await expect(
+            page.locator(".inspector-experimental-pill")
+        ).toBeVisible();
+        await expect(page.locator(".inspector-panel").first()).toBeVisible();
+
+        await page.goto("/files");
+        await expect(
+            page.locator(".inspector-experimental-pill")
+        ).toBeVisible();
+        await expect(page.locator(".inspector-panel").first()).toBeVisible();
+
+        await page.goto("/dev");
+        await expect(page.locator("section.inspector-panel")).toHaveCount(5);
+    });
+
+    test("empty states use the shared readable warning surface", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+
+        await page.goto("/rules");
+        await page.getByPlaceholder("Search rules...").fill("missing-rule");
+        await expect(
+            page
+                .locator(".inspector-empty-state")
+                .filter({ hasText: "No rules match the active filters" })
+        ).toBeVisible();
+
+        await page.goto("/extends");
+        await page
+            .getByPlaceholder("Search extended configs...")
+            .fill("missing-config");
+        await expect(
+            page
+                .locator(".inspector-empty-state")
+                .filter({ hasText: "No extended configs match the search" })
+        ).toBeVisible();
+    });
+
+    test("dev page exposes snapshot, metadata, diagnostics, and viewer panels", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/dev");
+
+        await expect(page.locator("section.inspector-panel")).toHaveCount(5);
+        await expect(page.getByText("Inspector snapshot")).toBeVisible();
+        await expect(page.getByText("Metadata health")).toBeVisible();
+        await expect(page.getByText("Inspector diagnostics (0)")).toBeVisible();
+        await expect(page.getByText("Viewer state")).toBeVisible();
+        await expect(
+            page.getByText("Config composition summary")
+        ).toBeVisible();
+        await expect(
+            page.getByText("stylelint.config.mjs").first()
+        ).toBeVisible();
+        await expect(page.getByText("Total rules:")).toBeVisible();
+    });
+
+    test("display toolbar controls expose durable active states", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.goto("/rules");
+
+        const fontButton = page.getByRole("button", {
+            name: "Font size: Default",
+        });
+        await expect(fontButton).toBeVisible();
+        await fontButton.click();
+        await page.getByRole("button", { name: /Large 112\.5%/ }).click();
+        await expect(
+            page.getByRole("button", { name: "Font size: Large" })
+        ).toBeVisible();
+
+        const dimButton = page.getByRole("button", {
+            name: "Disable dimming for disabled rules",
+        });
+        await expect(dimButton).toHaveAttribute("aria-pressed", "true");
+        await dimButton.click();
+        await expect(
+            page.getByRole("button", {
+                name: "Enable dimming for disabled rules",
+            })
+        ).toHaveAttribute("aria-pressed", "false");
+
+        const darkModeButton = page.getByRole("button", {
+            name: "Toggle dark mode",
+        });
+        const wasDark = await page.evaluate(() =>
+            document.documentElement.classList.contains("dark")
+        );
+        await darkModeButton.click();
+        await expect
+            .poll(() =>
+                page.evaluate(() =>
+                    document.documentElement.classList.contains("dark")
+                )
+            )
+            .toBe(!wasDark);
+    });
+
+    test("primary pages do not introduce horizontal overflow on desktop or mobile", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+
+        for (const viewport of [
+            { width: 1440, height: 900 },
+            { width: 390, height: 844 },
+        ]) {
+            await page.setViewportSize(viewport);
+
+            for (const path of [
+                "/configs",
+                "/rules",
+                "/extends",
+                "/files",
+                "/dev",
+            ]) {
+                await page.goto(path);
+                await expect(page.getByTestId(testIds.nav.tabs)).toBeVisible();
+
+                const metrics = await page.evaluate(() => ({
+                    bodyScrollWidth: document.body.scrollWidth,
+                    viewportWidth: document.documentElement.clientWidth,
+                    visibleTextLength: document.body.textContent?.trim().length,
+                }));
+
+                expect(metrics.visibleTextLength).toBeGreaterThan(0);
+                expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(
+                    metrics.viewportWidth + 2
+                );
+            }
+        }
+    });
 });

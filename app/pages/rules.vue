@@ -295,6 +295,7 @@ function selectRule(ruleName: string): void {
                     :class="filters.search ? 'font-mono' : ''"
                     placeholder="Search rules..."
                     aria-label="Search rules"
+                    class="inspector-input"
                     border="~ base rounded-full"
                     w-full
                     bg-transparent
@@ -479,9 +480,8 @@ function selectRule(ruleName: string): void {
         <div items-center justify-between gap-2 md:flex>
             <div flex="~ gap-2" lt-sm:flex-col>
                 <div
+                    class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center"
-                    border="~ gray/20 rounded-full"
-                    bg-gray:10
                     px3
                     py1
                 >
@@ -494,9 +494,8 @@ function selectRule(ruleName: string): void {
                     <span text-sm op50>out of {{ rules.length }} rules</span>
                 </div>
                 <div
+                    class="inspector-summary-pill"
                     flex="~ inline gap-2 items-center"
-                    border="~ gray/20 rounded-full"
-                    bg-gray:5
                     px3
                     py1
                     text-sm
@@ -519,9 +518,8 @@ function selectRule(ruleName: string): void {
                 </div>
                 <button
                     v-if="!isDefaultFilters"
+                    class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center self-start"
-                    border="~ purple/20 rounded-full"
-                    bg-purple:10
                     px3
                     py1
                     @click="resetFilters()"
@@ -559,6 +557,7 @@ function selectRule(ruleName: string): void {
         </div>
         <div
             v-if="selectedRule"
+            class="inspector-panel"
             border="~ violet/20 rounded-lg"
             my4
             bg-violet:5
@@ -608,13 +607,7 @@ function selectRule(ruleName: string): void {
                 No config item currently sets this rule.
             </div>
         </div>
-        <div
-            v-if="!filtered.length"
-            border="~ amber/25 rounded-lg"
-            my4
-            bg-amber:6
-            p4
-        >
+        <div v-if="!filtered.length" class="inspector-empty-state" my4>
             <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
                 <div i-ph-funnel-x-duotone />
                 <span font-medium>No rules match the active filters</span>

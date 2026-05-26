@@ -63,15 +63,8 @@ const activeRules = computed(() => {
 <template>
     <div flex="~ col gap-4" my4>
         <div
-            border="~ amber/20 rounded-full"
+            class="inspector-experimental-pill"
             flex="~ inline gap-2 items-center"
-            w-fit
-            bg-amber:8
-            px3
-            py1
-            text-sm
-            text-amber7
-            dark:text-amber3
         >
             <div i-ph-flask-duotone flex-none />
             <span
@@ -83,6 +76,7 @@ const activeRules = computed(() => {
         <template v-if="extendsEntries.length">
             <div flex="~ col gap-2 md:row md:items-center">
                 <div
+                    class="inspector-summary-pill"
                     flex="~ inline gap-2 items-center"
                     border="~ base rounded-full"
                     w-fit
@@ -103,6 +97,7 @@ const activeRules = computed(() => {
                         v-model="extendsSearch"
                         placeholder="Search extended configs..."
                         aria-label="Search extended configs"
+                        class="inspector-input"
                         border="~ base rounded-full"
                         w-full
                         bg-transparent
@@ -149,6 +144,7 @@ const activeRules = computed(() => {
 
             <div
                 v-if="activeEntry"
+                class="inspector-panel"
                 border="~ base rounded-xl"
                 flex="~ col gap-4"
                 bg-black:4
@@ -336,7 +332,7 @@ const activeRules = computed(() => {
                     </div>
                 </div>
             </div>
-            <div v-else rounded-lg border="~ amber/25" bg-amber:6 p4 text-sm>
+            <div v-else class="inspector-empty-state" text-sm>
                 <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
                     <div i-ph-funnel-x-duotone />
                     <span font-medium
@@ -357,6 +353,7 @@ const activeRules = computed(() => {
 
         <div
             v-else
+            class="inspector-panel"
             rounded-xl
             border="~ base"
             bg-black:5
