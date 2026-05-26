@@ -1,3 +1,4 @@
+import type { LanguageInput } from "@shikijs/types";
 import type { HighlighterCore } from "shiki/core";
 import { createJavaScriptRegexEngine } from "@shikijs/engine-javascript";
 import { createHighlighterCore } from "shiki/core";
@@ -17,7 +18,7 @@ createHighlighterCore({
     langs: [
         import("@shikijs/langs-precompiled/javascript"),
         import("@shikijs/langs-precompiled/typescript"),
-        import("textmate-grammar-glob/grammars/glob.json") as any,
+        import("textmate-grammar-glob/grammars/glob.json") as LanguageInput,
     ],
     engine: createJavaScriptRegexEngine(),
 }).then((highlighter) => {

@@ -5,19 +5,38 @@ import { getRuleFromName, payload } from "~/composables/payload";
 
 const extendsEntries = computed(() => payload.value.extendsInfo ?? []);
 const selectedSpecifier = ref("");
+const extendsSearch = ref("");
+const filteredExtendsEntries = computed(() => {
+    const search = extendsSearch.value.trim().toLowerCase();
+    if (!search) return extendsEntries.value;
+
+    return extendsEntries.value.filter((entry) =>
+        [
+            entry.specifier,
+            entry.packageName,
+            entry.description,
+            entry.source,
+            entry.customSyntax,
+            ...(entry.plugins ?? []),
+        ]
+            .filter((value): value is string => typeof value === "string")
+            .some((value) => value.toLowerCase().includes(search))
+    );
+});
 
 watchEffect(() => {
-    if (!extendsEntries.value.length) {
+    if (!filteredExtendsEntries.value.length) {
         selectedSpecifier.value = "";
         return;
     }
 
-    const hasSelectedEntry = extendsEntries.value.some(
+    const hasSelectedEntry = filteredExtendsEntries.value.some(
         (entry) => entry.specifier === selectedSpecifier.value
     );
 
     if (!hasSelectedEntry)
-        selectedSpecifier.value = extendsEntries.value[0]?.specifier ?? "";
+        selectedSpecifier.value =
+            filteredExtendsEntries.value[0]?.specifier ?? "";
 });
 
 const activeEntry = computed(() => {
@@ -62,9 +81,52 @@ const activeRules = computed(() => {
         </div>
 
         <template v-if="extendsEntries.length">
+            <div flex="~ col gap-2 md:row md:items-center">
+                <div
+                    flex="~ inline gap-2 items-center"
+                    border="~ base rounded-full"
+                    w-fit
+                    bg-black:4
+                    px3
+                    py1
+                    text-sm
+                    dark:bg-white:3
+                >
+                    <div i-ph-stack-plus-duotone />
+                    <span font-mono>{{ filteredExtendsEntries.length }}</span>
+                    <span op70
+                        >of {{ extendsEntries.length }} extends entries</span
+                    >
+                </div>
+                <div relative flex flex-auto>
+                    <input
+                        v-model="extendsSearch"
+                        placeholder="Search extended configs..."
+                        aria-label="Search extended configs"
+                        border="~ base rounded-full"
+                        w-full
+                        bg-transparent
+                        px3
+                        py2
+                        pl10
+                        outline-none
+                    />
+                    <div
+                        absolute
+                        bottom-0
+                        left-0
+                        top-0
+                        flex="~ items-center justify-center"
+                        p4
+                        op50
+                    >
+                        <div i-ph-magnifying-glass-duotone />
+                    </div>
+                </div>
+            </div>
             <div flex="~ wrap gap-2 items-center">
                 <button
-                    v-for="entry in extendsEntries"
+                    v-for="entry in filteredExtendsEntries"
                     :key="entry.specifier"
                     :data-testid="testIds.extends.specifierButton"
                     border="~ base rounded-full"
@@ -73,6 +135,7 @@ const activeRules = computed(() => {
                     text-left
                     font-mono
                     transition
+                    :aria-pressed="selectedSpecifier === entry.specifier"
                     :class="
                         selectedSpecifier === entry.specifier
                             ? 'bg-active'
@@ -272,6 +335,23 @@ const activeRules = computed(() => {
                         No rules were extracted for this extends entry.
                     </div>
                 </div>
+            </div>
+            <div v-else rounded-lg border="~ amber/25" bg-amber:6 p4 text-sm>
+                <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
+                    <div i-ph-funnel-x-duotone />
+                    <span font-medium
+                        >No extended configs match the search</span
+                    >
+                </div>
+                <button
+                    mt3
+                    btn-action
+                    type="button"
+                    @click="extendsSearch = ''"
+                >
+                    <div i-ph-arrow-counter-clockwise-duotone />
+                    Clear extends search
+                </button>
             </div>
         </template>
 

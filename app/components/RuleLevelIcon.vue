@@ -8,12 +8,17 @@ const props = defineProps<{
     hasOptions?: boolean;
     hasRedundantOptions?: boolean;
     configIndex?: number;
+    showConfigIndex?: boolean;
     class?: string;
 }>();
 
+const shouldShowConfigIndex = computed(
+    () => props.showConfigIndex && props.configIndex != null
+);
+
 const title = computed(() => {
-    if (props.configIndex == null) return `Enabled as '${props.level}'`;
-    return `Enabled as '${props.level}', in the ${nth(props.configIndex + 1)} config item`;
+    if (props.configIndex == null) return `Set to '${props.level}'`;
+    return `Set to '${props.level}' in the ${nth(props.configIndex + 1)} config item`;
 });
 
 const color = computed(
@@ -41,11 +46,26 @@ const icon = computed(
         inline-flex
         items-center
         justify-center
+        gap-1
         leading-none
-        :class="[color, props.class]"
+        :class="[
+            color,
+            shouldShowConfigIndex
+                ? 'min-w-11 border border-current/28 rounded-full bg-white/80 px-1.5 py-0.75 text-xs shadow-sm dark:bg-zinc-950/80'
+                : '',
+            props.class,
+        ]"
         :title="title"
+        role="img"
+        :aria-label="title"
     >
-        <div :class="icon" />
+        <div :class="icon" :text="shouldShowConfigIndex ? 'sm' : undefined" />
+        <span
+            v-if="shouldShowConfigIndex"
+            class="leading-none font-mono tabular-nums op90"
+        >
+            #{{ configIndex! + 1 }}
+        </span>
         <div
             v-if="hasOptions"
             absolute

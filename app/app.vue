@@ -2,7 +2,14 @@
 import { onBeforeUnmount, ref } from "vue";
 import { useRouter } from "#app/composables/router";
 import { useRuntimeConfig } from "#app/nuxt";
-import { errorInfo, init, isLoading } from "~/composables/payload";
+import {
+    errorInfo,
+    init,
+    isFetching,
+    isLoading,
+    payloadFetchError,
+    retryPayload,
+} from "~/composables/payload";
 
 import "floating-vue/dist/style.css";
 import "./styles/global.css";
@@ -74,16 +81,40 @@ init(config.app.baseURL);
             {{ errorInfo.error }}
         </div>
 
+        <div v-if="errorInfo.message" mt3 max-w-3xl text-sm font-mono op75>
+            {{ errorInfo.message }}
+        </div>
+
         <div mt6 op50>
             Note that
             <a
                 href="https://stylelint.io/user-guide/configure"
                 target="_blank"
+                rel="noopener noreferrer"
                 hover:underline
                 >Stylelint configuration</a
             >
             must be discoverable for the selected target file.
         </div>
+        <div v-if="payloadFetchError" mt3 max-w-3xl text-sm text-red font-mono>
+            {{ payloadFetchError }}
+        </div>
+        <button
+            mt6
+            btn-action
+            justify-self-center
+            :disabled="isFetching"
+            @click="retryPayload()"
+        >
+            <div
+                :class="
+                    isFetching
+                        ? 'i-svg-spinners-90-ring-with-bg'
+                        : 'i-ph-arrow-clockwise-duotone'
+                "
+            />
+            Retry payload
+        </button>
     </div>
     <div
         v-else-if="isLoading"

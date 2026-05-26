@@ -13,7 +13,7 @@ import {
 
 const rules = computed(() => Object.values(payload.value.rules));
 const listColumns =
-    "56px_minmax(14rem,clamp(14rem,38vw,30rem))_5.25rem_minmax(0,1fr)";
+    "8.75rem_minmax(14rem,clamp(14rem,38vw,30rem))_5.25rem_minmax(0,1fr)";
 const pluginNames = computed<string[]>(() => {
     return [...new Set(rules.value.map((i) => i.plugin))].filter(
         (plugin): plugin is string =>
@@ -101,6 +101,25 @@ const unusedRulesCount = computed(
 const recommendedRulesCount = computed(
     () => rules.value.filter((rule) => !!rule.docs?.recommended).length
 );
+const selectedRuleName = ref("");
+const selectedRule = computed(() =>
+    selectedRuleName.value
+        ? payload.value.rules[selectedRuleName.value]
+        : undefined
+);
+const selectedRuleStates = computed(() =>
+    selectedRuleName.value
+        ? (payload.value.ruleToState.get(selectedRuleName.value) ?? [])
+        : []
+);
+const selectedRuleFinalState = computed(() => {
+    return (
+        selectedRuleStates.value
+            .toReversed()
+            .find((state) => state.level !== "off") ??
+        selectedRuleStates.value.at(-1)
+    );
+});
 
 const conditionalFiltered = computed(() => {
     let conditional = rules.value;
@@ -260,6 +279,11 @@ function resetFilters() {
 function setRulesViewMode(mode: "list" | "grid"): void {
     isGridView.value = mode === "grid";
 }
+
+function selectRule(ruleName: string): void {
+    selectedRuleName.value =
+        selectedRuleName.value === ruleName ? "" : ruleName;
+}
 </script>
 
 <template>
@@ -270,6 +294,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                     v-model="filters.search"
                     :class="filters.search ? 'font-mono' : ''"
                     placeholder="Search rules..."
+                    aria-label="Search rules"
                     border="~ base rounded-full"
                     w-full
                     bg-transparent
@@ -301,6 +326,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                     <div class="flex flex-wrap items-center gap-2">
                         <button
                             type="button"
+                            :aria-pressed="!hasSelectedPlugin"
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 !hasSelectedPlugin
@@ -316,6 +342,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                             v-for="pluginOption in pluginOptions"
                             :key="pluginOption.value"
                             type="button"
+                            :aria-pressed="isPluginSelected(pluginOption.value)"
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 isPluginSelected(pluginOption.value)
@@ -334,6 +361,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                 <div text-right text-sm op50>State</div>
                 <OptionSelectGroup
                     v-model="filters.state"
+                    label="Rule state filter"
                     :options="[
                         '',
                         'using',
@@ -398,6 +426,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                 <div text-right text-sm op50>Status</div>
                 <OptionSelectGroup
                     v-model="filters.status"
+                    label="Rule status filter"
                     :options="[
                         '',
                         'active',
@@ -506,6 +535,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
             <div flex="~ gap-1">
                 <button
                     btn-action
+                    :aria-pressed="!isGridView"
                     :class="{
                         'btn-action-active': !isGridView,
                     }"
@@ -516,6 +546,7 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                 </button>
                 <button
                     btn-action
+                    :aria-pressed="isGridView"
                     :class="{
                         'btn-action-active': isGridView,
                     }"
@@ -526,13 +557,92 @@ function setRulesViewMode(mode: "list" | "grid"): void {
                 </button>
             </div>
         </div>
+        <div
+            v-if="selectedRule"
+            border="~ violet/20 rounded-lg"
+            my4
+            bg-violet:5
+            p4
+        >
+            <div flex="~ gap-3 items-start justify-between">
+                <div min-w-0>
+                    <div flex="~ gap-2 items-center wrap">
+                        <div i-ph-path-duotone text-violet5 />
+                        <span font-medium>Effective rule trace</span>
+                        <ColorizedRuleName
+                            :name="selectedRule.name"
+                            :prefix="selectedRule.plugin"
+                            :deprecated="selectedRule.deprecated"
+                            :borderless="true"
+                        />
+                    </div>
+                    <div mt2 text-sm op70>
+                        Ordered states explain why this rule is currently
+                        {{
+                            selectedRuleFinalState
+                                ? `set to ${selectedRuleFinalState.level}`
+                                : "not configured"
+                        }}.
+                    </div>
+                </div>
+                <button
+                    btn-action
+                    type="button"
+                    aria-label="Close effective rule trace"
+                    @click="selectedRuleName = ''"
+                >
+                    <div i-ph-x-duotone />
+                    Close
+                </button>
+            </div>
+            <div v-if="selectedRuleStates.length" mt3 flex="~ col gap-2">
+                <RuleStateItem
+                    v-for="(state, index) in selectedRuleStates"
+                    :key="`${state.configIndex}-${state.level}-${index}`"
+                    border="~ base rounded-lg"
+                    bg-black:4
+                    :state="state"
+                />
+            </div>
+            <div v-else mt3 rounded border="~ base" bg-black:4 p3 text-sm op70>
+                No config item currently sets this rule.
+            </div>
+        </div>
+        <div
+            v-if="!filtered.length"
+            border="~ amber/25 rounded-lg"
+            my4
+            bg-amber:6
+            p4
+        >
+            <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
+                <div i-ph-funnel-x-duotone />
+                <span font-medium>No rules match the active filters</span>
+            </div>
+            <div mt2 text-sm op75>
+                Adjust the search, plugin, state, or status filters to broaden
+                the rule set.
+            </div>
+            <button
+                v-if="!isDefaultFilters"
+                mt3
+                btn-action
+                type="button"
+                @click="resetFilters()"
+            >
+                <div i-ph-arrow-counter-clockwise-duotone />
+                Reset rule filters
+            </button>
+        </div>
         <RuleList
+            v-else
             my4
             :grid-view="isGridView"
             :rules="filtered"
             :list-columns="listColumns"
             :dim-disabled="stateStorage.dimDisabledRules"
             :get-bind="(name: string) => ({ class: getRuleRowClass(name) })"
+            @rule-select="selectRule"
         />
     </div>
 </template>

@@ -6,7 +6,12 @@ import { version } from "~~/package.json";
 import { testIds } from "~~/shared/test-ids";
 import { useRouter } from "#app/composables/router";
 import { toggleDark } from "~/composables/dark";
-import { isFetching, payload } from "~/composables/payload";
+import {
+    isFetching,
+    payload,
+    payloadConnectionStatus,
+    payloadFetchError,
+} from "~/composables/payload";
 import { filtersRules as filters, stateStorage } from "~/composables/state";
 
 const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate);
@@ -27,6 +32,31 @@ const deprecatedUsing = computed(() =>
                 ?.some((i) => i.level !== "off")
     )
 );
+
+const connectionNotice = computed(() => {
+    switch (payloadConnectionStatus.value) {
+        case "connecting":
+            return {
+                icon: "i-svg-spinners-90-ring-with-bg",
+                text: "Connecting updates",
+                class: "text-sky",
+            };
+        case "disconnected":
+            return {
+                icon: "i-ph-plugs-connected-duotone",
+                text: "Live updates disconnected",
+                class: "text-amber",
+            };
+        case "error":
+            return {
+                icon: "i-ph-warning-circle-duotone",
+                text: "Live update connection failed",
+                class: "text-red",
+            };
+        default:
+            return undefined;
+    }
+});
 
 const router = useRouter();
 const fontScaleOptions = [
@@ -127,9 +157,30 @@ function showDeprecated() {
                 <div i-svg-spinners-90-ring-with-bg flex-none text-sm />
                 Fetching updates...
             </div>
+            <div
+                v-else-if="payloadFetchError"
+                flex="~ gap-2 items-center"
+                ml2
+                text-red
+                :title="payloadFetchError"
+            >
+                <div i-ph-warning-circle-duotone flex-none text-sm />
+                Payload refresh failed
+            </div>
+            <div
+                v-else-if="connectionNotice"
+                flex="~ gap-2 items-center"
+                ml2
+                :class="connectionNotice.class"
+            >
+                <div :class="connectionNotice.icon" flex-none text-sm />
+                {{ connectionNotice.text }}
+            </div>
         </div>
         <div
             :data-testid="testIds.nav.tabs"
+            role="navigation"
+            aria-label="Inspector sections"
             flex="~ gap-3 items-center wrap"
             py4
         >
@@ -205,88 +256,101 @@ function showDeprecated() {
                 <div i-ph-terminal-window-duotone flex-none />
                 Dev
             </NuxtLink>
-            <VDropdown>
+            <div
+                role="toolbar"
+                aria-label="Display and repository controls"
+                flex="~ gap-1 items-center wrap"
+            >
+                <VDropdown>
+                    <button
+                        btn-action
+                        rounded-full
+                        :title="`Font size: ${activeFontScaleLabel}`"
+                        :aria-label="`Font size: ${activeFontScaleLabel}`"
+                    >
+                        <div i-ph-text-aa-duotone flex-none />
+                    </button>
+                    <template #popper>
+                        <div min-w-44 flex="~ col gap-1" p2>
+                            <button
+                                v-for="option in fontScaleOptions"
+                                :key="option.value"
+                                btn-action
+                                justify-between
+                                :class="{
+                                    'btn-action-active':
+                                        stateStorage.fontScale === option.value,
+                                }"
+                                @click="stateStorage.fontScale = option.value"
+                            >
+                                <span>{{ option.label }}</span>
+                                <span text-xs op70>
+                                    {{
+                                        option.value === "sm"
+                                            ? "95%"
+                                            : option.value === "lg"
+                                              ? "112.5%"
+                                              : "100%"
+                                    }}
+                                </span>
+                            </button>
+                        </div>
+                    </template>
+                </VDropdown>
                 <button
                     btn-action
                     rounded-full
-                    :title="`Font size: ${activeFontScaleLabel}`"
-                    :aria-label="`Font size: ${activeFontScaleLabel}`"
-                >
-                    <div i-ph-text-aa-duotone flex-none />
-                </button>
-                <template #popper>
-                    <div min-w-44 flex="~ col gap-1" p2>
-                        <button
-                            v-for="option in fontScaleOptions"
-                            :key="option.value"
-                            btn-action
-                            justify-between
-                            :class="{
-                                'btn-action-active':
-                                    stateStorage.fontScale === option.value,
-                            }"
-                            @click="stateStorage.fontScale = option.value"
-                        >
-                            <span>{{ option.label }}</span>
-                            <span text-xs op70>
-                                {{
-                                    option.value === "sm"
-                                        ? "95%"
-                                        : option.value === "lg"
-                                          ? "112.5%"
-                                          : "100%"
-                                }}
-                            </span>
-                        </button>
-                    </div>
-                </template>
-            </VDropdown>
-            <button
-                btn-action
-                rounded-full
-                :class="{
-                    'btn-action-active': stateStorage.dimDisabledRules,
-                }"
-                :title="
-                    stateStorage.dimDisabledRules
-                        ? 'Disable dimming for disabled rules'
-                        : 'Enable dimming for disabled rules'
-                "
-                :aria-pressed="stateStorage.dimDisabledRules"
-                @click="
-                    stateStorage.dimDisabledRules =
-                        !stateStorage.dimDisabledRules
-                "
-            >
-                <div
-                    :class="
+                    :class="{
+                        'btn-action-active': stateStorage.dimDisabledRules,
+                    }"
+                    :title="
                         stateStorage.dimDisabledRules
-                            ? 'i-ph-eye-closed-duotone'
-                            : 'i-ph-eye-duotone'
+                            ? 'Disable dimming for disabled rules'
+                            : 'Enable dimming for disabled rules'
                     "
-                />
-            </button>
-            <button
-                btn-action
-                rounded-full
-                title="Toggle Dark Mode"
-                @click="toggleDark()"
-            >
-                <div i-ph-sun-dim-duotone dark:i-ph-moon-stars-duotone />
-            </button>
-            <NuxtLink
-                href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector"
-                target="_blank"
-                btn-action
-                rounded-full
-                title="GitHub repository"
-            >
-                <div i-carbon-logo-github text-lg />
-            </NuxtLink>
+                    :aria-label="
+                        stateStorage.dimDisabledRules
+                            ? 'Disable dimming for disabled rules'
+                            : 'Enable dimming for disabled rules'
+                    "
+                    :aria-pressed="stateStorage.dimDisabledRules"
+                    @click="
+                        stateStorage.dimDisabledRules =
+                            !stateStorage.dimDisabledRules
+                    "
+                >
+                    <div
+                        :class="
+                            stateStorage.dimDisabledRules
+                                ? 'i-ph-eye-closed-duotone'
+                                : 'i-ph-eye-duotone'
+                        "
+                    />
+                </button>
+                <button
+                    btn-action
+                    rounded-full
+                    title="Toggle Dark Mode"
+                    aria-label="Toggle dark mode"
+                    @click="toggleDark()"
+                >
+                    <div i-ph-sun-dim-duotone dark:i-ph-moon-stars-duotone />
+                </button>
+                <NuxtLink
+                    href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector"
+                    target="_blank"
+                    btn-action
+                    rounded-full
+                    title="GitHub repository"
+                    aria-label="GitHub repository"
+                >
+                    <div i-carbon-logo-github text-lg />
+                </NuxtLink>
+            </div>
             <template v-if="deprecatedUsing.length">
                 <div border="l base" ml3 mr2 h-5 w-1px />
                 <button
-                    to="/configs"
+                    type="button"
                     border="~ orange/20 rounded-full"
                     flex="~ gap-2 items-center"
                     bg-orange:5

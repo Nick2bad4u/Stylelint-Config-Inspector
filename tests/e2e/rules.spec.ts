@@ -1,10 +1,15 @@
 import { expect, test } from "@playwright/test";
-import { mockPayload, pluginRuleName } from "./fixtures/mock-payload";
+import {
+    MOCK_PAYLOAD,
+    mockPayload,
+    pluginRuleName,
+} from "./fixtures/mock-payload";
 
 async function openRulesPage(
-    page: import("@playwright/test").Page
+    page: import("@playwright/test").Page,
+    payload = MOCK_PAYLOAD
 ): Promise<void> {
-    await mockPayload(page);
+    await mockPayload(page, payload);
     await page.goto("/rules");
     await expect(page.getByPlaceholder("Search rules...")).toBeVisible();
     await expect(page.getByText("out of 4 rules")).toBeVisible();
@@ -97,6 +102,117 @@ test.describe("rules page regressions", () => {
         await expect(search).toHaveValue("");
         await expect(page.locator(".colorized-rule-name")).toHaveCount(4);
         await expect(page.getByText("rules in use")).toBeVisible();
+    });
+
+    test("empty rule filters show a reset action", async ({ page }) => {
+        await openRulesPage(page);
+
+        const search = page.getByPlaceholder("Search rules...");
+        await search.fill("zzzzzzzz");
+
+        await expect(
+            page.getByText("No rules match the active filters")
+        ).toBeVisible();
+
+        await page.getByRole("button", { name: "Reset rule filters" }).click();
+
+        await expect(search).toHaveValue("");
+        await expect(page.locator(".colorized-rule-name")).toHaveCount(4);
+    });
+
+    test("rule selection opens a persistent effective trace", async ({
+        page,
+    }) => {
+        await openRulesPage(page);
+        await page
+            .getByPlaceholder("Search rules...")
+            .fill("stylelint/color-hex-length");
+        const coreRuleBadge = page
+            .locator('.colorized-rule-name[title="stylelint/color-hex-length"]')
+            .first();
+
+        await expect(coreRuleBadge).toBeVisible();
+        await coreRuleBadge.click();
+
+        await expect(page.getByText("Effective rule trace")).toBeVisible();
+        await expect(
+            page.getByText("Ordered states explain why")
+        ).toContainText("set to error");
+
+        await page
+            .getByRole("button", { name: "Close effective rule trace" })
+            .click();
+        await expect(page.getByText("Effective rule trace")).toHaveCount(0);
+    });
+
+    test("configured rules show visible config-state badges in list view", async ({
+        page,
+    }) => {
+        await openRulesPage(page);
+        await page
+            .getByPlaceholder("Search rules...")
+            .fill("stylelint/color-hex-length");
+
+        const firstConfigBadge = page
+            .getByRole("img", {
+                name: "Set to 'error' in the 1st config item",
+            })
+            .first();
+        await expect(firstConfigBadge).toBeVisible();
+        await expect(firstConfigBadge).toContainText("#1");
+    });
+
+    test("overloaded rule state rail clips to one row and expands on hover", async ({
+        page,
+    }) => {
+        const payload = structuredClone(MOCK_PAYLOAD);
+        payload.configs.push(
+            ...[
+                1,
+                2,
+                3,
+                4,
+                5,
+            ].map((index) => ({
+                index: payload.configs.length + index,
+                name: `stylelint/override-${index + 2}`,
+                rules: {
+                    "stylelint/color-hex-length": null,
+                },
+            }))
+        );
+
+        await openRulesPage(page, payload);
+        await page
+            .getByPlaceholder("Search rules...")
+            .fill("stylelint/color-hex-length");
+
+        const stateRail = page.getByTestId("rule-state-rail").first();
+        await expect(stateRail.getByRole("img")).toHaveCount(6);
+        await expect(page.getByTestId("rule-state-overflow")).toHaveCount(0);
+
+        const collapsedMetrics = await stateRail.evaluate((element) => ({
+            clientWidth: element.clientWidth,
+            renderedWidth: element.getBoundingClientRect().width,
+            scrollWidth: element.scrollWidth,
+            height: element.getBoundingClientRect().height,
+        }));
+        expect(collapsedMetrics.scrollWidth).toBeGreaterThan(
+            collapsedMetrics.clientWidth
+        );
+        expect(collapsedMetrics.height).toBeLessThan(32);
+
+        await stateRail.hover();
+
+        const expandedMetrics = await stateRail.evaluate((element) => ({
+            clientWidth: element.clientWidth,
+            renderedWidth: element.getBoundingClientRect().width,
+            height: element.getBoundingClientRect().height,
+        }));
+        expect(expandedMetrics.renderedWidth).toBeGreaterThan(
+            collapsedMetrics.renderedWidth
+        );
+        expect(expandedMetrics.height).toBeLessThan(32);
     });
 
     test("search is case-insensitive for rule names", async ({ page }) => {

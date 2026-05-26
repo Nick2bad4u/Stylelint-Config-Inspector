@@ -34,6 +34,7 @@ function collapseAll() {
                         :data-testid="testIds.files.viewListButton"
                         btn-action
                         border-none
+                        :aria-pressed="stateStorage.viewFilesTab === 'list'"
                         @click="stateStorage.viewFilesTab = 'list'"
                     >
                         <div i-ph-files-duotone />
@@ -49,6 +50,7 @@ function collapseAll() {
                         :data-testid="testIds.files.viewGroupsButton"
                         btn-action
                         border-none
+                        :aria-pressed="stateStorage.viewFilesTab === 'group'"
                         @click="stateStorage.viewFilesTab = 'group'"
                     >
                         <div i-ph-rows-duotone />
@@ -67,7 +69,10 @@ function collapseAll() {
             </div>
 
             <div
-                v-if="stateStorage.viewFilesTab === 'group'"
+                v-if="
+                    stateStorage.viewFilesTab === 'group' &&
+                    payload.filesResolved.groups.length
+                "
                 flex="~ gap-2 col"
             >
                 <FileGroupItem
@@ -78,7 +83,12 @@ function collapseAll() {
                     :index="idx"
                 />
             </div>
-            <div v-else>
+            <div
+                v-else-if="
+                    stateStorage.viewFilesTab === 'list' &&
+                    payload.filesResolved.list.length
+                "
+            >
                 <details
                     :open="listFilesOpen"
                     :data-testid="testIds.files.matchedListDetails"
@@ -115,6 +125,16 @@ function collapseAll() {
                         />
                     </div>
                 </details>
+            </div>
+            <div v-else rounded-lg border="~ amber/25" bg-amber:6 p4 text-sm>
+                <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
+                    <div i-ph-folder-open-duotone />
+                    <span font-medium>No matched files were reported</span>
+                </div>
+                <div mt2 op75>
+                    File matching is enabled, but the current payload did not
+                    include any matched files or file groups.
+                </div>
             </div>
         </template>
         <div v-else rounded border="~ base" bg-gray:5 p3 text-sm>

@@ -1,19 +1,25 @@
 <script setup lang="ts">
+import type { HTMLAttributes } from "vue";
+import { useId } from "vue";
+
 defineProps<{
+    label: string;
     options: readonly string[] | number[];
     titles?: string[];
     tooltips?: string[];
     classes?: string[];
-    props?: any[];
+    props?: HTMLAttributes[];
 }>();
 
 const value = defineModel<string | number>("modelValue", {
     type: [String, Number],
 });
+const groupName = useId();
 </script>
 
 <template>
     <fieldset flex="~ inline gap-1 wrap" of-hidden text-sm>
+        <legend sr-only>{{ label }}</legend>
         <label
             v-for="(i, idx) of options"
             :key="i"
@@ -44,6 +50,8 @@ const value = defineModel<string | number>("modelValue", {
                 v-model="value"
                 type="radio"
                 :value="i"
+                :name="groupName"
+                :aria-label="titles?.[idx] ?? String(i || 'All')"
                 :title="tooltips?.[idx] ?? titles?.[idx]"
                 absolute
                 inset-0

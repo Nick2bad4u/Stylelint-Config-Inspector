@@ -1,62 +1,37 @@
 ---
-name: "Scripts-Folder-Guidelines"
-description: "Guidance for repository maintenance and automation scripts under scripts/."
+name: "Stylelint-Config-Inspector-Scripts-Guide"
+description: "Guidelines for repository automation and maintenance scripts."
 applyTo: "scripts/**"
 ---
 
 # Scripts (`scripts/`) Guidelines
 
-Treat `scripts/` as the repository's automation and maintenance toolbox, not as application runtime code.
+## Role
 
-## Purpose
+- Keep script behavior deterministic and reviewable.
+- Scripts must not mutate files without clear intent and explicit output reporting.
 
-Scripts in this folder commonly handle tasks like:
+## Authoring rules
 
-- generating or syncing docs/readme sections
-- validating links or metadata
-- syncing version or peer-dependency constraints
-- compatibility smoke tests
-- repo bootstrapping and scaffolding
-- TypeDoc / Docusaurus support tasks
+- Prefer `.mjs` entrypoints for Node automation unless PowerShell is required for host setup.
+- Resolve repository paths from the project root.
+- Prefer `node:` built-ins and small composable helpers.
+- Exit with non-zero status on failures and print machine-parsable diagnostics.
 
-Keep them deterministic, reviewable, and safe to run repeatedly.
+## Reliability
 
-## Authoring expectations
+- Make scripts idempotent.
+- Separate `--check` from `--write` behavior when possible.
+- Keep temporary files in `temp/`.
+- Prefer explicit allowlists over recursive filesystem assumptions.
 
-- Prefer Node.js ESM scripts (`.mjs`) for cross-platform repo automation unless there is a strong reason to use another language.
-- Use PowerShell only when the task is intentionally Windows-specific or shell-native.
-- Resolve paths from the repository root explicitly; avoid assuming the current working directory unless the script contract guarantees it.
-- Use `node:` built-ins where possible.
-- Prefer small, composable helpers over giant monolithic scripts.
-- Print actionable diagnostics and exit with a non-zero code on failure.
+## Safety
 
-## Safety and determinism
+- Never hard-code absolute machine-specific paths.
+- Avoid changing unrelated files.
+- Document platform assumptions in script comments and usage output.
 
-- Scripts that rewrite files should be:
-  - idempotent
-  - deterministic
-  - explicit about what they change
-- Prefer a `--check`, `--write`, or similarly clear mode split when a script can either validate or mutate.
-- Never silently rewrite unrelated files.
-- Write temporary outputs to `temp/` or another designated generated folder rather than cluttering the repo root.
+## Testing expectations
 
-## Cross-platform discipline
-
-- Avoid Bash-only syntax in Node-driven scripts.
-- Avoid absolute machine-specific paths.
-- If a script depends on platform behavior, document that clearly in comments or the README.
-- Prefer repository scripts in `package.json` as the public entrypoint instead of telling users to invoke implementation files directly.
-
-## Source of truth
-
-- If a script exists to keep generated docs, readme tables, preset matrices, or config mirrors in sync, treat the upstream source as canonical and the generated output as derived.
-- Do not fork the same logic into multiple scripts.
-- If the repo already has a sync script for a task, update that script instead of adding a second competing generator.
-
-## Quality bar
-
-- Scripts should be easy to audit in diffs.
-- Keep inputs and outputs obvious.
-- Validate assumptions early.
-- Prefer readable transformations over clever one-liners.
-- If a script consumes built output, document why that is necessary; prefer source metadata when feasible.
+- If a script can be run in CI, include a corresponding guard or dry-run mode.
+- Validate arguments and fail fast on unsupported usage.

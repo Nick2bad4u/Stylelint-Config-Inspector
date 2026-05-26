@@ -24,6 +24,7 @@ import {
 import { configsOpenState, fileGroupsOpenState } from "./state";
 
 const LOG_NAME = "[Config Inspector]";
+const GENERIC_PAYLOAD_ERROR = "Failed to load Stylelint config payload";
 
 /**
  * Initial skeleton payload used before the first fetch completes. All required
@@ -41,6 +42,7 @@ const INITIAL_PAYLOAD: Payload = {
 };
 
 const data = ref<Payload>(INITIAL_PAYLOAD);
+let currentBaseURL = "/";
 
 /**
  * State of initial loading
@@ -54,60 +56,96 @@ export const isFetching = ref(false);
  * Error information
  */
 export const errorInfo = ref<ErrorInfo>();
+export const payloadFetchError = ref<string>();
+export const payloadConnectionStatus = ref<
+    "idle" | "connecting" | "connected" | "disconnected" | "error"
+>("idle");
+export const lastSuccessfulPayloadUpdate = computed(() => {
+    const timestamp = data.value.meta.lastUpdate;
+    return timestamp > 0 ? timestamp : undefined;
+});
 
 function isErrorInfo(payload: Payload | ErrorInfo): payload is ErrorInfo {
     return "error" in payload;
 }
 
+function stringifyError(error: unknown): string {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "string") return error;
+    return GENERIC_PAYLOAD_ERROR;
+}
+
 async function get(baseURL: string) {
     isFetching.value = true;
-    const payload = await $fetch<Payload | ErrorInfo>("/api/payload.json", {
-        baseURL,
-    });
-    if (isErrorInfo(payload)) {
-        errorInfo.value = payload;
+    payloadFetchError.value = undefined;
+
+    try {
+        const payload = await $fetch<Payload | ErrorInfo>("/api/payload.json", {
+            baseURL,
+        });
+        if (isErrorInfo(payload)) {
+            errorInfo.value = payload;
+            return;
+        }
+        errorInfo.value = undefined;
+        data.value = payload;
+        console.log(LOG_NAME, "Config payload", payload);
+        return payload;
+    } catch (error) {
+        const message = stringifyError(error);
+        payloadFetchError.value = message;
+
+        if (isLoading.value) {
+            errorInfo.value = {
+                error: GENERIC_PAYLOAD_ERROR,
+                message,
+            };
+        }
+    } finally {
         isLoading.value = false;
         isFetching.value = false;
-        return;
     }
-    errorInfo.value = undefined;
-    data.value = payload;
-    isLoading.value = false;
-    isFetching.value = false;
-    console.log(LOG_NAME, "Config payload", payload);
-    return payload;
 }
 
 let _promise: Promise<Payload | undefined> | undefined;
 
 export function init(baseURL: string) {
+    currentBaseURL = baseURL;
     if (_promise) return;
     _promise = get(baseURL).then((payload) => {
         if (!payload) return;
 
         if (typeof payload.meta.wsPort === "number") {
             // Connect to WebSocket, listen for config changes
+            payloadConnectionStatus.value = "connecting";
             const ws = new WebSocket(
                 `ws://${location.hostname}:${payload.meta.wsPort}`
             );
             ws.addEventListener("message", async (event) => {
                 console.log(LOG_NAME, "WebSocket message", event.data);
-                const payload = JSON.parse(event.data);
-                if (payload.type === "config-change") get(baseURL);
+                const payload = JSON.parse(event.data) as { type?: unknown };
+                if (payload.type === "config-change") await get(baseURL);
             });
             ws.addEventListener("open", () => {
+                payloadConnectionStatus.value = "connected";
                 console.log(LOG_NAME, "WebSocket connected");
             });
             ws.addEventListener("close", () => {
+                payloadConnectionStatus.value = "disconnected";
                 console.log(LOG_NAME, "WebSocket closed");
             });
             ws.addEventListener("error", (error) => {
+                payloadConnectionStatus.value = "error";
                 console.error(LOG_NAME, "WebSocket error", error);
             });
         }
 
         return payload;
     });
+}
+
+export function retryPayload() {
+    return get(currentBaseURL);
 }
 
 export function ensureDataFetch() {

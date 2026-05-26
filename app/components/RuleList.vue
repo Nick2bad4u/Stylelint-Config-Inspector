@@ -4,14 +4,24 @@ import { computed, defineComponent, Fragment, h } from "vue";
 import { getRuleFromName, payload } from "~/composables/payload";
 import { isGridView } from "../composables/state";
 
-const props = defineProps<{
-    rules: Partial<RulesRecord> | RuleInfo[];
-    getBind?: (ruleName: string) => Record<string, any>;
-    filter?: (ruleName: string) => boolean;
-    listColumns?: string;
-    dimDisabled?: boolean;
-    showRuleStates?: boolean;
-    gridView?: boolean;
+const props = withDefaults(
+    defineProps<{
+        rules: Partial<RulesRecord> | RuleInfo[];
+        getBind?: (ruleName: string) => Record<string, unknown>;
+        filter?: (ruleName: string) => boolean;
+        listColumns?: string;
+        dimDisabled?: boolean;
+        showRuleStates?: boolean;
+        gridView?: boolean;
+    }>(),
+    {
+        dimDisabled: true,
+        gridView: undefined,
+        showRuleStates: true,
+    }
+);
+const emit = defineEmits<{
+    ruleSelect: [ruleName: string];
 }>();
 const defaultListColumns =
     "42px_minmax(12rem,clamp(12rem,32vw,24rem))_5rem_minmax(0,1fr)";
@@ -32,6 +42,20 @@ function getRule(name: string) {
 }
 function getValue(name: string) {
     return Array.isArray(props.rules) ? undefined : props.rules[name];
+}
+
+function getRuleStates(name: string) {
+    if (props.showRuleStates === false) return undefined;
+    if (getValue(name) !== undefined) return undefined;
+
+    return payload.value.ruleToState.get(name) ?? [];
+}
+
+function getRuleItemBind(name: string): Record<string, unknown> {
+    return {
+        ...props.getBind?.(name),
+        ruleStates: getRuleStates(name),
+    };
 }
 
 const containerClass = computed(() => {
@@ -73,15 +97,11 @@ const Wrapper = defineComponent({
             <Wrapper v-if="props.filter?.(name) !== false">
                 <RuleItem
                     :rule="getRule(name)"
-                    :rule-states="
-                        props.showRuleStates !== false && Array.isArray(rules)
-                            ? payload.ruleToState.get(name) || []
-                            : undefined
-                    "
                     :grid-view="resolvedGridView"
                     :value="getValue(name)"
-                    v-bind="getBind?.(name)"
+                    v-bind="getRuleItemBind(name)"
                     :dim-disabled="dimDisabled"
+                    @badge-click="emit('ruleSelect', name)"
                 >
                     <template #popup>
                         <slot

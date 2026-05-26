@@ -15,7 +15,7 @@ import { getRuleDefaultOptions } from "~/composables/payload";
 const props = defineProps<{
     rule: RuleInfo;
     ruleStates?: RuleConfigStates;
-    value?: any;
+    value?: unknown;
     class?: string;
     gridView?: boolean;
     dimDisabled?: boolean;
@@ -36,7 +36,7 @@ interface DescriptionSegment {
     value: string;
 }
 
-function redundantOptions(options: any) {
+function redundantOptions(options: unknown[] | undefined) {
     const { hasRedundantOptions } = deepCompareOptions(
         options ?? [],
         getRuleDefaultOptions(props.rule.name)
@@ -117,8 +117,12 @@ function applyPlaceholderGuesses(
     return replaced ? parts.join("") : description;
 }
 
+const resolvedRuleStates = computed<RuleConfigStates>(
+    () => props.ruleStates ?? []
+);
+
 const effectiveState = computed(() => {
-    const states = props.ruleStates;
+    const states = resolvedRuleStates.value;
     if (!states?.length) return undefined;
 
     return (
@@ -146,7 +150,7 @@ const effectiveConfiguredValue = computed(() => {
 });
 
 const isOffOnlyState = computed(() => {
-    const states = props.ruleStates;
+    const states = resolvedRuleStates.value;
     if (!states?.length) return false;
 
     return states.every((state) => state.level === "off");
@@ -223,7 +227,6 @@ const dimRuleClass = computed(() =>
     isDimmedRule.value ? "op55 hover:op100 transition-opacity" : ""
 );
 
-const hasRuleStates = computed(() => (props.ruleStates?.length ?? 0) > 0);
 const hasLocalValue = computed(() => props.value !== undefined);
 
 const isCoreStylelintRule = computed(() => {
@@ -284,6 +287,9 @@ const pluginPrefixHint = computed(() => {
         firstLineAfterPrefix: "prefix.",
     };
 });
+
+const popoverPanelClass =
+    "max-h-[min(34rem,72vh)] min-w-[min(36rem,88vw)] overflow-auto border border-base rounded-lg bg-white/98 text-sm leading-5 text-zinc-800 shadow-2xl dark:bg-zinc-950/98 dark:text-zinc-100";
 </script>
 
 <template>
@@ -293,16 +299,20 @@ const pluginPrefixHint = computed(() => {
             dimRuleClass,
             gridView
                 ? 'absolute top-2 right-2 flex justify-end items-start'
-                : 'w-full flex items-center justify-end',
+                : 'relative w-full flex items-center justify-start overflow-visible',
         ]"
-        text-lg
     >
-        <template v-if="hasRuleStates">
+        <template v-if="resolvedRuleStates.length">
             <div
-                flex="~ items-center gap-0.5 justify-end"
-                :class="gridView ? 'flex-col' : ''"
+                data-testid="rule-state-rail"
+                class="rule-state-rail"
+                flex="~ items-center gap-1 justify-start nowrap"
+                :class="gridView ? 'flex-col' : 'rule-state-rail--list'"
             >
-                <template v-for="(s, idx) of ruleStates" :key="idx">
+                <template
+                    v-for="(s, idx) of resolvedRuleStates"
+                    :key="`${s.configIndex}-${s.level}-${idx}`"
+                >
                     <VDropdown>
                         <RuleLevelIcon
                             :level="s.level"
@@ -312,6 +322,7 @@ const pluginPrefixHint = computed(() => {
                                 !!s.options?.length
                             "
                             :has-redundant-options="redundantOptions(s.options)"
+                            :show-config-index="!gridView"
                         />
                         <template #popper="{ shown }">
                             <RuleStateItem v-if="shown" :state="s" />
@@ -359,18 +370,18 @@ const pluginPrefixHint = computed(() => {
                 />
             </div>
             <template #popper="{ shown }">
-                <div
-                    v-if="shown"
-                    max-h="50vh"
-                    min-w="min(32rem,82vw)"
-                    text-sm
-                    leading-5
-                >
-                    <div flex="~ items-center gap-2" p3>
+                <div v-if="shown" :class="popoverPanelClass">
+                    <div
+                        flex="~ items-center gap-2 wrap"
+                        border="b base"
+                        bg-black:3
+                        p3
+                        dark:bg-white:4
+                    >
                         <NuxtLink
                             v-if="!rule.invalid && rule.docs?.url"
                             v-tooltip="docsTooltip"
-                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/8 px3 py1.5 text-sm text-inherit no-underline transition dark:bg-white/6 hover:bg-black/14 dark:hover:bg-white/12"
+                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-white/70 px3 py1.5 text-sm text-inherit no-underline transition dark:bg-zinc-900/70 hover:bg-black/6 dark:hover:bg-white/10"
                             :to="rule.docs?.url"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -385,7 +396,7 @@ const pluginPrefixHint = computed(() => {
                             />
                         </NuxtLink>
                         <button
-                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/8 px3 py1.5 text-sm text-inherit transition dark:bg-white/6 hover:bg-black/14 dark:hover:bg-white/12"
+                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-white/70 px3 py1.5 text-sm text-inherit transition dark:bg-zinc-900/70 hover:bg-black/6 dark:hover:bg-white/10"
                             title="Copy"
                             @click="copy(rule.name)"
                         >
@@ -394,7 +405,7 @@ const pluginPrefixHint = computed(() => {
                         </button>
                         <slot name="popup-actions" />
                     </div>
-                    <div border="t base" px3 pb3 pt2.5>
+                    <div px3 pb3 pt3>
                         <div flex="~ items-center gap-1.5 wrap">
                             <span text-sm op70>Rule name</span>
                             <code font-mono>
@@ -446,6 +457,17 @@ const pluginPrefixHint = computed(() => {
                                     prefix in your config.
                                 </span>
                             </span>
+                        </div>
+                    </div>
+                    <div
+                        v-if="resolvedRuleStates.length"
+                        border="t base"
+                        px3
+                        py2
+                    >
+                        <div flex="~ gap-2 items-center" text-sm op70>
+                            <div i-ph-git-branch-duotone />
+                            Config state trace
                         </div>
                     </div>
                     <slot name="popup" />
@@ -589,3 +611,33 @@ const pluginPrefixHint = computed(() => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.rule-state-rail--list {
+    overflow: hidden;
+    border-radius: 9999px;
+    max-inline-size: 100%;
+    padding-block: 0.125rem;
+
+    &:hover,
+    &:focus-within {
+        position: absolute;
+        z-index: 20;
+        overflow: visible;
+        background: rgb(255 255 255 / 95%);
+        box-shadow: 0 18px 45px rgb(0 0 0 / 18%);
+        inline-size: max-content;
+        inset-inline-start: 0;
+        max-inline-size: min(42rem, 80vi);
+        outline: 1px solid var(--c-border);
+        padding-inline: 0.25rem;
+    }
+
+    html.dark & {
+        &:hover,
+        &:focus-within {
+            background: rgb(9 9 11 / 95%);
+        }
+    }
+}
+</style>

@@ -52,8 +52,8 @@ function goto() {
 </script>
 
 <template>
-    <div min-w-100 p4 flex="~ col gap-2">
-        <div flex="~ gap-1 items-center">
+    <div min-w="min(30rem,84vw)" p3 flex="~ col gap-3">
+        <div flex="~ gap-2 items-center wrap">
             <RuleLevelIcon
                 :level="state.level"
                 :config-index="state.configIndex"
@@ -65,13 +65,14 @@ function goto() {
             }}</span>
             <template v-if="!isLocal">
                 <span op50>in</span>
-                <button hover="!color-base" text-gray @click="goto()">
+                <button
+                    class="inline-flex items-center gap-1.5 border border-base rounded-full bg-black/4 px2 py0.5 text-sm text-inherit transition dark:bg-white/5 hover:bg-black/8 dark:hover:bg-white/10"
+                    @click="goto()"
+                >
                     <ColorizedConfigName
                         v-if="config.name"
                         :name="config.name"
-                        px2
                         font-mono
-                        border="~ base rounded"
                     />
                     <span op50> the </span>
                     {{ nth(state.configIndex + 1) }}
@@ -80,7 +81,15 @@ function goto() {
             </template>
             <div v-else op50>in this config</div>
         </div>
-        <div v-if="!isLocal" flex="~ gap-2">
+        <div
+            v-if="!isLocal"
+            rounded-lg
+            border="~ base"
+            bg-black:3
+            p2
+            flex="~ gap-2"
+            dark:bg-white:4
+        >
             <template v-if="config.files">
                 <div i-ph-file-magnifying-glass-duotone my1 flex-none op75 />
                 <div flex="~ col gap-2">
@@ -161,7 +170,7 @@ function goto() {
                     v-if="state.primaryOption !== undefined"
                     lang="ts"
                     :code="`configuredPrimaryOption: ${stringifyOptions(state.primaryOption)}`"
-                    rounded
+                    rounded-lg
                     bg-code
                     p2
                     text-sm
@@ -171,7 +180,7 @@ function goto() {
                     :key="idx"
                     lang="ts"
                     :code="stringifyOptions(options)"
-                    rounded
+                    rounded-lg
                     bg-code
                     p2
                     text-sm
@@ -187,7 +196,7 @@ function goto() {
                     :key="idx"
                     lang="ts"
                     :code="stringifyOptions(options)"
-                    rounded
+                    rounded-lg
                     bg-code
                     p2
                     text-sm

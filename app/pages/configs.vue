@@ -18,6 +18,7 @@ import {
 import {} from "~~/shared/config-plugin-filters";
 import { isIgnoreOnlyConfig, matchFile } from "~~/shared/configs";
 import { getRuleLevel } from "~~/shared/rules";
+import { definePageMeta } from "#app/composables/pages";
 import { useRoute } from "#app/composables/router";
 import { getPluginColor } from "~/composables/color";
 import { payload } from "~/composables/payload";
@@ -27,8 +28,6 @@ import {
     stateStorage,
 } from "~/composables/state";
 
-// TODO: fix the lint
-// eslint-disable-next-line unimport/auto-insert
 definePageMeta({
     scrollToTop(to) {
         return !("index" in to.query);
@@ -147,6 +146,12 @@ function clearConfigFilters(): void {
     clearFilepathFilter();
     filters.rule = "";
     clearPluginSelection();
+}
+
+function setShowSpecificOnly(event: Event): void {
+    const target = event.target;
+    stateStorage.showSpecificOnly =
+        target instanceof HTMLInputElement ? target.checked : false;
 }
 
 watchEffect(() => {
@@ -330,6 +335,7 @@ onMounted(async () => {
                 <input
                     v-model="input"
                     placeholder="Test matching with filepath..."
+                    aria-label="Test matching with filepath"
                     border="~ base rounded-full"
                     :class="input ? 'font-mono' : ''"
                     w-full
@@ -479,6 +485,7 @@ onMounted(async () => {
                     <div class="flex flex-wrap items-center gap-2">
                         <button
                             type="button"
+                            :aria-pressed="!hasSelectedPlugin"
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 !hasSelectedPlugin
@@ -493,6 +500,7 @@ onMounted(async () => {
                             v-for="pluginOption in pluginOptions"
                             :key="pluginOption.value"
                             type="button"
+                            :aria-pressed="isPluginSelected(pluginOption.value)"
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 isPluginSelected(pluginOption.value)
@@ -520,6 +528,9 @@ onMounted(async () => {
                             "
                             btn-action
                             border-none
+                            :aria-pressed="
+                                stateStorage.viewFileMatchType === 'configs'
+                            "
                             @click="
                                 stateStorage.viewFileMatchType =
                                     stateStorage.viewFileMatchType === 'configs'
@@ -539,6 +550,9 @@ onMounted(async () => {
                             "
                             btn-action
                             border-none
+                            :aria-pressed="
+                                stateStorage.viewFileMatchType !== 'configs'
+                            "
                             @click="
                                 stateStorage.viewFileMatchType =
                                     stateStorage.viewFileMatchType === 'configs'
@@ -564,11 +578,7 @@ onMounted(async () => {
                     <input
                         :checked="stateStorage.showSpecificOnly"
                         type="checkbox"
-                        @change="
-                            stateStorage.showSpecificOnly = !!(
-                                $event.target as any
-                            ).checked
-                        "
+                        @change="setShowSpecificOnly"
                     />
                     <span op50>Show Specific Rules Only</span>
                 </label>
@@ -586,6 +596,7 @@ onMounted(async () => {
                     <div flex="~ gap-1">
                         <button
                             btn-action
+                            :aria-pressed="stateStorage.viewType === 'list'"
                             :class="{
                                 'btn-action-active':
                                     stateStorage.viewType === 'list',
@@ -597,6 +608,7 @@ onMounted(async () => {
                         </button>
                         <button
                             btn-action
+                            :aria-pressed="stateStorage.viewType === 'grid'"
                             :class="{
                                 'btn-action-active':
                                     stateStorage.viewType === 'grid',
@@ -615,7 +627,30 @@ onMounted(async () => {
             </div>
 
             <template v-if="!filteredConfigs.length">
-                <div mt5 italic op50>No matched config items.</div>
+                <div mt5 border="~ amber/25 rounded-lg" bg-amber:6 p4 text-sm>
+                    <div
+                        flex="~ gap-2 items-center"
+                        text-amber7
+                        dark:text-amber3
+                    >
+                        <div i-ph-funnel-x-duotone />
+                        <span font-medium>No matched config items</span>
+                    </div>
+                    <div mt2 op75>
+                        The active filepath, rule, or plugin filters exclude
+                        every config item.
+                    </div>
+                    <div v-if="hasActiveConfigFilters" mt3 flex="~ gap-2 wrap">
+                        <button
+                            btn-action
+                            type="button"
+                            @click="clearConfigFilters"
+                        >
+                            <div i-ph-arrow-counter-clockwise-duotone />
+                            Clear config filters
+                        </button>
+                    </div>
+                </div>
                 <template v-if="fileMatchResult?.globs.length">
                     <div>Ignored by globs:</div>
                     <div flex="~ gap-2 items-center wrap">

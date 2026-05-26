@@ -339,6 +339,11 @@ async function scrollToSection(
 
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
 }
+
+function setOpenFromToggle(event: Event): void {
+    const target = event.target;
+    if (target instanceof HTMLDetailsElement) open.value = target.open;
+}
 </script>
 
 <template>
@@ -348,7 +353,7 @@ async function scrollToSection(
         border="~ rounded-lg"
         relative
         :class="active ? 'border-yellow:70' : 'border-base'"
-        @toggle="open = ($event.target as any).open"
+        @toggle="setOpenFromToggle"
     >
         <summary block>
             <div

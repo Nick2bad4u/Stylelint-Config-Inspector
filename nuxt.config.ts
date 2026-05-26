@@ -1,18 +1,7 @@
-interface NuxtLike {
-    options: {
-        experimental: Record<string, unknown>;
-    };
-}
-
-function forcePayloadExtraction(_options: unknown, nuxt: NuxtLike) {
-    nuxt.options.experimental.payloadExtraction = true;
-}
-
 export default defineNuxtConfig({
     ssr: false,
 
     modules: [
-        forcePayloadExtraction,
         "@vueuse/nuxt",
         "@unocss/nuxt",
         "@nuxt/eslint",
@@ -28,15 +17,47 @@ export default defineNuxtConfig({
 
     experimental: {
         typedPages: true,
-        clientNodeCompat: true,
-        componentIslands: false,
     },
 
     features: {
         inlineStyles: false,
     },
 
+    vite: {
+        build: {
+            modulePreload: {
+                polyfill: false,
+            },
+            rollupOptions: {
+                onwarn(warning, warn) {
+                    const isVueUsePureAnnotationWarning =
+                        warning.id?.includes("@vueuse/core/dist/index.js") &&
+                        warning.message.includes("#__PURE__");
+
+                    if (isVueUsePureAnnotationWarning) return;
+
+                    warn(warning);
+                },
+            },
+        },
+    },
+
     css: ["@unocss/reset/tailwind.css"],
+
+    routeRules: {
+        "/": {
+            prerender: true,
+        },
+        "/200.html": {
+            prerender: true,
+        },
+        "/404.html": {
+            prerender: true,
+        },
+        "/*": {
+            prerender: false,
+        },
+    },
 
     nitro: {
         preset: "static",
@@ -49,25 +70,10 @@ export default defineNuxtConfig({
         output: {
             dir: "./dist",
         },
-        routeRules: {
-            "/": {
-                prerender: true,
-            },
-            "/200.html": {
-                prerender: true,
-            },
-            "/404.html": {
-                prerender: true,
-            },
-            "/*": {
-                prerender: false,
-            },
-        },
         sourceMap: false,
     },
 
     app: {
-        baseURL: "./",
         head: {
             viewport: "width=device-width,initial-scale=1",
             meta: [
@@ -96,10 +102,6 @@ export default defineNuxtConfig({
             ],
             title: "Stylelint Config Inspector",
         },
-    },
-
-    vite: {
-        base: "./",
     },
 
     devtools: {

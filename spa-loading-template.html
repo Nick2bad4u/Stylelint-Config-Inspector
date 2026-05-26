@@ -1,0 +1,77 @@
+<div
+    class="spa-loading-shell"
+    role="status"
+    aria-live="polite"
+>
+    <div
+        class="spa-loading-mark"
+        aria-hidden="true"
+    ></div>
+    <div class="spa-loading-copy">
+        <div class="spa-loading-title">Stylelint Config Inspector</div>
+        <div class="spa-loading-subtitle">Loading config...</div>
+    </div>
+</div>
+
+<style>
+    .spa-loading-shell {
+        display: grid;
+        box-sizing: border-box;
+        padding: 1rem;
+        background: #f8fafc;
+        color: #27272a;
+        font-family: sans-serif;
+        gap: 1rem;
+        min-block-size: 100dvb;
+        place-content: center;
+        text-align: center;
+    }
+
+    .spa-loading-mark {
+        border: 0.2rem solid rgb(124 58 237 / 0.24);
+        border-radius: 9999px;
+        animation: spa-loading-spin 800ms linear infinite;
+        block-size: 2rem;
+        border-block-start-color: #7c3aed;
+        inline-size: 2rem;
+        margin-inline: auto;
+    }
+
+    .spa-loading-copy {
+        display: grid;
+        gap: 0.25rem;
+    }
+
+    .spa-loading-title {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    .spa-loading-subtitle {
+        color: #71717a;
+        font-size: 0.875rem;
+    }
+
+    @keyframes spa-loading-spin {
+        to {
+            transform: rotate(1turn);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .spa-loading-mark {
+            animation: none;
+        }
+    }
+
+    @media (prefers-color-scheme: dark) {
+        .spa-loading-shell {
+            background: #09090b;
+            color: #f4f4f5;
+        }
+
+        .spa-loading-subtitle {
+            color: #a1a1aa;
+        }
+    }
+</style>
