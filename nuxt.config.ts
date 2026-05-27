@@ -42,7 +42,11 @@ export default defineNuxtConfig({
         },
     },
 
-    css: ["@unocss/reset/tailwind.css"],
+    css: [
+        "@unocss/reset/tailwind.css",
+        "floating-vue/dist/style.css",
+        "~/styles/global.css",
+    ],
 
     routeRules: {
         "/": {

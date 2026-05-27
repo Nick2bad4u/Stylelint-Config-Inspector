@@ -11,8 +11,6 @@ import {
     retryPayload,
 } from "~/composables/payload";
 
-import "floating-vue/dist/style.css";
-import "./styles/global.css";
 import "./composables/dark";
 
 const config = useRuntimeConfig();

@@ -11,6 +11,7 @@ import {
 import { getPluginColor } from "~/composables/color";
 import { deepCompareOptions } from "~/composables/options";
 import { getRuleDefaultOptions } from "~/composables/payload";
+import { nth } from "~/composables/strings";
 
 const props = defineProps<{
     rule: RuleInfo;
@@ -42,6 +43,10 @@ function redundantOptions(options: unknown[] | undefined) {
         getRuleDefaultOptions(props.rule.name)
     );
     return hasRedundantOptions;
+}
+
+function getRuleStateLabel(state: RuleConfigStates[number]): string {
+    return `Set to '${state.level}' in the ${nth(state.configIndex + 1)} config item`;
 }
 
 const { copy } = useClipboard();
@@ -311,7 +316,7 @@ const pluginPrefixHint = computed(() => {
 });
 
 const popoverPanelClass =
-    "max-h-[min(34rem,72vh)] min-w-[min(36rem,88vw)] overflow-auto border border-base rounded-lg bg-white/98 text-sm leading-5 text-zinc-800 shadow-2xl dark:bg-zinc-950/98 dark:text-zinc-100";
+    "inspector-popover-panel max-h-[min(34rem,72vh)] min-w-[min(36rem,88vw)] overflow-auto text-sm leading-5";
 </script>
 
 <template>
@@ -336,21 +341,35 @@ const popoverPanelClass =
                     :key="`${s.configIndex}-${s.level}-${idx}`"
                 >
                     <span class="rule-state-pill inline-flex flex-none">
-                        <VDropdown :triggers="['hover', 'focus', 'click']">
-                            <RuleLevelIcon
-                                :level="s.level"
-                                :config-index="s.configIndex"
-                                :has-options="
-                                    s.primaryOption !== undefined ||
-                                    !!s.options?.length
-                                "
-                                :has-redundant-options="
-                                    redundantOptions(s.options)
-                                "
-                                :show-config-index="!gridView"
-                            />
+                        <VDropdown
+                            :triggers="['hover', 'focus']"
+                            :popper-triggers="['hover']"
+                            :auto-hide="false"
+                        >
+                            <button
+                                type="button"
+                                class="rule-state-trigger"
+                                :aria-label="getRuleStateLabel(s)"
+                            >
+                                <RuleLevelIcon
+                                    :level="s.level"
+                                    :config-index="s.configIndex"
+                                    :has-options="
+                                        s.primaryOption !== undefined ||
+                                        !!s.options?.length
+                                    "
+                                    :has-redundant-options="
+                                        redundantOptions(s.options)
+                                    "
+                                    :show-config-index="!gridView"
+                                />
+                            </button>
                             <template #popper="{ shown }">
-                                <RuleStateItem v-if="shown" :state="s" />
+                                <RuleStateItem
+                                    v-if="shown"
+                                    :state="s"
+                                    variant="popover"
+                                />
                             </template>
                         </VDropdown>
                     </span>
@@ -359,7 +378,7 @@ const popoverPanelClass =
                     v-if="hiddenRuleStateCount > 0 && !gridView"
                     v-tooltip="overflowRuleStateLabel"
                     data-testid="rule-state-overflow"
-                    class="rule-state-overflow-pill min-w-11 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-1.5 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors hover:border-violet5/55 dark:bg-zinc-950/80 dark:text-gray4 hover:text-violet6 dark:hover:border-violet3/45 dark:hover:text-violet3"
+                    class="rule-state-overflow-pill min-w-13 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-2 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors hover:border-violet5/55 dark:bg-zinc-950/80 dark:text-gray4 hover:text-violet6 dark:hover:border-violet3/45 dark:hover:text-violet3"
                     :title="overflowRuleStateLabel"
                     role="img"
                     :aria-label="overflowRuleStateLabel"
@@ -409,16 +428,14 @@ const popoverPanelClass =
             <template #popper="{ shown }">
                 <div v-if="shown" :class="popoverPanelClass">
                     <div
+                        class="inspector-popover-header"
                         flex="~ items-center gap-2 wrap"
-                        border="b base"
-                        bg-black:3
                         p3
-                        dark:bg-white:4
                     >
                         <NuxtLink
                             v-if="!rule.invalid && rule.docs?.url"
                             v-tooltip="docsTooltip"
-                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-white/70 px3 py1.5 text-sm text-inherit no-underline transition dark:bg-zinc-900/70 hover:bg-black/6 dark:hover:bg-white/10"
+                            class="inspector-popover-action"
                             :to="rule.docs?.url"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -433,7 +450,7 @@ const popoverPanelClass =
                             />
                         </NuxtLink>
                         <button
-                            class="inline-flex items-center gap-1.5 border border-base rounded-full bg-white/70 px3 py1.5 text-sm text-inherit transition dark:bg-zinc-900/70 hover:bg-black/6 dark:hover:bg-white/10"
+                            class="inspector-popover-action"
                             title="Copy"
                             @click="copy(rule.name)"
                         >
@@ -454,14 +471,14 @@ const popoverPanelClass =
                                 pluginSourceLabel
                             }}</span>
                             <code
-                                class="inline-flex items-center border rounded-full px2 py0.5 text-sm font-mono"
+                                class="inspector-popover-chip inline-flex items-center border rounded-full px2 py0.5 text-sm font-mono"
                                 :style="pluginColorStyle"
                             >
                                 {{ pluginDisplayName }}
                             </code>
                             <span
                                 v-if="isCoreStylelintRule"
-                                class="inline-flex border border-violet/30 rounded-full bg-violet/8 px2 py0.5 text-xs text-violet7 dark:text-violet3"
+                                class="inspector-popover-chip inline-flex border rounded-full px2 py0.5 text-xs"
                             >
                                 Built-in rule · omit
                                 <span
@@ -498,6 +515,7 @@ const popoverPanelClass =
                     </div>
                     <div
                         v-if="resolvedRuleStates.length"
+                        class="inspector-popover-section"
                         border="t base"
                         px3
                         py2
@@ -680,6 +698,23 @@ const popoverPanelClass =
         &:focus-within {
             background: rgb(9 9 11 / 95%);
         }
+    }
+}
+
+.rule-state-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: help;
+
+    &:focus-visible {
+        border-radius: 9999px;
+        outline: 2px solid rgb(124 58 237 / 62%);
+        outline-offset: 2px;
     }
 }
 </style>

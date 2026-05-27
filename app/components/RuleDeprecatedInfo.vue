@@ -31,10 +31,7 @@ const versionInfo = computed(() => {
 });
 
 function getLinkClass(url: string | undefined) {
-    return [
-        "text-blue5 dark:text-blue4",
-        url ? "underline" : "",
-    ];
+    return ["text-blue5 dark:text-blue4", url ? "underline" : ""];
 }
 </script>
 
@@ -68,24 +65,41 @@ function getLinkClass(url: string | undefined) {
                         ) in deprecatedInfo.replacedBy"
                     >
                         <NuxtLink
-                            v-if="rule"
+                            v-if="rule?.url"
                             :key="rule.name"
                             :class="getLinkClass(rule.url)"
                             :href="rule.url"
                             target="_blank"
+                            rel="noopener noreferrer"
                         >
                             {{ rule.name ?? rule.url }}
                         </NuxtLink>
+                        <span
+                            v-else-if="rule"
+                            :key="rule.name"
+                            :class="getLinkClass(undefined)"
+                        >
+                            {{ rule.name }}
+                        </span>
                         <template v-if="plugin">
                             in
                             <NuxtLink
+                                v-if="plugin.url"
                                 :key="plugin.name"
                                 :class="getLinkClass(plugin.url)"
                                 :href="plugin.url"
                                 target="_blank"
+                                rel="noopener noreferrer"
                             >
                                 {{ plugin.name ?? plugin.url }}
-                            </NuxtLink> </template
+                            </NuxtLink>
+                            <span
+                                v-else
+                                :key="plugin.name"
+                                :class="getLinkClass(undefined)"
+                            >
+                                {{ plugin.name }}
+                            </span> </template
                         >{{
                             i === deprecatedInfo.replacedBy.length - 1
                                 ? "."
@@ -95,7 +109,7 @@ function getLinkClass(url: string | undefined) {
                         }}
                     </template>
                 </p>
-                <p mt2>
+                <p v-if="deprecatedInfo.url" mt2>
                     <a
                         text-red
                         underline

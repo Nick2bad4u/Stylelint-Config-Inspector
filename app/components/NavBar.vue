@@ -114,6 +114,8 @@ function showDeprecated() {
                         w-4.5
                         dark:brightness-185
                         dark:invert
+                        alt=""
+                        aria-hidden="true"
                     />
                     <span>
                         Built for the
@@ -124,7 +126,6 @@ function showDeprecated() {
                             hover:underline
                             >Stylelint ecosystem</a
                         >
-                        with best-effort metadata normalization.
                     </span>
                 </div>
             </div>

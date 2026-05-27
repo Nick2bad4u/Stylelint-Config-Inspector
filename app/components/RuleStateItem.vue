@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import type { RuleConfigState } from "~~/shared/types";
-import { computed, reactive } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "#app/composables/router";
 import { deepCompareOptions } from "~/composables/options";
 import { getRuleDefaultOptions, payload } from "~/composables/payload";
 import { filtersConfigs } from "~/composables/state";
 import { nth, stringifyOptions } from "~/composables/strings";
 
-const props = defineProps<{
-    state: RuleConfigState;
-    isLocal?: boolean;
-}>();
+type RuleOptionsView = "state" | "default";
+
+const props = withDefaults(
+    defineProps<{
+        state: RuleConfigState;
+        isLocal?: boolean;
+        variant?: "panel" | "popover";
+    }>(),
+    {
+        variant: "panel",
+    }
+);
 
 const colors = {
     error: "text-red",
@@ -39,9 +47,22 @@ const initialRuleOptionsView = computed(() =>
     !hasStateOptions.value && defaultOptions.value?.length ? "default" : "state"
 );
 
-const ruleOptions = reactive({
-    viewType: initialRuleOptionsView.value as "state" | "default",
-});
+const ruleOptionsView = ref<RuleOptionsView>("state");
+
+watch(
+    initialRuleOptionsView,
+    (view) => {
+        ruleOptionsView.value = view;
+    },
+    { immediate: true }
+);
+
+const panelClass = computed(() => [
+    "rule-state-panel",
+    props.variant === "popover"
+        ? "rule-state-panel--popover inspector-popover-panel"
+        : "inspector-panel",
+]);
 
 const router = useRouter();
 function goto() {
@@ -52,12 +73,7 @@ function goto() {
 </script>
 
 <template>
-    <div
-        class="rule-state-panel inspector-panel"
-        min-w="min(30rem,84vw)"
-        p3
-        flex="~ col gap-3"
-    >
+    <div :class="panelClass" min-w="min(30rem,84vw)" p3 flex="~ col gap-3">
         <div flex="~ gap-2 items-center wrap">
             <RuleLevelIcon
                 :level="state.level"
@@ -85,13 +101,11 @@ function goto() {
         </div>
         <div
             v-if="!isLocal"
-            class="rule-state-scope"
+            class="rule-state-scope inspector-popover-section"
             rounded-lg
             border="~ base"
-            bg-black:3
             p2
             flex="~ gap-2"
-            dark:bg-white:4
         >
             <template v-if="config.files">
                 <div i-ph-file-magnifying-glass-duotone my1 flex-none op75 />
@@ -120,9 +134,9 @@ function goto() {
                             btn-action
                             :class="{
                                 'btn-action-active':
-                                    ruleOptions.viewType === 'state',
+                                    ruleOptionsView === 'state',
                             }"
-                            @click="ruleOptions.viewType = 'state'"
+                            @click="ruleOptionsView = 'state'"
                         >
                             <div i-ph-sliders-duotone my1 flex-none op75 />
                             Rule options
@@ -132,9 +146,9 @@ function goto() {
                             btn-action
                             :class="{
                                 'btn-action-active':
-                                    ruleOptions.viewType === 'default',
+                                    ruleOptionsView === 'default',
                             }"
-                            @click="ruleOptions.viewType = 'default'"
+                            @click="ruleOptionsView = 'default'"
                         >
                             <div i-ph-faders-duotone my1 flex-none op75 />
                             Option defaults
@@ -168,7 +182,7 @@ function goto() {
                     </template>
                 </div>
             </div>
-            <template v-if="ruleOptions.viewType === 'state'">
+            <template v-if="ruleOptionsView === 'state'">
                 <Shiki
                     v-if="state.primaryOption !== undefined"
                     lang="ts"
@@ -189,7 +203,7 @@ function goto() {
                     text-sm
                 />
             </template>
-            <template v-if="ruleOptions.viewType === 'default'">
+            <template v-if="ruleOptionsView === 'default'">
                 <div v-if="!hasStateOptions" op50>
                     No explicit options are configured in this state; showing
                     Stylelint defaults.
@@ -208,7 +222,7 @@ function goto() {
         </template>
         <template
             v-if="
-                ruleOptions.viewType === 'state' &&
+                ruleOptionsView === 'state' &&
                 comparedOptions.hasRedundantOptions
             "
         >
@@ -221,16 +235,8 @@ function goto() {
 </template>
 
 <style scoped>
-.rule-state-panel {
-    border-color: rgb(124 58 237 / 0.18);
-    background: rgb(255 255 255 / 0.96);
-    color: rgb(39 39 42);
-
-    html.dark & {
-        border-color: rgb(167 139 250 / 0.2);
-        background: rgb(24 24 27 / 0.96);
-        color: rgb(244 244 245);
-    }
+.rule-state-panel--popover {
+    box-shadow: none;
 }
 
 .rule-state-config-button {
@@ -274,11 +280,5 @@ function goto() {
 
 .rule-state-scope {
     border-color: rgb(124 58 237 / 0.14);
-    background: rgb(124 58 237 / 0.045);
-
-    html.dark & {
-        border-color: rgb(167 139 250 / 0.16);
-        background: rgb(167 139 250 / 0.07);
-    }
 }
 </style>

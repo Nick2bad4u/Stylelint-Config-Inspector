@@ -171,6 +171,17 @@ test.describe("rules page regressions", () => {
     test("overloaded rule state rail clips to one row and expands on hover", async ({
         page,
     }) => {
+        const consoleNoise: string[] = [];
+        page.on("console", (message) => {
+            const text = message.text();
+            if (
+                text.includes("Blocked aria-hidden") ||
+                text.includes("[Config Inspector]")
+            ) {
+                consoleNoise.push(text);
+            }
+        });
+
         const payload = structuredClone(MOCK_PAYLOAD);
         payload.configs.push(
             ...[
@@ -204,6 +215,11 @@ test.describe("rules page regressions", () => {
             "aria-label",
             "4 more config states; hover to show the full trace"
         );
+        const overflowWidth = await stateRail
+            .getByTestId("rule-state-overflow")
+            .evaluate((element) => element.getBoundingClientRect().width);
+        expect(overflowWidth).toBeGreaterThanOrEqual(52);
+
         const ruleName = page
             .locator('.colorized-rule-name[title="stylelint/color-hex-length"]')
             .first();
@@ -248,6 +264,13 @@ test.describe("rules page regressions", () => {
         );
         expect(expandedMetrics.height).toBeLessThan(32);
         expect(ruleNameXAfter).toBeCloseTo(ruleNameXBefore, 0);
+
+        const expandedStateBadges = stateRail.getByRole("img");
+        for (let index = 0; index < 6; index += 1)
+            await expandedStateBadges.nth(index).hover();
+        await page.mouse.move(0, 0);
+        await page.waitForTimeout(100);
+        expect(consoleNoise).toEqual([]);
     });
 
     test("message-derived description metadata is available in hover text only", async ({

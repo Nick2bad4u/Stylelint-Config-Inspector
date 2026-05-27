@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import type {
     ErrorInfo,
     FilesGroup,
@@ -89,7 +88,6 @@ async function get(baseURL: string) {
         }
         errorInfo.value = undefined;
         data.value = payload;
-        console.log(LOG_NAME, "Config payload", payload);
         return payload;
     } catch (error) {
         const message = stringifyError(error);
@@ -122,17 +120,14 @@ export function init(baseURL: string) {
                 `ws://${location.hostname}:${payload.meta.wsPort}`
             );
             ws.addEventListener("message", async (event) => {
-                console.log(LOG_NAME, "WebSocket message", event.data);
                 const payload = JSON.parse(event.data) as { type?: unknown };
                 if (payload.type === "config-change") await get(baseURL);
             });
             ws.addEventListener("open", () => {
                 payloadConnectionStatus.value = "connected";
-                console.log(LOG_NAME, "WebSocket connected");
             });
             ws.addEventListener("close", () => {
                 payloadConnectionStatus.value = "disconnected";
-                console.log(LOG_NAME, "WebSocket closed");
             });
             ws.addEventListener("error", (error) => {
                 payloadConnectionStatus.value = "error";

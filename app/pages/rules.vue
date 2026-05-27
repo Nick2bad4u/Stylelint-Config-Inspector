@@ -13,7 +13,7 @@ import {
 
 const rules = computed(() => Object.values(payload.value.rules));
 const listColumns =
-    "8.75rem_minmax(14rem,clamp(14rem,38vw,30rem))_5.25rem_minmax(0,1fr)";
+    "10rem_minmax(14rem,clamp(14rem,38vw,30rem))_5.25rem_minmax(0,1fr)";
 const pluginNames = computed<string[]>(() => {
     return [...new Set(rules.value.map((i) => i.plugin))].filter(
         (plugin): plugin is string =>
