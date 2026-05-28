@@ -178,9 +178,8 @@ function showDeprecated() {
                 {{ connectionNotice.text }}
             </div>
         </div>
-        <div
+        <nav
             :data-testid="testIds.nav.tabs"
-            role="navigation"
             aria-label="Inspector sections"
             flex="~ gap-3 items-center wrap"
             py4
@@ -366,6 +365,6 @@ function showDeprecated() {
                     Using {{ deprecatedUsing.length }} deprecated rules
                 </button>
             </template>
-        </div>
+        </nav>
     </div>
 </template>

@@ -37,7 +37,6 @@ definePageMeta({
 const input = ref(filters.filepath);
 const autoCompleteIndex = ref(0);
 const autoCompleteOpen = ref(false);
-const autoCompleteListboxId = "filepath-autocomplete-listbox";
 
 function expandAll() {
     configsOpenState.value = configsOpenState.value.map(() => true);
@@ -197,10 +196,6 @@ function autoCompleteConfirm(idx = autoCompleteIndex.value) {
     autoCompleteOpen.value = false;
 }
 
-function getAutoCompleteOptionId(idx: number): string {
-    return `filepath-autocomplete-option-${idx}`;
-}
-
 function autoCompleteBlur() {
     setTimeout(() => {
         autoCompleteOpen.value = false;
@@ -341,16 +336,9 @@ onMounted(async () => {
                     v-model="input"
                     placeholder="Test matching with filepath..."
                     aria-label="Test matching with filepath"
-                    role="combobox"
                     aria-autocomplete="list"
-                    :aria-controls="autoCompleteListboxId"
                     :aria-expanded="
                         autoCompleteOpen && autoCompleteFiles.length > 0
-                    "
-                    :aria-activedescendant="
-                        autoCompleteOpen && autoCompleteFiles.length
-                            ? getAutoCompleteOptionId(autoCompleteIndex)
-                            : undefined
                     "
                     class="inspector-input"
                     border="~ base rounded-full"
@@ -382,8 +370,6 @@ onMounted(async () => {
                 </div>
                 <div
                     v-show="autoCompleteOpen && autoCompleteFiles.length"
-                    :id="autoCompleteListboxId"
-                    role="listbox"
                     pos="absolute left-8 right-8 top-1/1"
                     border="~ base rounded"
                     flex="~ col"
@@ -397,10 +383,8 @@ onMounted(async () => {
                 >
                     <button
                         v-for="(file, idx) of autoCompleteFiles"
-                        :id="getAutoCompleteOptionId(idx)"
                         :key="file.item"
                         type="button"
-                        role="option"
                         :aria-selected="idx === autoCompleteIndex"
                         :class="idx === autoCompleteIndex ? 'bg-active' : ''"
                         px3

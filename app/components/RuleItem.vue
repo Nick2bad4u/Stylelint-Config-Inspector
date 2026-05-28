@@ -380,10 +380,9 @@ const popoverPanelClass =
                     data-testid="rule-state-overflow"
                     class="rule-state-overflow-pill min-w-13 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-2 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors hover:border-violet5/55 dark:bg-zinc-950/80 dark:text-gray4 hover:text-violet6 dark:hover:border-violet3/45 dark:hover:text-violet3"
                     :title="overflowRuleStateLabel"
-                    role="img"
                     :aria-label="overflowRuleStateLabel"
                 >
-                    <span aria-hidden="true">+{{ hiddenRuleStateCount }}</span>
+                    <span>+{{ hiddenRuleStateCount }}</span>
                 </div>
             </div>
         </template>

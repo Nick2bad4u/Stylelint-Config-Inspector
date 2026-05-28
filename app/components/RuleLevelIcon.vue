@@ -41,7 +41,7 @@ const icon = computed(
 </script>
 
 <template>
-    <div
+    <span
         relative
         inline-flex
         items-center
@@ -55,8 +55,8 @@ const icon = computed(
                 : '',
             props.class,
         ]"
+        data-testid="rule-level-icon"
         :title="title"
-        role="img"
         :aria-label="title"
     >
         <div :class="icon" :text="shouldShowConfigIndex ? 'sm' : undefined" />
@@ -78,5 +78,5 @@ const icon = computed(
             op75
             :class="hasRedundantOptions ? 'text-blue5' : ''"
         />
-    </div>
+    </span>
 </template>

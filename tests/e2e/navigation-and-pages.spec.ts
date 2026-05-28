@@ -108,7 +108,9 @@ test.describe("navigation and page regressions", () => {
         const listButtonBounds = await listButton.boundingBox();
         expect(clearFiltersBounds).not.toBeNull();
         expect(listButtonBounds).not.toBeNull();
-        expect(clearFiltersBounds!.x).toBeLessThan(listButtonBounds!.x);
+        if (!clearFiltersBounds || !listButtonBounds)
+            throw new Error("Expected filter controls to have layout bounds.");
+        expect(clearFiltersBounds.x).toBeLessThan(listButtonBounds.x);
         await clearFiltersButton.click();
 
         await expect(filepathInput).toHaveValue("");

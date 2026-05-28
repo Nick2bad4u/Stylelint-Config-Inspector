@@ -154,9 +154,9 @@ test.describe("rules page regressions", () => {
             .fill("stylelint/color-hex-length");
 
         const firstConfigBadge = page
-            .getByRole("img", {
-                name: "Set to 'error' in the 1st config item",
-            })
+            .locator(
+                '[data-testid="rule-level-icon"][aria-label="Set to \'error\' in the 1st config item"]'
+            )
             .first();
         await expect(firstConfigBadge).toBeVisible();
         await expect(firstConfigBadge).toContainText("#1");
@@ -205,7 +205,9 @@ test.describe("rules page regressions", () => {
             .fill("stylelint/color-hex-length");
 
         const stateRail = page.getByTestId("rule-state-rail").first();
-        await expect(stateRail.getByRole("img")).toHaveCount(3);
+        await expect(
+            stateRail.locator('[data-testid="rule-level-icon"]:visible')
+        ).toHaveCount(2);
         await expect(stateRail.getByTestId("rule-state-overflow")).toHaveText(
             "+4"
         );
@@ -240,12 +242,16 @@ test.describe("rules page regressions", () => {
             .getByTestId("rule-state-overflow")
             .boundingBox();
         expect(overflowBox).not.toBeNull();
+        if (!overflowBox)
+            throw new Error("Expected overflow badge to have layout bounds.");
         await page.mouse.move(
-            overflowBox!.x + overflowBox!.width / 2,
-            overflowBox!.y + overflowBox!.height / 2
+            overflowBox.x + overflowBox.width / 2,
+            overflowBox.y + overflowBox.height / 2
         );
 
-        await expect(stateRail.getByRole("img")).toHaveCount(6);
+        await expect(
+            stateRail.locator('[data-testid="rule-level-icon"]:visible')
+        ).toHaveCount(6);
         await expect(stateRail.getByTestId("rule-state-overflow")).toBeHidden();
         await expect(page.locator(".rule-state-panel").first()).toBeVisible();
 
@@ -265,7 +271,9 @@ test.describe("rules page regressions", () => {
         expect(expandedMetrics.height).toBeLessThan(32);
         expect(ruleNameXAfter).toBeCloseTo(ruleNameXBefore, 0);
 
-        const expandedStateBadges = stateRail.getByRole("img");
+        const expandedStateBadges = stateRail.locator(
+            '[data-testid="rule-level-icon"]:visible'
+        );
         for (let index = 0; index < 6; index += 1)
             await expandedStateBadges.nth(index).hover();
         await page.mouse.move(0, 0);
@@ -277,8 +285,8 @@ test.describe("rules page regressions", () => {
         page,
     }) => {
         const payload = structuredClone(MOCK_PAYLOAD);
-        payload.rules[pluginRuleName]!.docs = {
-            ...payload.rules[pluginRuleName]!.docs,
+        payload.rules[pluginRuleName].docs = {
+            ...payload.rules[pluginRuleName].docs,
             descriptionSource: "message",
         };
 
