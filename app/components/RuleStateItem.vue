@@ -273,7 +273,8 @@ function goto() {
         &:focus-visible {
             border-color: rgb(167 139 250 / 0.38);
             background: rgb(124 58 237 / 0.2);
-            box-shadow: 0 0 0 3px rgb(167 139 250 / 0.12);
+            outline: 3px solid rgb(167 139 250 / 0.12);
+            outline-offset: 0;
         }
     }
 }

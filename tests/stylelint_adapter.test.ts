@@ -155,6 +155,130 @@ describe("stylelint adapter", () => {
         });
     });
 
+    it("tracks root config imports as dependencies for live updates", async () => {
+        const cwd = await createTempProject(
+            `
+      import shared from "./stylelint.shared.mjs";
+
+      export default {
+        rules: {
+          ...shared.rules,
+          "alpha-value-notation": "number"
+        },
+      }
+    `,
+            {
+                "stylelint.shared.mjs": `
+          export default {
+            rules: {
+              "color-no-invalid-hex": true
+            }
+          }
+        `,
+            }
+        );
+
+        const result = await readConfig({
+            cwd,
+            chdir: false,
+            globMatchedFiles: false,
+            targetFilePath: "src/styles.css",
+        });
+
+        expect(result.dependencies).toEqual(
+            expect.arrayContaining([
+                join(cwd, "stylelint.config.mjs"),
+                join(cwd, "stylelint.shared.mjs"),
+            ])
+        );
+    });
+
+    it("tracks imported shared config packages as dependencies for live updates", async () => {
+        const cwd = await createTempProject(
+            `
+      import shared from "stylelint-config-local";
+
+      export default {
+        rules: {
+          ...shared.rules,
+          "alpha-value-notation": "number"
+        },
+      }
+    `,
+            {
+                "node_modules/stylelint-config-local/index.mjs": `
+          export default {
+            rules: {
+              "color-no-invalid-hex": true
+            }
+          }
+        `,
+                "node_modules/stylelint-config-local/package.json":
+                    JSON.stringify(
+                        {
+                            name: "stylelint-config-local",
+                            private: true,
+                            version: "0.0.0-test",
+                            type: "module",
+                            main: "index.mjs",
+                        },
+                        null,
+                        2
+                    ),
+            }
+        );
+
+        const result = await readConfig({
+            cwd,
+            chdir: false,
+            globMatchedFiles: false,
+            targetFilePath: "src/styles.css",
+        });
+
+        expect(result.dependencies).toEqual(
+            expect.arrayContaining([
+                join(cwd, "stylelint.config.mjs"),
+                join(cwd, "node_modules/stylelint-config-local/index.mjs"),
+            ])
+        );
+    });
+
+    it("tracks extended shared configs as dependencies for live updates", async () => {
+        const cwd = await createTempProject(
+            `
+      export default {
+        extends: ["./stylelint.shared.mjs"],
+        rules: {
+          "alpha-value-notation": "number"
+        },
+      }
+    `,
+            {
+                "stylelint.shared.mjs": `
+          export default {
+            rules: {
+              "color-no-invalid-hex": true
+            }
+          }
+        `,
+            }
+        );
+
+        const result = await readConfig({
+            cwd,
+            chdir: false,
+            globMatchedFiles: false,
+            targetFilePath: "src/styles.css",
+        });
+
+        expect(result.dependencies).toEqual(
+            expect.arrayContaining([
+                join(cwd, "stylelint.config.mjs"),
+                join(cwd, "stylelint.shared.mjs"),
+            ])
+        );
+    });
+
     it("returns a structured not-found payload when no config exists", async () => {
         const cwd = await createTempProject();
 

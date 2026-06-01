@@ -57,6 +57,8 @@ const REGEXP_SPECIAL_CHARS_RE = /[.*+?^${}()|[\]\\]/g;
 const AT_PREFIX_RE = /^@/;
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/;
 const STYLELINT_PACKAGE_PREFIX_RE = /^stylelint-/;
+const STYLELINT_CONFIG_PACKAGE_IMPORT_RE =
+    /^(?:stylelint-config(?:-|$)|@[^/]+\/stylelint-config(?:-|$))/;
 const SCOPED_STYLELINT_PLUGIN_PACKAGE_RE =
     /^(@[^/]+)\/stylelint-plugin(?:-(.+))?$/;
 const SCOPED_STYLELINT_PACKAGE_RE = /^(@[^/]+)\/stylelint-(.+)$/;
@@ -169,6 +171,12 @@ interface ResolvedExtendsSpecifier {
     packageRoot?: string;
     resolvedPath?: string;
     source: ExtendsInfo["source"];
+}
+
+interface LoadedExtendsConfig {
+    config?: StylelintConfigLike;
+    dependencies: string[];
+    entryPath?: string;
 }
 
 let _recommendedCoreRulesPromise: Promise<Set<string>> | undefined;
@@ -573,24 +581,110 @@ async function resolvePackageEntryPath(
     return undefined;
 }
 
+async function resolveExtendsEntryPath(
+    resolvedSpecifier: ResolvedExtendsSpecifier
+): Promise<string | undefined> {
+    return (
+        resolvedSpecifier.resolvedPath ??
+        (resolvedSpecifier.packageRoot
+            ? await resolvePackageEntryPath(resolvedSpecifier.packageRoot)
+            : undefined)
+    );
+}
+
+async function loadExtendsConfigWithDependencies(
+    resolvedSpecifier: ResolvedExtendsSpecifier,
+    configBasePath: string
+): Promise<LoadedExtendsConfig> {
+    const entryPath = await resolveExtendsEntryPath(resolvedSpecifier);
+
+    if (!entryPath) return { dependencies: [] };
+
+    try {
+        const loaded = await loadConfigFromPath(entryPath, configBasePath);
+        return {
+            config: loaded.config as StylelintConfigLike,
+            dependencies: loaded.dependencies,
+            entryPath,
+        };
+    } catch {
+        return {
+            dependencies: [entryPath],
+            entryPath,
+        };
+    }
+}
+
 async function loadExtendsConfig(
     resolvedSpecifier: ResolvedExtendsSpecifier,
     configBasePath: string
 ): Promise<StylelintConfigLike | undefined> {
-    const entryPath =
-        resolvedSpecifier.resolvedPath ??
-        (resolvedSpecifier.packageRoot
-            ? await resolvePackageEntryPath(resolvedSpecifier.packageRoot)
-            : undefined);
+    return (
+        await loadExtendsConfigWithDependencies(
+            resolvedSpecifier,
+            configBasePath
+        )
+    ).config;
+}
 
-    if (!entryPath) return undefined;
+function addDependency(
+    dependencies: Set<string>,
+    dependency: string,
+    basePath: string
+): void {
+    dependencies.add(
+        normalize(
+            isAbsolute(dependency) ? dependency : resolve(basePath, dependency)
+        )
+    );
+}
 
-    try {
-        const loaded = await loadConfigFromPath(entryPath, configBasePath);
-        return loaded.config as StylelintConfigLike;
-    } catch {
-        return undefined;
+async function collectExtendsDependencies(
+    configs: FlatConfigItem[],
+    workspaceBasePath: string,
+    configBasePath: string
+): Promise<string[]> {
+    const dependencies = new Set<string>();
+    const visited = new Set<string>();
+
+    async function visit(specifier: string, basePath: string): Promise<void> {
+        const resolvedSpecifier = await resolveExtendsSpecifier(
+            specifier,
+            basePath,
+            workspaceBasePath
+        );
+        const cacheKey =
+            resolvedSpecifier.resolvedPath ??
+            resolvedSpecifier.packageRoot ??
+            `${basePath}:${specifier}`;
+
+        if (visited.has(cacheKey)) return;
+        visited.add(cacheKey);
+
+        const loaded = await loadExtendsConfigWithDependencies(
+            resolvedSpecifier,
+            basePath
+        );
+        loaded.dependencies.forEach((dependency) =>
+            addDependency(dependencies, dependency, basePath)
+        );
+
+        const directExtends = toStringArray(loaded.config?.extends);
+        if (!directExtends || !loaded.entryPath) return;
+
+        const nestedBasePath = dirname(loaded.entryPath);
+        for (const nestedSpecifier of directExtends)
+            await visit(nestedSpecifier, nestedBasePath);
     }
+
+    for (const config of configs) {
+        for (const specifier of config.extends ?? [])
+            await visit(specifier, configBasePath);
+    }
+
+    return [...dependencies].toSorted((left, right) =>
+        left.localeCompare(right)
+    );
 }
 
 async function readExtendsPackageMetadata(
@@ -1613,6 +1707,7 @@ async function loadConfigFromPath(
     const { mod, dependencies } = await bundleRequire({
         filepath: configPath,
         cwd: basePath,
+        notExternal: [STYLELINT_CONFIG_PACKAGE_IMPORT_RE],
         tsconfig: false,
     });
 
@@ -1738,14 +1833,13 @@ class StylelintInspectorAdapter implements InspectorAdapter {
             try {
                 const loaded = await loadConfigFromPath(configPath, basePath);
                 config = loaded.config;
-
-                if (options.userConfigPath)
-                    loaded.dependencies.forEach((dep) => dependencies.add(dep));
-                else dependencies.add(configPath);
+                loaded.dependencies.forEach((dependency) =>
+                    addDependency(dependencies, dependency, basePath)
+                );
             } catch (error) {
                 if (options.userConfigPath) throw error;
 
-                dependencies.add(configPath);
+                addDependency(dependencies, configPath, basePath);
                 diagnostics.push(
                     "Could not parse discovered config directly; using resolved output only for config item extraction."
                 );
@@ -1808,6 +1902,14 @@ class StylelintInspectorAdapter implements InspectorAdapter {
             config as StylelintConfigLike | undefined
         );
         const configBasePath = configPath ? dirname(configPath) : basePath;
+        const extendsDependencies = await collectExtendsDependencies(
+            configs,
+            basePath,
+            configBasePath
+        );
+        extendsDependencies.forEach((dependency) =>
+            addDependency(dependencies, dependency, basePath)
+        );
         const [
             rules,
             stylelintIgnore,

@@ -86,6 +86,8 @@ export async function createWsServer(
         ignoreInitial: true,
         cwd: basePath,
     });
+    if (resolvedConfigPath.configPath)
+        watcher.add(resolvedConfigPath.configPath);
 
     watcher.on("change", (path) => {
         payload = undefined;

@@ -12,7 +12,6 @@ summary::-webkit-details-marker {
 
 body {
     --at-apply: bg-base color-base font-sans;
-    background-attachment: fixed;
     background-color: #f8fafc;
     background-image:
         linear-gradient(180deg, #ffffff 0%, #f8fafc 42%, #eef2f7 100%),
@@ -56,7 +55,8 @@ body {
         &:focus,
         &:focus-visible {
             background: rgb(24 24 27 / 0.62);
-            box-shadow: 0 0 0 3px rgb(167 139 250 / 0.16);
+            outline: 3px solid rgb(167 139 250 / 0.16);
+            outline-offset: 0;
         }
     }
 }
@@ -118,7 +118,8 @@ body {
 
         &:focus-within {
             border-color: rgb(167 139 250 / 0.52);
-            box-shadow: 0 0 0 3px rgb(167 139 250 / 0.14);
+            outline: 3px solid rgb(167 139 250 / 0.14);
+            outline-offset: 0;
         }
     }
 }
@@ -165,7 +166,6 @@ body {
     html.dark & {
         border-color: rgb(167 139 250 / 0.22);
         background: rgb(20 16 33 / 0.97);
-        box-shadow: 0 18px 45px rgb(0 0 0 / 0.34);
         color: rgb(244 244 245);
     }
 }
@@ -225,7 +225,8 @@ body {
         &:focus-visible {
             border-color: rgb(167 139 250 / 0.38);
             background: rgb(124 58 237 / 0.18);
-            box-shadow: 0 0 0 3px rgb(167 139 250 / 0.12);
+            outline: 3px solid rgb(167 139 250 / 0.12);
+            outline-offset: 0;
         }
     }
 }
@@ -336,9 +337,8 @@ html.dark {
     html.dark & {
         &:hover,
         &:focus-visible {
-            box-shadow:
-                0 0 0 1px rgb(167 139 250 / 0.36),
-                0 6px 14px rgb(91 33 182 / 0.32);
+            outline: 1px solid rgb(167 139 250 / 0.36);
+            outline-offset: 0;
         }
     }
 }
@@ -422,7 +422,6 @@ html.dark [id="popper_inner"] {
 
 html.dark .v-popper--theme-dropdown .v-popper__inner,
 html.dark .v-popper--theme-tooltip .v-popper__inner {
-    backdrop-filter: blur(6px);
     background: rgb(20 16 33 / 0.97);
     color: rgb(228 228 231);
 }
