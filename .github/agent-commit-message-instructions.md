@@ -2,7 +2,6 @@
 
 - Use the following commit types for all commit messages, formatted as: `👷 [build]`, `🧹 [chore]`, `📝 [docs]`, `✨ [feat]`, `🐛 [fix]`, `⚡️ [perf]`, `🚜 [refactor]`, `⏪ [revert]`, `🎨 [style]`, `🧪 [test]`
 
-
 ## Format Requirements
 
 - Always start your commit message with the appropriate emoji and type in brackets
@@ -20,7 +19,6 @@
 - Write like a technical changelog author.
 - Use relevant emojis where useful for readability, not emoji spam, but be through in parsing and describing all meaningful changes that match emojis above.
 - Describe all meaningful changes comprehensively.
-
 
 - Entire Gitmoji Table Reference below, use for ideas and consistency.
 

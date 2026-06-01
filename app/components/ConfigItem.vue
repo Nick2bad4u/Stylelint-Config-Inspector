@@ -181,12 +181,7 @@ const extraConfigs = computed(() => {
 
 function isPrimitiveExtraConfigValue(value: unknown): boolean {
     return (
-        value == null ||
-        [
-            "string",
-            "number",
-            "boolean",
-        ].includes(typeof value)
+        value == null || ["string", "number", "boolean"].includes(typeof value)
     );
 }
 
