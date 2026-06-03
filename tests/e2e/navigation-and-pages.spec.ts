@@ -495,4 +495,51 @@ test.describe("navigation and page regressions", () => {
             }
         }
     });
+
+    test("root background spans long pages without viewport tiling", async ({
+        page,
+    }) => {
+        await mockPayload(page);
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.goto("/configs");
+        await expect(page.getByTestId(testIds.nav.tabs)).toBeVisible();
+
+        const backgroundMetrics = await page.evaluate(() => {
+            const bodyStyles = getComputedStyle(document.body);
+            const bodyHeight = document.body.getBoundingClientRect().height;
+            const viewportHeight = document.documentElement.clientHeight;
+
+            return {
+                backgroundRepeat: bodyStyles.backgroundRepeat,
+                backgroundSize: bodyStyles.backgroundSize,
+                bodyHeight,
+                scrollHeight: document.documentElement.scrollHeight,
+                viewportHeight,
+            };
+        });
+
+        const backgroundRepeats = backgroundMetrics.backgroundRepeat
+            .split(",")
+            .map((value) => value.trim());
+
+        expect(backgroundRepeats.length).toBeGreaterThan(0);
+        expect(
+            backgroundRepeats.every((value) => value === "no-repeat")
+        ).toBe(true);
+
+        const backgroundSizes = backgroundMetrics.backgroundSize
+            .split(",")
+            .map((value) => value.trim());
+
+        expect(backgroundSizes.length).toBe(backgroundRepeats.length);
+        expect(
+            backgroundSizes.every((value) => value === "100% 100%")
+        ).toBe(true);
+        expect(backgroundMetrics.scrollHeight).toBeGreaterThan(
+            backgroundMetrics.viewportHeight
+        );
+        expect(backgroundMetrics.bodyHeight).toBeGreaterThan(
+            backgroundMetrics.viewportHeight
+        );
+    });
 });

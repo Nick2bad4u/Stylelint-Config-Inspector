@@ -62,8 +62,8 @@ init(config.app.baseURL);
 
     <div
         v-if="errorInfo"
+        class="inspector-viewport-state"
         grid
-        h-full
         w-full
         place-content-center
         whitespace-pre-line
@@ -116,8 +116,8 @@ init(config.app.baseURL);
     </div>
     <div
         v-else-if="isLoading"
+        class="inspector-viewport-state"
         flex="~ col"
-        h-full
         w-full
         items-center
         justify-center
