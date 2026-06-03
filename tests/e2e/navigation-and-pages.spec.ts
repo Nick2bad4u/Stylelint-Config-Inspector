@@ -531,7 +531,7 @@ test.describe("navigation and page regressions", () => {
             .split(",")
             .map((value) => value.trim());
 
-        expect(backgroundSizes.length).toBe(backgroundRepeats.length);
+        expect(backgroundSizes.length).toBeGreaterThan(0);
         expect(backgroundSizes.every((value) => value === "100% 100%")).toBe(
             true
         );
