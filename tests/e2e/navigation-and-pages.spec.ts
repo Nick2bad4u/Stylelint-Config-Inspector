@@ -523,18 +523,18 @@ test.describe("navigation and page regressions", () => {
             .map((value) => value.trim());
 
         expect(backgroundRepeats.length).toBeGreaterThan(0);
-        expect(
-            backgroundRepeats.every((value) => value === "no-repeat")
-        ).toBe(true);
+        expect(backgroundRepeats.every((value) => value === "no-repeat")).toBe(
+            true
+        );
 
         const backgroundSizes = backgroundMetrics.backgroundSize
             .split(",")
             .map((value) => value.trim());
 
         expect(backgroundSizes.length).toBe(backgroundRepeats.length);
-        expect(
-            backgroundSizes.every((value) => value === "100% 100%")
-        ).toBe(true);
+        expect(backgroundSizes.every((value) => value === "100% 100%")).toBe(
+            true
+        );
         expect(backgroundMetrics.scrollHeight).toBeGreaterThan(
             backgroundMetrics.viewportHeight
         );
