@@ -145,6 +145,7 @@ jobs:
 
             - name: Upload test results to Codecov
               if: ${{ !cancelled() }}
+              continue-on-error: true
               uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
               with:
                   use_oidc: true
@@ -153,12 +154,13 @@ jobs:
                   flags: ${{ steps.codecov_flags.outputs.test_results_flag }}
                   name: vitest-junit-${{ steps.codecov_flags.outputs.test_results_flag }}
                   report_type: test_results
-                  fail_ci_if_error: true
+                  fail_ci_if_error: false
                   disable_search: true
                   verbose: true
 
             - name: Upload coverage to Codecov
               if: ${{ !cancelled() && matrix.node == 'lts/*' }}
+              continue-on-error: true
               uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
               with:
                   use_oidc: true
@@ -167,6 +169,6 @@ jobs:
                   flags: ${{ steps.codecov_flags.outputs.os_flag }}
                   name: vitest-unit-coverage-${{ steps.codecov_flags.outputs.os_flag }}
                   report_type: coverage
-                  fail_ci_if_error: true
+                  fail_ci_if_error: false
                   disable_search: true
                   verbose: true
