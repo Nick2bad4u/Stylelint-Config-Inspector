@@ -1,5 +1,4 @@
 # yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
-# eslint-disable
 
 name: "OpenSSF Scorecard"
 
