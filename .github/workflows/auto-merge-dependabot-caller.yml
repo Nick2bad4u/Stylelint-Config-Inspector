@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://www.schemastore.org/github-workflow.json
 name: "Dependabot Auto Merge"
 
 run-name: >-
@@ -5,7 +6,7 @@ run-name: >-
         github.event_name == 'pull_request' &&
         format('Dependabot Auto Merge #{0}', github.event.pull_request.number) ||
         github.event_name == 'merge_group' &&
-        format('Dependabot Auto Merge merge group {0}', github.event.merge_group.head_sha || github.ref_name || github.run_id) ||
+        format('Dependabot Auto Merge merge group {0}', github.sha || github.ref_name || github.run_id) ||
         format('Dependabot Auto Merge {0}', github.ref_name || github.run_id)
     }}
 
@@ -13,8 +14,7 @@ concurrency:
     group: >-
         dependabot-auto-merge-${{ github.workflow }}-${{
             github.event.pull_request.number ||
-            github.event.merge_group.head_sha ||
-            github.event.merge_group.head_ref ||
+            github.sha ||
             github.ref ||
             github.run_id
         }}
@@ -53,6 +53,6 @@ jobs:
         permissions:
             contents: "write"
             pull-requests: "write"
-        uses: "Nick2bad4u/workflow-templates/.github/workflows/reusable-auto-merge-dependabot.yml@d8d4958ee20f3089dc0baeed32c27afbec4c8502"
+        uses: "Nick2bad4u/workflow-templates/.github/workflows/reusable-auto-merge-dependabot.yml@main"
         with:
             semver-policy: "patch,minor"
