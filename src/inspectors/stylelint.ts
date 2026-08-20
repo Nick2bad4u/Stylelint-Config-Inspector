@@ -199,9 +199,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
     return typeof value === "object" && value !== null;
 }
 
-function isScalarValue(
-    value: unknown
-): value is string | number | boolean | null {
+function isScalarValue(value: unknown): value is
+    | string
+    | number
+    | boolean
+    | null {
     return (
         value === null ||
         typeof value === "string" ||
@@ -210,9 +212,13 @@ function isScalarValue(
     );
 }
 
-function isPlainSerializableObject(
-    value: unknown
-): value is Record<string, string | number | boolean | null> {
+function isPlainSerializableObject(value: unknown): value is Record<
+    string,
+    | string
+    | number
+    | boolean
+    | null
+> {
     if (!isRecord(value)) return false;
 
     return Object.values(value).every(isScalarValue);
@@ -541,7 +547,10 @@ async function resolveExtendsSpecifier(
           ? await resolvePackageRoot(packageName, searchPaths)
           : undefined;
 
-    let source: "package" | "local" | "unknown" = "unknown";
+    let source:
+        | "package"
+        | "local"
+        | "unknown" = "unknown";
     if (packageName) {
         source = "package";
     } else if (specifier.startsWith(".") || isAbsolute(specifier)) {

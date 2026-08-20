@@ -140,18 +140,18 @@ const Noop = defineComponent({
 
 <style scoped>
 .glob-item {
-    overflow: hidden;
     box-sizing: border-box;
-    contain: paint;
-    max-inline-size: min(100%, 52vi, 38rem);
     min-inline-size: 0;
+    max-inline-size: min(100%, 52vi, 38rem);
+    contain: paint;
+    overflow: hidden;
 }
 
 .glob-item__content {
     display: block;
-    overflow: hidden;
-    max-inline-size: 100%;
     min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }

@@ -241,14 +241,14 @@ function goto() {
 
 .rule-state-config-button {
     display: inline-flex;
+    gap: 0.375rem;
     align-items: center;
     padding: 0.125rem 0.5rem;
+    font-size: 0.875rem;
+    color: inherit;
+    background: rgb(124 58 237 / 0.07);
     border: 1px solid rgb(124 58 237 / 0.2);
     border-radius: 9999px;
-    background: rgb(124 58 237 / 0.07);
-    color: inherit;
-    font-size: 0.875rem;
-    gap: 0.375rem;
     transition:
         border-color 140ms ease,
         background 140ms ease,
@@ -260,21 +260,21 @@ function goto() {
 
     &:hover,
     &:focus-visible {
-        border-color: rgb(124 58 237 / 0.36);
         background: rgb(124 58 237 / 0.12);
+        border-color: rgb(124 58 237 / 0.36);
         box-shadow: 0 0 0 3px rgb(124 58 237 / 0.1);
     }
 
     html.dark & {
-        border-color: rgb(167 139 250 / 0.22);
         background: rgb(124 58 237 / 0.14);
+        border-color: rgb(167 139 250 / 0.22);
 
         &:hover,
         &:focus-visible {
-            border-color: rgb(167 139 250 / 0.38);
-            background: rgb(124 58 237 / 0.2);
             outline: 3px solid rgb(167 139 250 / 0.12);
             outline-offset: 0;
+            background: rgb(124 58 237 / 0.2);
+            border-color: rgb(167 139 250 / 0.38);
         }
     }
 }

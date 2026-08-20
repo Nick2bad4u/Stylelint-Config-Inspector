@@ -9,8 +9,8 @@ Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md)
 
 ## Prerequisites
 
-- Node.js LTS
-- npm `>=11`
+- Node.js `^22.22.2 || ^24.15.0 || >=26.0.0`
+- npm `12.0.2`
 - Git
 
 ## Local setup
@@ -20,7 +20,7 @@ Maintainers: release procedures are documented in [RELEASING.md](./RELEASING.md)
 2. Install dependencies from the repository root:
 
    ```bash
-   npm ci --force
+   npm ci
    ```
 
 3. Run the main quality gate:

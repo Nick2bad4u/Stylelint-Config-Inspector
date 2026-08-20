@@ -12,7 +12,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import * as path from "node:path";
 import process from "node:process";
 import pc from "picocolors";
@@ -71,8 +71,10 @@ const hasAnyFlag = (flags) => flags.some((flag) => hasFlag(flag));
 const useDefaultFiles =
     fileArgs.length === 0 && !hasAnyFlag(["-version", "-init-config"]);
 
-if (!hasFlag("-config-file")) {
-    userArgs.push("-config-file", path.join(repoRoot, "ActionLintConfig.yaml"));
+const defaultConfigPath = path.join(repoRoot, "ActionLintConfig.yaml");
+
+if (!hasFlag("-config-file") && existsSync(defaultConfigPath)) {
+    userArgs.push("-config-file", defaultConfigPath);
 }
 
 if (!hasAnyFlag(["-color", "-no-color"])) {

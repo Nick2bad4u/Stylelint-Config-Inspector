@@ -28,6 +28,7 @@ export default await nuxt()
     })
     .append({
         files: [
+            "**/*.{yaml,yml}",
             "**/.github/instructions/Docs-Folder.instructions.md",
             ".checkov.yml",
             ".devskim.json",

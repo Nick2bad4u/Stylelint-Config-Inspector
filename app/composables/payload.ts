@@ -57,7 +57,11 @@ export const isFetching = ref(false);
 export const errorInfo = ref<ErrorInfo>();
 export const payloadFetchError = ref<string>();
 export const payloadConnectionStatus = ref<
-    "idle" | "connecting" | "connected" | "disconnected" | "error"
+    | "idle"
+    | "connecting"
+    | "connected"
+    | "disconnected"
+    | "error"
 >("idle");
 export const lastSuccessfulPayloadUpdate = computed(() => {
     const timestamp = data.value.meta.lastUpdate;

@@ -42,7 +42,7 @@ const META_FIELDS = new Set(["name"]);
 const CONFIG_INSPECTOR_FIELDS = new Set(["index"]);
 const STYLELINT_OVERRIDE_NAME_RE = /^stylelint\/override-(\d+)(?:\s+\(.+\))?$/;
 
-const open = defineModel("open", {
+const open = defineModel<boolean>("open", {
     default: true,
 });
 

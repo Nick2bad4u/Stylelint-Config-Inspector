@@ -100,29 +100,29 @@ const scopeColor = computed(() => getPluginColor(scopeColorKey.value));
 .colorized-rule-name {
     position: relative;
     display: inline-flex;
-    overflow: hidden;
     align-items: baseline;
     inline-size: 100%;
-    max-inline-size: 100%;
     min-inline-size: 0;
+    max-inline-size: 100%;
+    overflow: hidden;
     white-space: nowrap;
 }
 
 .colorized-rule-name--button {
     padding: 0;
-    border: 0;
-    appearance: none;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
     font: inherit;
+    color: inherit;
     text-align: start;
+    appearance: none;
+    cursor: pointer;
+    background: transparent;
+    border: 0;
 }
 
 .colorized-rule-name__name {
-    overflow: hidden;
     flex: 1 1 auto;
     min-inline-size: 0;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -130,9 +130,9 @@ const scopeColor = computed(() => getPluginColor(scopeColorKey.value));
 .colorized-rule-name--hoverable:hover,
 .colorized-rule-name--hoverable:focus-visible {
     z-index: 20;
-    overflow: visible;
     inline-size: max-content;
     max-inline-size: min(72ch, calc(100vi - 8rem));
+    overflow: visible;
 }
 
 .colorized-rule-name--hoverable:hover .colorized-rule-name__name,

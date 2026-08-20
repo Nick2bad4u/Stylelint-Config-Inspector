@@ -47,4 +47,5 @@ applyTo: "src/**"
 - Avoid broad rewrites; make behavior-safe, incremental improvements.
 
   </quality>
+
 </instructions>

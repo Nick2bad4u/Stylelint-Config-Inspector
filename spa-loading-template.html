@@ -14,26 +14,26 @@
 
 <style>
     .spa-loading-shell {
-        display: grid;
         box-sizing: border-box;
-        padding: 1rem;
-        background: #f8fafc;
-        color: #27272a;
-        font-family: sans-serif;
+        display: grid;
         gap: 1rem;
-        min-block-size: 100dvb;
         place-content: center;
+        min-block-size: 100dvb;
+        padding: 1rem;
+        font-family: sans-serif;
+        color: #27272a;
         text-align: center;
+        background: #f8fafc;
     }
 
     .spa-loading-mark {
+        inline-size: 2rem;
+        block-size: 2rem;
+        margin-inline: auto;
         border: 0.2rem solid rgb(124 58 237 / 0.24);
+        border-block-start-color: #7c3aed;
         border-radius: 9999px;
         animation: spa-loading-spin 800ms linear infinite;
-        block-size: 2rem;
-        border-block-start-color: #7c3aed;
-        inline-size: 2rem;
-        margin-inline: auto;
     }
 
     .spa-loading-copy {
@@ -47,8 +47,8 @@
     }
 
     .spa-loading-subtitle {
-        color: #71717a;
         font-size: 0.875rem;
+        color: #71717a;
     }
 
     @keyframes spa-loading-spin {
@@ -65,8 +65,8 @@
 
     @media (prefers-color-scheme: dark) {
         .spa-loading-shell {
-            background: #09090b;
             color: #f4f4f5;
+            background: #09090b;
         }
 
         .spa-loading-subtitle {

@@ -61,4 +61,5 @@ applyTo: "**"
 - Keep instructions in all nested AGENTS aligned with this repository purpose.
 
   </workflow>
+
 </instructions>

@@ -655,10 +655,10 @@ const popoverPanelClass =
 <style scoped>
 .rule-state-rail--list {
     position: relative;
-    overflow: hidden;
-    border-radius: 9999px;
     max-inline-size: 100%;
     padding-block: 0.125rem;
+    overflow: hidden;
+    border-radius: 9999px;
 
     & .rule-state-pill:nth-of-type(n + 3) {
         display: none;
@@ -667,28 +667,28 @@ const popoverPanelClass =
     &:hover,
     &:focus-within {
         position: absolute;
+        inset-inline-start: 0;
         z-index: 20;
+        inline-size: max-content;
+        max-inline-size: min(42rem, 80vi);
+        padding-inline: 0.25rem;
+        outline: 1px solid var(--c-border);
         background: rgb(255 255 255 / 95%);
         box-shadow: 0 18px 45px rgb(0 0 0 / 18%);
-        inline-size: max-content;
-        inset-inline-start: 0;
-        max-inline-size: min(42rem, 80vi);
-        outline: 1px solid var(--c-border);
-        padding-inline: 0.25rem;
 
         & .rule-state-pill {
             display: inline-flex;
         }
 
         & .rule-state-overflow-pill {
-            overflow: hidden;
-            border-inline-width: 0;
-            box-shadow: none;
-            min-inline-size: 0;
-            opacity: 0;
-            padding-inline: 0;
-            pointer-events: none;
             visibility: hidden;
+            min-inline-size: 0;
+            padding-inline: 0;
+            overflow: hidden;
+            pointer-events: none;
+            box-shadow: none;
+            opacity: 0;
+            border-inline-width: 0;
         }
     }
 
@@ -705,15 +705,15 @@ const popoverPanelClass =
     align-items: center;
     justify-content: center;
     padding: 0;
-    border: 0;
-    background: transparent;
     color: inherit;
     cursor: help;
+    background: transparent;
+    border: 0;
 
     &:focus-visible {
-        border-radius: 9999px;
         outline: 2px solid rgb(124 58 237 / 62%);
         outline-offset: 2px;
+        border-radius: 9999px;
     }
 }
 </style>

@@ -64,15 +64,7 @@
         "prefer-alphabetical-optionalDependencies": "error",
         "prefer-alphabetical-peerDependencies": "error",
         "prefer-caret-version-dependencies": "error",
-        "prefer-caret-version-devDependencies": [
-            "error",
-            {
-                "exceptions": [
-                    "vitest-environment-browser",
-                    "prettier-plugin-multiline-arrays"
-                ]
-            }
-        ],
+        "prefer-caret-version-devDependencies": "error",
         "prefer-no-engineStrict": "error",
         "prefer-no-version-zero-dependencies": "off",
         "prefer-no-version-zero-devDependencies": "off",

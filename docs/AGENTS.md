@@ -34,4 +34,5 @@ applyTo: "docs/**"
 - Match terminology used by the CLI (`inspect`, config path resolution, and payload output).
 
   </content>
+
 </instructions>

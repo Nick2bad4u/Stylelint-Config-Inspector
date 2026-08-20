@@ -49,4 +49,5 @@ applyTo: "tests/**, test/**"
 - Prefer explicit assertions over implementation details.
 
   </quality>
+
 </instructions>

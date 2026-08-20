@@ -90,12 +90,12 @@ export default defineNuxtConfig({
             link: [
                 { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
                 {
-                    rel: "alternate icon",
+                    rel: "icon",
                     type: "image/svg+xml",
                     href: "/stylelint/stylelint-icon-black.svg",
                 },
                 {
-                    rel: "alternate icon",
+                    rel: "icon",
                     type: "image/png",
                     href: "/stylelint/stylelint-icon-white-512.png",
                 },
