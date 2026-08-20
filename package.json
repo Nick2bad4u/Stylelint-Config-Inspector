@@ -87,6 +87,7 @@
         "lint:tsdown": "tsdown --no-write",
         "lint:tsdown:build": "tsdown",
         "prepack": "npm run build",
+        "playwright:install": "playwright install --with-deps",
         "prebench": "npm run build",
         "prepare": "nuxt prepare",
         "release:check": "npm run check && npm run lint:package:strict && npm pack --dry-run",
@@ -242,6 +243,8 @@
     "allowScripts": {
         "core-js": false,
         "esbuild@0.28.2": true,
+        "fsevents@2.3.2": false,
+        "fsevents@2.3.3": false,
         "unrs-resolver@1.12.2": true
     }
 }

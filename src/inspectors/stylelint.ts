@@ -71,7 +71,6 @@ const UNSAFE_MESSAGE_DESCRIPTION_RE =
     /^Expected\s+"undefined"\s+to\s+be\s+one\s+of\s+"undefined"/i;
 const MESSAGE_PLACEHOLDER_RE = /%[a-z]/i;
 const MESSAGE_UNDEFINED_RE = /\bundefined\b/i;
-const TRAILING_RULE_REFERENCE_RE = /\s*\(([^()]+)\)\s*$/;
 const DESCRIPTION_TEMPLATE_TOKEN_RE = /<([a-z][\w-]*)>/gi;
 const QUOTED_GENERATED_PLACEHOLDER_RE = /(["'])(‹[^›]+›)\1/g;
 const MULTIPLE_WHITESPACE_RE = /\s+/g;
@@ -1099,17 +1098,25 @@ function sanitizeDescription(ruleName: string, description: string): string {
     }
 
     const shortRuleName = ruleName.split("/").at(-1) ?? ruleName;
-    const trailingRuleReference = TRAILING_RULE_REFERENCE_RE.exec(
-        normalizedDescription
+    const trailingReferenceStart = normalizedDescription.lastIndexOf("(");
+    const trailingReference = normalizedDescription.slice(
+        trailingReferenceStart + 1,
+        -1
     );
-    if (trailingRuleReference?.[1]) {
-        const referencedRule = trailingRuleReference[1].trim().toLowerCase();
+    if (
+        normalizedDescription.endsWith(")") &&
+        trailingReferenceStart >= 0 &&
+        trailingReference.length > 0 &&
+        !trailingReference.includes("(") &&
+        !trailingReference.includes(")")
+    ) {
+        const referencedRule = trailingReference.trim().toLowerCase();
         if (
             referencedRule === ruleName.toLowerCase() ||
             referencedRule === shortRuleName.toLowerCase()
         ) {
             return normalizedDescription
-                .slice(0, trailingRuleReference.index)
+                .slice(0, trailingReferenceStart)
                 .trim();
         }
     }

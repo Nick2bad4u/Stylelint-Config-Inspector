@@ -518,6 +518,7 @@ function selectRule(ruleName: string): void {
                 </div>
                 <button
                     v-if="!isDefaultFilters"
+                    type="button"
                     class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center self-start"
                     px3
@@ -532,6 +533,7 @@ function selectRule(ruleName: string): void {
 
             <div flex="~ gap-1">
                 <button
+                    type="button"
                     btn-action
                     :aria-pressed="!isGridView"
                     :class="{
@@ -543,6 +545,7 @@ function selectRule(ruleName: string): void {
                     List
                 </button>
                 <button
+                    type="button"
                     btn-action
                     :aria-pressed="isGridView"
                     :class="{

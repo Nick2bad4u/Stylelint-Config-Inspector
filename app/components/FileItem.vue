@@ -27,7 +27,7 @@ function searchFile() {
 <template>
     <div flex="~ gap-2 items-center">
         <div :class="icon" flex-none h="1em" translate-y-1px />
-        <button text-gray hover="underline" @click="searchFile">
+        <button type="button" text-gray hover="underline" @click="searchFile">
             {{ filepath }}
         </button>
     </div>

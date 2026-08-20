@@ -221,7 +221,7 @@ const groupIdentity = computed(() => {
                     flex="~ col gap-1"
                 >
                     <VDropdown>
-                        <button badge text-start>
+                        <button type="button" badge text-start>
                             <ColorizedConfigName
                                 :name="config.name"
                                 :index="config.index"
@@ -231,6 +231,7 @@ const groupIdentity = computed(() => {
                             <div v-if="shown" max-h="50vh" min-w-100>
                                 <div flex="~ items-center gap-2" p3>
                                     <button
+                                        type="button"
                                         btn-action-sm
                                         title="Copy"
                                         @click="goToConfig(config.index)"

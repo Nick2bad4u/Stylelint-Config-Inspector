@@ -28,6 +28,7 @@ function collapseAll() {
             <div flex="~ gap-2 items-center">
                 <div border="~ base rounded" flex="~ inline">
                     <button
+                        type="button"
                         :class="
                             stateStorage.viewFilesTab === 'list'
                                 ? 'btn-action-active'
@@ -44,6 +45,7 @@ function collapseAll() {
                     </button>
                     <div border="l base" />
                     <button
+                        type="button"
                         :class="
                             stateStorage.viewFilesTab === 'group'
                                 ? 'btn-action-active'
@@ -61,10 +63,10 @@ function collapseAll() {
                 </div>
                 <div flex-auto />
                 <template v-if="stateStorage.viewFilesTab === 'group'">
-                    <button btn-action px3 @click="expandAll">
+                    <button type="button" btn-action px3 @click="expandAll">
                         Expand All
                     </button>
-                    <button btn-action px3 @click="collapseAll">
+                    <button type="button" btn-action px3 @click="collapseAll">
                         Collapse All
                     </button>
                 </template>

@@ -123,6 +123,7 @@ const activeRules = computed(() => {
                 <button
                     v-for="entry in filteredExtendsEntries"
                     :key="entry.specifier"
+                    type="button"
                     :data-testid="testIds.extends.specifierButton"
                     border="~ base rounded-full"
                     px3

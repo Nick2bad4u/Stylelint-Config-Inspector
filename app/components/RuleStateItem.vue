@@ -86,7 +86,11 @@ function goto() {
             }}</span>
             <template v-if="!isLocal">
                 <span op50>in</span>
-                <button class="rule-state-config-button" @click="goto()">
+                <button
+                    type="button"
+                    class="rule-state-config-button"
+                    @click="goto()"
+                >
                     <ColorizedConfigName
                         v-if="config.name"
                         :name="config.name"
@@ -131,6 +135,7 @@ function goto() {
                     <template v-if="hasOptionTabs">
                         <button
                             v-if="hasStateOptions"
+                            type="button"
                             btn-action
                             :class="{
                                 'btn-action-active':
@@ -143,6 +148,7 @@ function goto() {
                         </button>
                         <button
                             v-if="hasDefaultOptions"
+                            type="button"
                             btn-action
                             :class="{
                                 'btn-action-active':

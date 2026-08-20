@@ -445,6 +445,7 @@ onMounted(async () => {
                             <span op50>of them are specific to the file</span>
                         </template>
                         <button
+                            type="button"
                             i-ph-x
                             text-sm
                             op25
@@ -465,6 +466,7 @@ onMounted(async () => {
                         <ColorizedRuleName :name="filters.rule" />
                         <span op50>rule</span>
                         <button
+                            type="button"
                             i-ph-x
                             text-sm
                             op25
@@ -526,6 +528,7 @@ onMounted(async () => {
                 <template v-if="filters.filepath">
                     <div border="~ base rounded" flex>
                         <button
+                            type="button"
                             :class="
                                 stateStorage.viewFileMatchType === 'configs'
                                     ? 'btn-action-active'
@@ -548,6 +551,7 @@ onMounted(async () => {
                         </button>
                         <div border="l base" />
                         <button
+                            type="button"
                             :class="
                                 stateStorage.viewFileMatchType !== 'configs'
                                     ? 'btn-action-active'
@@ -591,6 +595,7 @@ onMounted(async () => {
                 <div flex="~ items-center gap-1">
                     <button
                         v-if="hasActiveConfigFilters"
+                        type="button"
                         btn-action
                         px3
                         @click="clearConfigFilters"
@@ -600,6 +605,7 @@ onMounted(async () => {
                     </button>
                     <div flex="~ gap-1">
                         <button
+                            type="button"
                             btn-action
                             :aria-pressed="stateStorage.viewType === 'list'"
                             :class="{
@@ -612,6 +618,7 @@ onMounted(async () => {
                             List
                         </button>
                         <button
+                            type="button"
                             btn-action
                             :aria-pressed="stateStorage.viewType === 'grid'"
                             :class="{
@@ -625,8 +632,10 @@ onMounted(async () => {
                         </button>
                     </div>
                 </div>
-                <button btn-action px3 @click="expandAll">Expand All</button>
-                <button btn-action px3 @click="collapseAll">
+                <button type="button" btn-action px3 @click="expandAll">
+                    Expand All
+                </button>
+                <button type="button" btn-action px3 @click="collapseAll">
                     Collapse All
                 </button>
             </div>

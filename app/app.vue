@@ -98,6 +98,7 @@ init(config.app.baseURL);
             {{ payloadFetchError }}
         </div>
         <button
+            type="button"
             mt6
             btn-action
             justify-self-center

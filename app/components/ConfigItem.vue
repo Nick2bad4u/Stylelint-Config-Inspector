@@ -694,6 +694,7 @@ function setOpenFromToggle(event: Event): void {
                     <template #popup-actions="{ ruleName }">
                         <button
                             v-close-popper
+                            type="button"
                             btn-action-sm
                             @click="emit('badgeClick', ruleName)"
                         >
@@ -705,6 +706,7 @@ function setOpenFromToggle(event: Event): void {
                 <div>
                     <button
                         v-if="filters?.rule"
+                        type="button"
                         ml8
                         op50
                         @click="emit('badgeClick', '')"
@@ -728,6 +730,7 @@ function setOpenFromToggle(event: Event): void {
 
                 <div flex="~ col gap-2" w-full>
                     <button
+                        type="button"
                         class="w-fit flex items-center gap-1 text-sm text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100"
                         @click="showAdditionalConfigs = !showAdditionalConfigs"
                     >

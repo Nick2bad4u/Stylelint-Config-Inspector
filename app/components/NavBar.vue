@@ -263,6 +263,7 @@ function showDeprecated() {
             >
                 <VDropdown>
                     <button
+                        type="button"
                         btn-action
                         rounded-full
                         :title="`Font size: ${activeFontScaleLabel}`"
@@ -275,6 +276,7 @@ function showDeprecated() {
                             <button
                                 v-for="option in fontScaleOptions"
                                 :key="option.value"
+                                type="button"
                                 btn-action
                                 justify-between
                                 :class="{
@@ -298,6 +300,7 @@ function showDeprecated() {
                     </template>
                 </VDropdown>
                 <button
+                    type="button"
                     btn-action
                     rounded-full
                     :class="{
@@ -328,6 +331,7 @@ function showDeprecated() {
                     />
                 </button>
                 <button
+                    type="button"
                     btn-action
                     rounded-full
                     title="Toggle Dark Mode"

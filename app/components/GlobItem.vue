@@ -122,7 +122,11 @@ const Noop = defineComponent({
                         :key="config.name"
                         flex="~ gap-2"
                     >
-                        <button btn-badge @click="goToConfig(config.index)">
+                        <button
+                            type="button"
+                            btn-badge
+                            @click="goToConfig(config.index)"
+                        >
                             <ColorizedConfigName
                                 :name="config.name"
                                 :index="config.index"

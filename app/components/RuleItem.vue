@@ -29,7 +29,7 @@ const emit = defineEmits<{
 
 const PLACEHOLDER_CONTEXT_RE =
     /no more than|at most|at least|specificity|match pattern|to be one of|must be|should be|allowed list|disallowed list/;
-const PLACEHOLDER_VALUE_RE = /<value>|‹([^›]+)›/gu;
+const PLACEHOLDER_VALUE_RE = /[‹<][^›>]*[›>]/gu;
 const DEFAULT_PLACEHOLDER_EXAMPLE = "foo";
 
 interface DescriptionSegment {
@@ -186,6 +186,13 @@ const descriptionSegments = computed<DescriptionSegment[]>(() => {
     let cursor = 0;
 
     for (const match of description.matchAll(PLACEHOLDER_VALUE_RE)) {
+        const rawToken = match[0];
+        const isGeneratedPlaceholder =
+            rawToken.length > 2 &&
+            rawToken.startsWith("‹") &&
+            rawToken.endsWith("›");
+        if (rawToken !== "<value>" && !isGeneratedPlaceholder) continue;
+
         const index = match.index ?? 0;
         if (cursor < index) {
             segments.push({
@@ -196,7 +203,9 @@ const descriptionSegments = computed<DescriptionSegment[]>(() => {
 
         segments.push({
             type: "token",
-            value: match[1] ?? DEFAULT_PLACEHOLDER_EXAMPLE,
+            value: isGeneratedPlaceholder
+                ? rawToken.slice(1, -1)
+                : DEFAULT_PLACEHOLDER_EXAMPLE,
         });
         cursor = index + match[0].length;
     }
@@ -449,6 +458,7 @@ const popoverPanelClass =
                             />
                         </NuxtLink>
                         <button
+                            type="button"
                             class="inspector-popover-action"
                             title="Copy"
                             @click="copy(rule.name)"

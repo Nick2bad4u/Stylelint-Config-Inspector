@@ -277,7 +277,10 @@ test.describe("rules page regressions", () => {
         for (let index = 0; index < 6; index += 1)
             await expandedStateBadges.nth(index).hover();
         await page.mouse.move(0, 0);
-        await page.waitForTimeout(100);
+        await expect(expandedStateBadges).toHaveCount(2);
+        await expect(
+            stateRail.getByTestId("rule-state-overflow")
+        ).toBeVisible();
         expect(consoleNoise).toEqual([]);
     });
 

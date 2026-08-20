@@ -3,7 +3,12 @@ import { computed } from "vue";
 import { payload } from "~/composables/payload";
 import { stateStorage } from "~/composables/state";
 
-const PLACEHOLDER_DESCRIPTION_RE = /<value>|‹[^›]+›/u;
+function hasPlaceholderDescription(description: string): boolean {
+    if (description.includes("<value>")) return true;
+
+    const openingIndex = description.indexOf("‹");
+    return description.indexOf("›", openingIndex + 1) > openingIndex + 1;
+}
 
 const rules = computed(() => Object.values(payload.value.rules));
 const diagnostics = computed(() => payload.value.diagnostics ?? []);
@@ -118,7 +123,7 @@ const metadataHealth = computed(() => {
         (rule) => rule.docs?.urlSource === "inferred"
     ).length;
     const placeholderDescriptions = allRules.filter((rule) =>
-        PLACEHOLDER_DESCRIPTION_RE.test(rule.docs?.description ?? "")
+        hasPlaceholderDescription(rule.docs?.description ?? "")
     ).length;
 
     const toPct = (count: number) =>
