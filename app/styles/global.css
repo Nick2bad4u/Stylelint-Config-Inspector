@@ -310,12 +310,13 @@ html.dark {
 .config-plugin-filter-pill {
     padding: 0.125rem 0.625rem;
     color: rgb(76 29 149);
-    background: rgb(139 92 246 / 0.1);
+    background: rgb(237 233 254);
     border: 1px solid rgb(139 92 246 / 0.25);
     border-radius: 9999px;
 
     html.dark & {
-        color: rgb(196 181 253);
+        color: rgb(237 233 254);
+        background: rgb(46 16 101);
     }
 }
 
