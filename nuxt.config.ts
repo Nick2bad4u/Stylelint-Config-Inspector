@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 export default defineNuxtConfig({
     ssr: false,
 
@@ -79,6 +81,15 @@ export default defineNuxtConfig({
 
     app: {
         head: {
+            // Avoid an origin-root favicon request before the client initializes.
+            link: [
+                {
+                    key: "inspector-favicon",
+                    rel: "icon",
+                    type: "image/svg+xml",
+                    href: `data:image/svg+xml,${encodeURIComponent(readFileSync(new URL("./public/favicon.svg", import.meta.url), "utf8"))}`,
+                },
+            ],
             viewport: "width=device-width,initial-scale=1",
             meta: [
                 { name: "theme-color", content: "#5B21B6" },
