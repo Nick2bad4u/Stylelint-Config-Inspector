@@ -3,6 +3,22 @@ import { testIds } from "../../shared/test-ids";
 import { rewriteStaticHtmlWithBase } from "../../src/build-static-html";
 import { mockPayload } from "./fixtures/mock-payload";
 
+test.describe("static startup", () => {
+    test.use({ javaScriptEnabled: false });
+
+    test("provides the favicon before JavaScript initializes", async ({
+        page,
+    }) => {
+        await page.goto("/");
+        const icon = page.locator('head link[rel="icon"]');
+        await expect(icon).toHaveAttribute(
+            "href",
+            /^data:image\/svg\+xml,%3Csvg/
+        );
+        await expect(icon).toHaveAttribute("type", "image/svg+xml");
+    });
+});
+
 for (const baseURL of ["/", "/nested/inspector/"]) {
     test(`keeps hydrated icons within the deployment base ${baseURL}`, async ({
         page,

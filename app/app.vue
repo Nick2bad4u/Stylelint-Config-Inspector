@@ -19,6 +19,7 @@ const config = useRuntimeConfig();
 useHead({
     link: [
         {
+            key: "inspector-favicon",
             rel: "icon",
             type: "image/svg+xml",
             href: `${config.app.baseURL}favicon.svg`,
