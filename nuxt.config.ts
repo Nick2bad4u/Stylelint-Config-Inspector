@@ -87,23 +87,6 @@ export default defineNuxtConfig({
                     content: "Stylelint Inspector",
                 },
             ],
-            link: [
-                { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
-                {
-                    rel: "icon",
-                    type: "image/svg+xml",
-                    href: "/stylelint/stylelint-icon-black.svg",
-                },
-                {
-                    rel: "icon",
-                    type: "image/png",
-                    href: "/stylelint/stylelint-icon-white-512.png",
-                },
-                {
-                    rel: "apple-touch-icon",
-                    href: "/stylelint/stylelint-icon-white-512.png",
-                },
-            ],
             title: "Stylelint Config Inspector",
         },
     },

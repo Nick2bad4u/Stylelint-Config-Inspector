@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref } from "vue";
+import { useHead } from "#app/composables/head";
 import { useRouter } from "#app/composables/router";
 import { useRuntimeConfig } from "#app/nuxt";
 import {
@@ -14,6 +15,30 @@ import {
 import "./composables/dark";
 
 const config = useRuntimeConfig();
+// Static exports receive their deployment base at runtime through the CLI.
+useHead({
+    link: [
+        {
+            rel: "icon",
+            type: "image/svg+xml",
+            href: `${config.app.baseURL}favicon.svg`,
+        },
+        {
+            rel: "icon",
+            type: "image/svg+xml",
+            href: `${config.app.baseURL}stylelint/stylelint-icon-black.svg`,
+        },
+        {
+            rel: "icon",
+            type: "image/png",
+            href: `${config.app.baseURL}stylelint/stylelint-icon-white-512.png`,
+        },
+        {
+            rel: "apple-touch-icon",
+            href: `${config.app.baseURL}stylelint/stylelint-icon-white-512.png`,
+        },
+    ],
+});
 const router = useRouter();
 const isRouteNavigating = ref(false);
 let routeSpinnerTimeout: ReturnType<typeof setTimeout> | undefined;
