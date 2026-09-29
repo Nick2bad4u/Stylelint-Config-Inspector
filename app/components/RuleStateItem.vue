@@ -96,9 +96,9 @@ function goto() {
                         :name="config.name"
                         font-mono
                     />
-                    <span op50> the </span>
-                    {{ nth(state.configIndex + 1) }}
-                    <span op50> config item </span>
+                    <span flex-none whitespace-nowrap op50>
+                        the {{ nth(state.configIndex + 1) }} config item
+                    </span>
                 </button>
             </template>
             <div v-else op50>in this config</div>
@@ -247,6 +247,7 @@ function goto() {
 
 .rule-state-config-button {
     display: inline-flex;
+    flex-wrap: wrap;
     gap: 0.375rem;
     align-items: center;
     padding: 0.125rem 0.5rem;
@@ -254,7 +255,7 @@ function goto() {
     color: inherit;
     background: rgb(124 58 237 / 0.07);
     border: 1px solid rgb(124 58 237 / 0.2);
-    border-radius: 9999px;
+    border-radius: 0.375rem;
     transition:
         border-color 140ms ease,
         background 140ms ease,

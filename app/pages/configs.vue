@@ -9,6 +9,7 @@ import {
     defineComponent,
     h,
     nextTick,
+    onBeforeUnmount,
     onMounted,
     ref,
     shallowRef,
@@ -202,11 +203,21 @@ function autoCompleteConfirm(idx = autoCompleteIndex.value) {
     autoCompleteOpen.value = false;
 }
 
+let autoCompleteBlurTimer: ReturnType<typeof setTimeout> | undefined;
+
+function openAutoComplete() {
+    clearTimeout(autoCompleteBlurTimer);
+    autoCompleteOpen.value = true;
+}
+
 function autoCompleteBlur() {
-    setTimeout(() => {
+    clearTimeout(autoCompleteBlurTimer);
+    autoCompleteBlurTimer = setTimeout(() => {
         autoCompleteOpen.value = false;
     }, 100);
 }
+
+onBeforeUnmount(() => clearTimeout(autoCompleteBlurTimer));
 
 function autoCompleteMove(delta: number) {
     if (!autoCompleteOpen.value) return;
@@ -356,8 +367,8 @@ onMounted(async () => {
                     py2
                     pl10
                     outline-none
-                    @focus="autoCompleteOpen = true"
-                    @click="autoCompleteOpen = true"
+                    @focus="openAutoComplete"
+                    @click="openAutoComplete"
                     @blur="autoCompleteBlur"
                     @keydown.esc="autoCompleteOpen = false"
                     @keydown.down.prevent="autoCompleteMove(1)"

@@ -478,8 +478,8 @@ function selectRule(ruleName: string): void {
             </div>
         </div>
 
-        <div items-center justify-between gap-2 md:flex>
-            <div flex="~ gap-2" lt-sm:flex-col>
+        <div flex="~ items-center justify-between gap-2 wrap">
+            <div flex="~ gap-2 wrap" lt-sm:flex-col>
                 <div
                     class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center"
@@ -522,6 +522,7 @@ function selectRule(ruleName: string): void {
                     type="button"
                     class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center self-start"
+                    whitespace-nowrap
                     px3
                     py1
                     @click="resetFilters()"
@@ -532,7 +533,7 @@ function selectRule(ruleName: string): void {
                 </button>
             </div>
 
-            <div flex="~ gap-1">
+            <div flex="~ gap-1" flex-none whitespace-nowrap>
                 <button
                     type="button"
                     btn-action
@@ -567,8 +568,8 @@ function selectRule(ruleName: string): void {
             bg-primary:5
             p4
         >
-            <div flex="~ gap-3 items-start justify-between">
-                <div min-w-0>
+            <div flex="~ gap-3 items-start justify-between wrap">
+                <div min-w-0 flex-1 basis-48>
                     <div flex="~ gap-2 items-center wrap">
                         <div i-ph-path-duotone text-primary5 />
                         <span font-medium>Effective rule trace</span>
@@ -590,6 +591,8 @@ function selectRule(ruleName: string): void {
                 </div>
                 <button
                     btn-action
+                    flex-none
+                    whitespace-nowrap
                     type="button"
                     aria-label="Close effective rule trace"
                     @click="selectedRuleName = ''"

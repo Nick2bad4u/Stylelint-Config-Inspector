@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "@playwright/test";
 import { testIds } from "../../shared/test-ids";
 import {
@@ -27,6 +27,31 @@ async function expectNoOverflow(page: Page): Promise<void> {
         ),
     }));
     expect(dimensions.content).toBeLessThanOrEqual(dimensions.viewport + 2);
+}
+
+async function expectSingleLineText(
+    locator: Locator,
+    label: string
+): Promise<void> {
+    const lineCount = await locator.evaluate((element, text) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+        let node = walker.nextNode();
+        while (node) {
+            const index = node.textContent?.indexOf(text) ?? -1;
+            if (index >= 0) {
+                const range = document.createRange();
+                range.setStart(node, index);
+                range.setEnd(node, index + text.length);
+                return range.getClientRects().length;
+            }
+            node = walker.nextNode();
+        }
+        throw new Error(`Could not find rendered label: ${text}`);
+    }, label);
+    expect(
+        lineCount,
+        `${label} should remain a readable single-line label`
+    ).toBe(1);
 }
 
 for (const theme of ["light", "dark"] as const) {
@@ -146,6 +171,22 @@ for (const width of [320, 768]) {
             .filter({ hasText: "Copy name" })
             .first();
         await expect(popup).toBeVisible();
+        await expectSingleLineText(
+            page.getByRole("button", { name: "List", exact: true }),
+            "List"
+        );
+        await expectSingleLineText(
+            page.getByRole("button", { name: "Grid", exact: true }),
+            "Grid"
+        );
+        await expectSingleLineText(
+            page.getByRole("button", { name: "Close effective rule trace" }),
+            "Close"
+        );
+        await expectSingleLineText(
+            popup.locator(".rule-state-config-button").first(),
+            "the 1st config item"
+        );
         const bounds = await popup.boundingBox();
         expect(bounds).not.toBeNull();
         expect(bounds!.x).toBeGreaterThanOrEqual(0);

@@ -38,6 +38,13 @@ test.describe("Configs and Files interactions", () => {
 
         await input.fill("src/");
         await expect(input).toHaveAttribute("aria-expanded", "true");
+        await page.clock.install();
+        await input.evaluate((element) => {
+            element.blur();
+            element.focus();
+        });
+        await page.clock.runFor(150);
+        await expect(input).toHaveAttribute("aria-expanded", "true");
         await input.press("Escape");
         await expect(input).toHaveAttribute("aria-expanded", "false");
         await expect(input).toHaveValue("src/");
