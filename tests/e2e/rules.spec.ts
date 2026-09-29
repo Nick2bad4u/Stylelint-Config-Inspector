@@ -402,16 +402,16 @@ test.describe("rules page regressions", () => {
         });
         await expect(pluginFilterChip).toBeVisible();
 
-        const beforeHoverShadow = await pluginFilterChip.evaluate(
-            (element) => getComputedStyle(element).boxShadow
+        const beforeHoverOutline = await pluginFilterChip.evaluate(
+            (element) => getComputedStyle(element).outlineStyle
         );
         await pluginFilterChip.hover();
-        const afterHoverShadow = await pluginFilterChip.evaluate(
-            (element) => getComputedStyle(element).boxShadow
+        const afterHoverOutline = await pluginFilterChip.evaluate(
+            (element) => getComputedStyle(element).outlineStyle
         );
 
-        expect(beforeHoverShadow).not.toBe(afterHoverShadow);
-        expect(afterHoverShadow).not.toBe("none");
+        expect(beforeHoverOutline).not.toBe(afterHoverOutline);
+        expect(afterHoverOutline).toBe("solid");
     });
 
     test("list/grid toggle works and preserves rule visibility", async ({

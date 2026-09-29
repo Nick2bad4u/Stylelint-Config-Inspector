@@ -1,5 +1,4 @@
 import type { Page } from "@playwright/test";
-import process from "node:process";
 
 export const pluginRuleName = "plugin/no-unsupported-browser-features";
 export const extendSpecifier = "stylelint-config-recommended";
@@ -7,10 +6,10 @@ export const secondaryExtendSpecifier = "@scope/stylelint-config-team";
 
 export const MOCK_PAYLOAD = {
     meta: {
-        basePath: process.cwd(),
+        basePath: "/workspace/example",
         configPath: "stylelint.config.mjs",
         engine: "stylelint",
-        lastUpdate: Date.now(),
+        lastUpdate: 1790636400000,
         targetFilePath: "src/example.css",
     },
     configs: [
@@ -151,4 +150,30 @@ export async function mockPayload(
             body: JSON.stringify(payload),
         });
     });
+}
+
+/**
+ * Stable long labels exercise wrapping without changing the shared basic
+ * fixture.
+ */
+export function createStressPayload(): typeof MOCK_PAYLOAD {
+    const payload = structuredClone(MOCK_PAYLOAD);
+    payload.meta.configPath =
+        "configuration/organization-wide-stylelint-baseline-for-all-product-teams/stylelint.config.mjs";
+    payload.meta.targetFilePath =
+        "src/components/customer-facing-product-settings/subcomponents/notification-preferences/example.css";
+    payload.configs[0]!.name =
+        "@organization/stylelint-configuration-for-customer-facing-product-components-and-shared-design-system";
+    payload.files.push({
+        filepath:
+            "src/components/customer-facing-product-settings/subcomponents/notification-preferences/notification-preferences-responsive-styles.css",
+        globs: [
+            "**/*.css",
+            "src/components/customer-facing-product-settings/**/*.css",
+        ],
+        configs: [1],
+    });
+    payload.extendsInfo[1]!.description =
+        "Shared configuration for product teams with deliberately long package metadata to verify readable wrapping at every supported viewport and font size.";
+    return payload;
 }

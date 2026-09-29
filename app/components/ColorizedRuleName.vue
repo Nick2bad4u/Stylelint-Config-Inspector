@@ -139,5 +139,7 @@ const scopeColor = computed(() => getPluginColor(scopeColorKey.value));
 .colorized-rule-name--hoverable:focus-visible .colorized-rule-name__name {
     overflow: visible;
     text-overflow: clip;
+    overflow-wrap: anywhere;
+    white-space: normal;
 }
 </style>

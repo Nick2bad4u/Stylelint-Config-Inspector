@@ -866,3 +866,7 @@ CNAME
 **/docs/docusaurus/src/pages/index.tsx
 **/docs/docusaurus/sidebars.ts
 **/docs/docusaurus/static/storybook/**
+
+# Generated browser audit assets and disposable verification workspaces.
+output/playwright/**
+temp/**

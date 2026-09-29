@@ -2,7 +2,7 @@
 import type { RuleConfigStates, RuleInfo, RuleLevel } from "~~/shared/types";
 import { useClipboard } from "@vueuse/core";
 import { vTooltip } from "floating-vue";
-import { computed } from "vue";
+import { computed, onBeforeUnmount } from "vue";
 import {
     getRuleLevel,
     getRuleOptions,
@@ -343,6 +343,52 @@ const pluginPrefixHint = computed(() => {
 
 const popoverPanelClass =
     "inspector-popover-panel max-h-[min(34rem,72vh)] min-w-[min(36rem,88vw)] overflow-auto text-sm leading-5";
+
+const ruleStateBoundaries = new WeakSet<Element>();
+const ruleStateBoundaryController = new AbortController();
+onBeforeUnmount(() => ruleStateBoundaryController.abort());
+
+function bindRuleStateBoundary(element: unknown, hide: () => void) {
+    if (!(element instanceof HTMLElement)) return;
+    const panel = element.closest(".v-popper__popper");
+    if (!panel || ruleStateBoundaries.has(panel)) return;
+    ruleStateBoundaries.add(panel);
+    const options = { signal: ruleStateBoundaryController.signal };
+    panel.addEventListener(
+        "focusout",
+        (event) => {
+            if (event instanceof FocusEvent) hideInactiveRuleState(event, hide);
+        },
+        options
+    );
+    panel.addEventListener(
+        "mouseleave",
+        (event) => {
+            if (event instanceof MouseEvent) hideInactiveRuleState(event, hide);
+        },
+        options
+    );
+}
+
+function hideInactiveRuleState(
+    event: FocusEvent | MouseEvent,
+    hide: () => void
+) {
+    if (!(event.currentTarget instanceof HTMLElement)) return;
+    const panel = event.currentTarget.closest(".v-popper__popper");
+    const isFocusChange = event instanceof FocusEvent;
+    const nextFocus = isFocusChange
+        ? event.relatedTarget
+        : document.activeElement;
+    if (
+        nextFocus instanceof Node &&
+        panel?.contains(nextFocus) &&
+        (isFocusChange || nextFocus !== panel)
+    )
+        return;
+    if (isFocusChange && panel?.matches(":hover")) return;
+    hide();
+}
 </script>
 
 <template>
@@ -369,8 +415,8 @@ const popoverPanelClass =
                     <span class="rule-state-pill inline-flex flex-none">
                         <VDropdown
                             :triggers="['hover', 'focus']"
-                            :popper-triggers="['hover']"
-                            :auto-hide="false"
+                            :popper-triggers="['hover', 'focus']"
+                            :popper-hide-triggers="[]"
                         >
                             <button
                                 type="button"
@@ -390,12 +436,19 @@ const popoverPanelClass =
                                     :show-config-index="!gridView"
                                 />
                             </button>
-                            <template #popper="{ shown }">
-                                <RuleStateItem
-                                    v-if="shown"
-                                    :state="s"
-                                    variant="popover"
-                                />
+                            <template #popper="{ shown, hide }">
+                                <div
+                                    :ref="
+                                        (element) =>
+                                            bindRuleStateBoundary(element, hide)
+                                    "
+                                >
+                                    <RuleStateItem
+                                        v-if="shown"
+                                        :state="s"
+                                        variant="popover"
+                                    />
+                                </div>
                             </template>
                         </VDropdown>
                     </span>
@@ -404,7 +457,7 @@ const popoverPanelClass =
                     v-if="hiddenRuleStateCount > 0 && !gridView"
                     v-tooltip="overflowRuleStateLabel"
                     data-testid="rule-state-overflow"
-                    class="rule-state-overflow-pill min-w-13 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-2 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors hover:border-violet5/55 dark:bg-zinc-950/80 dark:text-gray4 hover:text-violet6 dark:hover:border-violet3/45 dark:hover:text-violet3"
+                    class="rule-state-overflow-pill hover:border-primary5/55 hover:text-primary6 dark:hover:border-primary3/45 dark:hover:text-primary3 min-w-13 inline-flex flex-none cursor-help items-center justify-center gap-1 border border-base rounded-full bg-white/80 px-2 py-0.75 text-xs text-gray5 leading-none font-mono tabular-nums shadow-sm transition-colors dark:bg-zinc-950/80 dark:text-gray4"
                     :title="overflowRuleStateLabel"
                     :aria-label="overflowRuleStateLabel"
                 >
@@ -431,7 +484,7 @@ const popoverPanelClass =
                 <span
                     v-if="isCoreStylelintRule"
                     v-tooltip="builtInRuleHint"
-                    class="inline-flex flex-none cursor-help items-center text-violet6 op75 dark:text-violet3"
+                    class="text-primary6 dark:text-primary3 inline-flex flex-none cursor-help items-center op75"
                     :title="builtInRuleHint"
                 >
                     <span i-ph-asterisk class="text-3 leading-none" />
@@ -508,7 +561,7 @@ const popoverPanelClass =
                             >
                                 Built-in rule · omit
                                 <span
-                                    class="mx1 text-violet8 font-mono dark:text-violet2"
+                                    class="text-primary8 dark:text-primary2 mx1 font-mono"
                                     >stylelint/</span
                                 >
                                 in config
@@ -523,7 +576,7 @@ const popoverPanelClass =
                                 <span>
                                     {{ pluginPrefixHint.firstLineBeforePrefix }}
                                     <span
-                                        class="mx0.5 text-violet7 font-mono dark:text-violet3"
+                                        class="text-primary7 dark:text-primary3 mx0.5 font-mono"
                                         >plugin/</span
                                     >
                                     {{ pluginPrefixHint.firstLineAfterPrefix }}
@@ -531,7 +584,7 @@ const popoverPanelClass =
                                 <span>
                                     Keep the
                                     <span
-                                        class="mx0.5 text-violet7 font-mono dark:text-violet3"
+                                        class="text-primary7 dark:text-primary3 mx0.5 font-mono"
                                         >plugin/</span
                                     >
                                     prefix in your config.
@@ -631,7 +684,7 @@ const popoverPanelClass =
                 <span v-if="segment.type === 'text'">{{ segment.value }}</span>
                 <code
                     v-else
-                    class="mx-0.5 inline text-[0.94em] text-violet7 font-mono dark:text-violet3"
+                    class="text-primary7 dark:text-primary3 mx-0.5 inline text-[0.94em] font-mono"
                 >
                     {{ segment.value }}
                 </code>

@@ -37,13 +37,19 @@ definePageMeta({
 const input = ref(filters.filepath);
 const autoCompleteIndex = ref(0);
 const autoCompleteOpen = ref(false);
+const commonRulesDetails = ref<HTMLDetailsElement>();
+const specificRulesDetails = ref<HTMLDetailsElement>();
 
 function expandAll() {
     configsOpenState.value = configsOpenState.value.map(() => true);
+    if (commonRulesDetails.value) commonRulesDetails.value.open = true;
+    if (specificRulesDetails.value) specificRulesDetails.value.open = true;
 }
 
 function collapseAll() {
     configsOpenState.value = configsOpenState.value.map(() => false);
+    if (commonRulesDetails.value) commonRulesDetails.value.open = false;
+    if (specificRulesDetails.value) specificRulesDetails.value.open = false;
 }
 
 const filteredConfigs = shallowRef<FlatConfigItem[]>([]);
@@ -330,6 +336,7 @@ onMounted(async () => {
 
 <template>
     <div>
+        <h1 class="inspector-page-title" mt4>Configs</h1>
         <div flex="~ col gap-3" py4>
             <div relative flex>
                 <input
@@ -423,7 +430,7 @@ onMounted(async () => {
                         </template>
                         <template
                             v-else-if="
-                                stateStorage.viewFileMatchType === 'configs'
+                                stateStorage.viewFileMatchType !== 'merged'
                             "
                         >
                             <span op50>matched with</span>
@@ -450,6 +457,7 @@ onMounted(async () => {
                             text-sm
                             op25
                             hover:op100
+                            aria-label="Clear filepath filter"
                             @click="clearFilepathFilter()"
                         />
                     </div>
@@ -471,6 +479,7 @@ onMounted(async () => {
                             text-sm
                             op25
                             hover:op100
+                            aria-label="Clear rule filter"
                             @click="filters.rule = ''"
                         />
                     </div>
@@ -496,8 +505,8 @@ onMounted(async () => {
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 !hasSelectedPlugin
-                                    ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
-                                    : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+                                    ? 'bg-active color-active'
+                                    : 'bg-base color-muted hover:bg-hover',
                             ]"
                             @click="clearPluginSelection"
                         >
@@ -511,10 +520,10 @@ onMounted(async () => {
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 isPluginSelected(pluginOption.value)
-                                    ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
+                                    ? 'bg-active color-active opacity-100'
                                     : hasSelectedPlugin
-                                      ? 'bg-white/65 text-zinc-700 opacity-55 hover:opacity-85 dark:bg-zinc-900/30 dark:text-zinc-300 dark:opacity-45 dark:hover:opacity-80'
-                                      : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+                                      ? 'bg-base color-muted opacity-60 hover:opacity-100'
+                                      : 'bg-base color-muted hover:bg-hover',
                             ]"
                             :style="pluginOption.style"
                             @click="togglePluginSelection(pluginOption.value)"
@@ -530,21 +539,16 @@ onMounted(async () => {
                         <button
                             type="button"
                             :class="
-                                stateStorage.viewFileMatchType === 'configs'
+                                stateStorage.viewFileMatchType !== 'merged'
                                     ? 'btn-action-active'
                                     : 'op50'
                             "
                             btn-action
                             border-none
                             :aria-pressed="
-                                stateStorage.viewFileMatchType === 'configs'
+                                stateStorage.viewFileMatchType !== 'merged'
                             "
-                            @click="
-                                stateStorage.viewFileMatchType =
-                                    stateStorage.viewFileMatchType === 'configs'
-                                        ? 'merged'
-                                        : 'configs'
-                            "
+                            @click="stateStorage.viewFileMatchType = 'configs'"
                         >
                             <div i-ph-stack-duotone />
                             <span>Matched Config Items</span>
@@ -553,21 +557,16 @@ onMounted(async () => {
                         <button
                             type="button"
                             :class="
-                                stateStorage.viewFileMatchType !== 'configs'
+                                stateStorage.viewFileMatchType === 'merged'
                                     ? 'btn-action-active'
                                     : 'op50'
                             "
                             btn-action
                             border-none
                             :aria-pressed="
-                                stateStorage.viewFileMatchType !== 'configs'
+                                stateStorage.viewFileMatchType === 'merged'
                             "
-                            @click="
-                                stateStorage.viewFileMatchType =
-                                    stateStorage.viewFileMatchType === 'configs'
-                                        ? 'merged'
-                                        : 'configs'
-                            "
+                            @click="stateStorage.viewFileMatchType = 'merged'"
                         >
                             <div i-ph-film-script-duotone />
                             <span>Merged Rules</span>
@@ -578,7 +577,7 @@ onMounted(async () => {
                 <label
                     v-if="
                         filters.filepath &&
-                        stateStorage.viewFileMatchType === 'configs'
+                        stateStorage.viewFileMatchType !== 'merged'
                     "
                     flex="~ gap-2 items-center"
                     ml2
@@ -686,6 +685,7 @@ onMounted(async () => {
                     "
                 >
                     <details
+                        ref="commonRulesDetails"
                         class="flat-config-item"
                         border="~ base rounded-lg"
                         relative
@@ -720,6 +720,7 @@ onMounted(async () => {
                         />
                     </details>
                     <details
+                        ref="specificRulesDetails"
                         class="flat-config-item"
                         border="~ base rounded-lg"
                         open

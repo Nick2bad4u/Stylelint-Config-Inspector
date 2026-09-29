@@ -145,25 +145,14 @@ const metadataHealth = computed(() => {
 
 <template>
     <div py4 flex="~ col gap-4">
-        <section
-            class="inspector-panel"
-            border="~ sky/20 rounded-xl"
-            bg-sky:6
-            p4
-        >
-            <div flex="~ items-center gap-2 wrap" text-sky8 dark:text-sky3>
+        <h1 class="inspector-page-title">Dev</h1>
+        <section class="inspector-panel" border="~ base" p4>
+            <div flex="~ items-center gap-2 wrap" color-base>
                 <div i-ph-chart-bar-horizontal-duotone flex-none />
                 <span font-medium>Inspector snapshot</span>
             </div>
             <div mt3 grid="~ cols-1 gap-3 md:cols-2 xl:cols-4">
-                <div
-                    border="~ base rounded-lg"
-                    bg-black:8
-                    p3
-                    text-sm
-                    leading-7
-                    dark:bg-white:4
-                >
+                <div border="~ base rounded-lg" bg-code p3 text-sm leading-7>
                     <div class="dev-kv">
                         <span class="dev-label">Config path:</span>
                         <code class="dev-value">{{
@@ -196,14 +185,7 @@ const metadataHealth = computed(() => {
                         }}</code>
                     </div>
                 </div>
-                <div
-                    border="~ base rounded-lg"
-                    bg-black:8
-                    p3
-                    text-sm
-                    leading-7
-                    dark:bg-white:4
-                >
+                <div border="~ base rounded-lg" bg-code p3 text-sm leading-7>
                     <div class="dev-kv">
                         <span class="dev-label">Total rules:</span>
                         <span class="dev-value">{{ rules.length }}</span>
@@ -231,14 +213,7 @@ const metadataHealth = computed(() => {
                         }}</span>
                     </div>
                 </div>
-                <div
-                    border="~ base rounded-lg"
-                    bg-black:8
-                    p3
-                    text-sm
-                    leading-7
-                    dark:bg-white:4
-                >
+                <div border="~ base rounded-lg" bg-code p3 text-sm leading-7>
                     <div class="dev-kv">
                         <span class="dev-label">Matched files:</span>
                         <span class="dev-value">{{
@@ -268,14 +243,7 @@ const metadataHealth = computed(() => {
                         <span class="dev-value">{{ diagnostics.length }}</span>
                     </div>
                 </div>
-                <div
-                    border="~ base rounded-lg"
-                    bg-black:8
-                    p3
-                    text-sm
-                    leading-7
-                    dark:bg-white:4
-                >
+                <div border="~ base rounded-lg" bg-code p3 text-sm leading-7>
                     <div class="dev-kv">
                         <span class="dev-label">Extends entries:</span>
                         <span class="dev-value">{{
@@ -310,17 +278,8 @@ const metadataHealth = computed(() => {
             </div>
         </section>
 
-        <section
-            class="inspector-panel"
-            border="~ purple/20 rounded-xl"
-            bg-purple:6
-            p4
-        >
-            <div
-                flex="~ items-center gap-2 wrap"
-                text-violet8
-                dark:text-violet3
-            >
+        <section class="inspector-panel" border="~ base" p4>
+            <div flex="~ items-center gap-2 wrap" color-base>
                 <div i-ph-flask-duotone flex-none />
                 <span font-medium>Metadata health</span>
             </div>
@@ -329,10 +288,10 @@ const metadataHealth = computed(() => {
             </div>
 
             <div
-                border="~ purple/20"
+                border="~ base"
                 mt3
                 rounded-lg
-                bg-black:10
+                bg-code
                 p3
                 text-sm
                 leading-7
@@ -379,12 +338,7 @@ const metadataHealth = computed(() => {
             </div>
         </section>
 
-        <section
-            class="inspector-panel"
-            border="~ amber/25 rounded-xl"
-            bg-amber:6
-            p4
-        >
+        <section class="inspector-panel" border="~ base" p4>
             <div flex="~ gap-2 items-center" text-amber7 dark:text-amber3>
                 <div i-ph-warning-circle-duotone flex-none />
                 <span font-medium
@@ -401,26 +355,20 @@ const metadataHealth = computed(() => {
             <div v-else mt2 text-sm op70>No diagnostics emitted.</div>
         </section>
 
-        <section
-            class="inspector-panel"
-            border="~ emerald/20 rounded-xl"
-            bg-emerald:6
-            p4
-        >
+        <section class="inspector-panel" border="~ base" p4>
             <div flex="~ gap-2 items-center" text-emerald7 dark:text-emerald3>
                 <div i-ph-sliders-horizontal-duotone flex-none />
                 <span font-medium>Viewer state</span>
             </div>
             <div
-                border="~ emerald/20"
+                border="~ base"
                 mt3
                 rounded-lg
-                bg-black:8
+                bg-code
                 p3
                 text-sm
                 leading-7
                 font-mono
-                dark:bg-white:4
             >
                 <div class="dev-kv">
                     <span class="dev-label">Theme:</span>
@@ -501,26 +449,20 @@ const metadataHealth = computed(() => {
             <div v-else mt3 text-sm op70>No active viewer filters.</div>
         </section>
 
-        <section
-            class="inspector-panel"
-            border="~ violet/20 rounded-xl"
-            bg-violet:6
-            p4
-        >
-            <div flex="~ gap-2 items-center" text-violet8 dark:text-violet3>
+        <section class="inspector-panel" border="~ base" p4>
+            <div flex="~ gap-2 items-center" color-base>
                 <div i-ph-stack-duotone flex-none />
                 <span font-medium>Config composition summary</span>
             </div>
             <div
-                border="~ violet/20"
+                border="~ base"
                 mt3
                 rounded-lg
-                bg-black:8
+                bg-code
                 p3
                 text-sm
                 leading-7
                 font-mono
-                dark:bg-white:4
             >
                 <div class="dev-kv">
                     <span class="dev-label">Root entries:</span>
@@ -556,13 +498,7 @@ const metadataHealth = computed(() => {
                 </div>
             </div>
             <div mt3 grid="~ cols-1 gap-3 lg:cols-2">
-                <div
-                    border="~ violet/20"
-                    rounded-lg
-                    bg-black:8
-                    p3
-                    dark:bg-white:4
-                >
+                <div border="~ base" rounded-lg bg-code p3>
                     <div text-sm font-medium>Declared plugins</div>
                     <div mt2 flex="~ gap-2 wrap">
                         <code
@@ -571,19 +507,13 @@ const metadataHealth = computed(() => {
                                 18
                             )"
                             :key="pluginEntry.name"
-                            class="rounded-full bg-violet:10 px2.5 py0.5 text-xs text-violet8 font-mono dark:text-violet2"
+                            class="text-primary8 dark:text-primary2 rounded-full bg-primary:10 px2.5 py0.5 text-xs font-mono"
                         >
                             {{ pluginEntry.name }} · {{ pluginEntry.count }}
                         </code>
                     </div>
                 </div>
-                <div
-                    border="~ violet/20"
-                    rounded-lg
-                    bg-black:8
-                    p3
-                    dark:bg-white:4
-                >
+                <div border="~ base" rounded-lg bg-code p3>
                     <div text-sm font-medium>.stylelintignore patterns</div>
                     <div
                         v-if="stylelintIgnore?.patterns.length"

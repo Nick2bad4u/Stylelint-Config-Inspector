@@ -25,6 +25,10 @@ const rootTag = computed(() => (props.clickable ? "button" : "div"));
     <component
         :is="rootTag"
         v-tooltip="`${props.number} ${props.title}`"
+        :type="props.clickable ? 'button' : undefined"
+        :aria-label="
+            props.clickable ? `${props.title}: ${props.number}` : undefined
+        "
         class="inline-flex items-center gap-1.5 text-left leading-none"
         :class="[
             props.number ? props.color : 'op25',
@@ -32,7 +36,11 @@ const rootTag = computed(() => (props.clickable ? "button" : "div"));
         ]"
         @click="emit('click')"
     >
-        <div :class="props.icon" class="h-4 w-4 flex-none text-center" />
+        <div
+            :class="props.icon"
+            class="h-4 w-4 flex-none text-center"
+            aria-hidden="true"
+        />
         <span
             inline-block
             min-w="1.75ch"

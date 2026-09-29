@@ -1,4 +1,6 @@
-import type { FlatConfigItem } from "./types";
+import type { FlatConfigItem, RuleInfo } from "./types";
+
+type RulePluginCatalog = Readonly<Record<string, Pick<RuleInfo, "plugin">>>;
 
 const FILE_EXTENSION_SUFFIX_RE = /\.[^.]+$/;
 const STYLELINT_PLUGIN_PREFIX_RE = /^stylelint-plugin-/;
@@ -36,7 +38,8 @@ export function getRulePluginName(ruleName: string): string {
 }
 
 export function getConfigRulePlugins(
-    config: Pick<FlatConfigItem, "rules">
+    config: Pick<FlatConfigItem, "rules">,
+    ruleCatalog?: RulePluginCatalog
 ): Set<string> {
     const rules = config.rules;
     if (!rules) return new Set<string>();
@@ -44,7 +47,9 @@ export function getConfigRulePlugins(
     return new Set(
         Object.keys(rules)
             .filter((name) => name.includes("/"))
-            .map((name) => getRulePluginName(name))
+            .map(
+                (name) => ruleCatalog?.[name]?.plugin || getRulePluginName(name)
+            )
             .filter(Boolean)
     );
 }
@@ -158,10 +163,11 @@ export function resolveConfigPluginFilter(
 
 export function getConfigPluginFilters(
     config: FlatConfigItem,
-    knownRulePlugins: Iterable<string>
+    knownRulePlugins: Iterable<string>,
+    ruleCatalog?: RulePluginCatalog
 ): string[] {
     const filters = new Set<string>();
-    const configRulePlugins = getConfigRulePlugins(config);
+    const configRulePlugins = getConfigRulePlugins(config, ruleCatalog);
 
     for (const configRulePlugin of configRulePlugins)
         filters.add(configRulePlugin);
@@ -181,12 +187,13 @@ export function getConfigPluginFilters(
 export function configMatchesPluginFilters(
     config: FlatConfigItem,
     selectedPlugins: readonly string[],
-    knownRulePlugins: Iterable<string>
+    knownRulePlugins: Iterable<string>,
+    ruleCatalog?: RulePluginCatalog
 ): boolean {
     if (!selectedPlugins.length) return true;
 
     const configPlugins = new Set(
-        getConfigPluginFilters(config, knownRulePlugins)
+        getConfigPluginFilters(config, knownRulePlugins, ruleCatalog)
     );
     return selectedPlugins.some((selectedPlugin) =>
         configPlugins.has(selectedPlugin)
@@ -195,21 +202,24 @@ export function configMatchesPluginFilters(
 
 export function ruleMatchesPluginFilters(
     ruleName: string,
-    selectedPlugins: readonly string[]
+    selectedPlugins: readonly string[],
+    ruleCatalog?: RulePluginCatalog
 ): boolean {
     if (!selectedPlugins.length) return true;
 
-    const rulePluginName = getRulePluginName(ruleName);
+    const rulePluginName =
+        ruleCatalog?.[ruleName]?.plugin || getRulePluginName(ruleName);
     return selectedPlugins.includes(rulePluginName);
 }
 
 export function configMatchesRulePluginFilters(
     config: Pick<FlatConfigItem, "rules">,
-    selectedPlugins: readonly string[]
+    selectedPlugins: readonly string[],
+    ruleCatalog?: RulePluginCatalog
 ): boolean {
     if (!selectedPlugins.length) return true;
 
-    const configRulePlugins = getConfigRulePlugins(config);
+    const configRulePlugins = getConfigRulePlugins(config, ruleCatalog);
     return selectedPlugins.some((selectedPlugin) =>
         configRulePlugins.has(selectedPlugin)
     );

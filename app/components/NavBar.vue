@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useTimeAgo } from "@vueuse/core";
 import { Dropdown as VDropdown } from "floating-vue";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { version } from "~~/package.json";
 import { testIds } from "~~/shared/test-ids";
 import { useRouter } from "#app/composables/router";
@@ -15,6 +15,12 @@ import {
 import { filtersRules as filters, stateStorage } from "~/composables/state";
 
 const lastUpdate = useTimeAgo(() => payload.value.meta.lastUpdate);
+const fontMenuTrigger = ref<HTMLButtonElement>();
+
+function closeFontMenu(hide: () => void) {
+    hide();
+    fontMenuTrigger.value?.focus();
+}
 const DEFAULT_TARGET_FILE = "stylelint-inspector-target.css";
 const showTargetFile = computed(() => {
     const target = payload.value.meta.targetFilePath;
@@ -97,16 +103,13 @@ function showDeprecated() {
                     v{{ version }}
                 </a>
                 <div
-                    border="~ violet/20 rounded-full"
+                    class="inspector-summary-pill"
                     inline-flex
                     items-center
                     gap-2
-                    bg-violet:8
                     px3
                     py1
                     text-xs
-                    text-violet7
-                    dark:text-violet3
                 >
                     <img
                         src="/stylelint/stylelint-icon-black.svg"
@@ -133,17 +136,19 @@ function showDeprecated() {
 
         <div
             v-if="payload.meta.configPath"
-            flex="~ gap-1 items-center"
+            flex="~ gap-1 items-center wrap"
             my1
             text-sm
         >
-            <span font-mono op35>{{ payload.meta.configPath }}</span>
+            <span min-w-0 color-muted font-mono>{{
+                payload.meta.configPath
+            }}</span>
         </div>
-        <div v-if="showTargetFile" flex="~ gap-1 items-center" my1 text-sm>
+        <div v-if="showTargetFile" flex="~ gap-1 items-center wrap" my1 text-sm>
             <span op50>Resolved using target file</span>
             <code font-mono op75>{{ payload.meta.targetFilePath }}</code>
         </div>
-        <div flex="~ gap-1 items-center wrap" text-sm>
+        <div flex="~ gap-1 items-center wrap" text-sm role="status">
             <span op50>Composed with</span>
             <span font-bold>{{ payload.configs.length }}</span>
             <span op50>config items, updated</span>
@@ -181,7 +186,7 @@ function showDeprecated() {
         <nav
             :data-testid="testIds.nav.tabs"
             aria-label="Inspector sections"
-            flex="~ gap-3 items-center wrap"
+            flex="~ gap-2 items-center wrap"
             py4
         >
             <NuxtLink
@@ -245,6 +250,18 @@ function showDeprecated() {
                 />
             </NuxtLink>
             <NuxtLink
+                to="/stats"
+                :data-testid="testIds.nav.statsLink"
+                btn-action
+                px3
+                py1
+                text-base
+                active-class="btn-action-active"
+            >
+                <div i-ph-chart-bar-duotone flex-none />
+                Stats
+            </NuxtLink>
+            <NuxtLink
                 to="/dev"
                 :data-testid="testIds.nav.devLink"
                 btn-action
@@ -263,6 +280,7 @@ function showDeprecated() {
             >
                 <VDropdown>
                     <button
+                        ref="fontMenuTrigger"
                         type="button"
                         btn-action
                         rounded-full
@@ -271,8 +289,13 @@ function showDeprecated() {
                     >
                         <div i-ph-text-aa-duotone flex-none />
                     </button>
-                    <template #popper>
-                        <div min-w-44 flex="~ col gap-1" p2>
+                    <template #popper="{ hide }">
+                        <div
+                            min-w-44
+                            flex="~ col gap-1"
+                            p2
+                            @keydown.esc.prevent.stop="closeFontMenu(hide)"
+                        >
                             <button
                                 v-for="option in fontScaleOptions"
                                 :key="option.value"
@@ -283,13 +306,16 @@ function showDeprecated() {
                                     'btn-action-active':
                                         stateStorage.fontScale === option.value,
                                 }"
+                                :aria-pressed="
+                                    stateStorage.fontScale === option.value
+                                "
                                 @click="stateStorage.fontScale = option.value"
                             >
                                 <span>{{ option.label }}</span>
                                 <span text-xs op70>
                                     {{
                                         option.value === "sm"
-                                            ? "95%"
+                                            ? "93.75%"
                                             : option.value === "lg"
                                               ? "112.5%"
                                               : "100%"

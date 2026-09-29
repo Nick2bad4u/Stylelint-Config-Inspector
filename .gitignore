@@ -882,4 +882,5 @@ temp/
 
 # Playwright
 /playwright/.auth/
+/output/playwright/
 test-report.junit.xml

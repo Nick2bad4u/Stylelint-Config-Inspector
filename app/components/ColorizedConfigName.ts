@@ -20,6 +20,7 @@ export default defineComponent({
             if (parts.value) {
                 return h(
                     "span",
+                    { class: "min-w-0 break-words" },
                     parts.value.map((part, i) =>
                         h(
                             "span",
