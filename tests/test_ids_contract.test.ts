@@ -12,6 +12,7 @@ describe("test-id contract", () => {
             testIds.nav.rulesLink,
             testIds.nav.extendsLink,
             testIds.nav.filesLink,
+            testIds.nav.statsLink,
             testIds.nav.devLink,
         ]);
     });

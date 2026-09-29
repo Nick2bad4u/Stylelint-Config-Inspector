@@ -1,3 +1,4 @@
+import type { StatsState } from "../shared/stats";
 import { existsSync } from "node:fs";
 import fs from "node:fs/promises";
 import process from "node:process";
@@ -15,6 +16,7 @@ import { MARK_CHECK, MARK_INFO } from "./constants";
 import { distDir } from "./dirs";
 import { ConfigInspectorError } from "./errors";
 import { createHostServer } from "./server";
+import { collectStats } from "./stats/index";
 
 const RE_CONSECUTIVE_SLASHES = /\/+/g;
 
@@ -25,6 +27,9 @@ cli.command(
     "Build inspector with current config file for static hosting"
 )
     .option("--config <configFile>", "Config file path")
+    .option("--stats", "Include native Stylelint timing statistics", {
+        default: false,
+    })
     .option("--files", "Include matched file paths in payload", {
         default: true,
     })
@@ -68,6 +73,24 @@ cli.command(
             throw error;
         }
 
+        const stats: StatsState = {
+            mode: "static",
+            status: "idle",
+            stale: false,
+        };
+        if (options.stats) {
+            stats.report = await collectStats(
+                {
+                    cwd,
+                    userConfigPath: options.config,
+                    userBasePath: options.basePath,
+                    targetFilePath: options.target,
+                },
+                { configRevision: configs.payload.meta.lastUpdate }
+            );
+            stats.status = "complete";
+        }
+
         let baseURL = options.base;
         if (!baseURL.endsWith("/")) baseURL += "/";
         if (!baseURL.startsWith("/")) baseURL = `/${baseURL}`;
@@ -102,6 +125,11 @@ cli.command(
             JSON.stringify(configs.payload, null, 2),
             "utf-8"
         );
+        await fs.writeFile(
+            resolve(outDir, "api/stats.json"),
+            JSON.stringify(stats, null, 2),
+            "utf-8"
+        );
 
         console.log(MARK_CHECK, `Built to ${relative(cwd, outDir)}`);
         console.log(
@@ -112,6 +140,9 @@ cli.command(
 
 cli.command("", "Start dev inspector")
     .option("--config <configFile>", "Config file path")
+    .option("--stats", "Start native Stylelint timing analysis immediately", {
+        default: false,
+    })
     .option("--files", "Include matched file paths in payload", {
         default: true,
     })
@@ -155,6 +186,17 @@ cli.command("", "Start dev inspector")
             userBasePath: options.basePath,
             globMatchedFiles: options.files,
             targetFilePath: options.target,
+            stats: options.stats,
+        });
+        const closeServer = () => {
+            server.close();
+            server.closeAllConnections();
+        };
+        process.once("SIGINT", closeServer);
+        process.once("SIGTERM", closeServer);
+        server.once("close", () => {
+            process.off("SIGINT", closeServer);
+            process.off("SIGTERM", closeServer);
         });
 
         server.listen(port, host, async () => {

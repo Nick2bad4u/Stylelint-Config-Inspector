@@ -7,16 +7,19 @@ import { toNodeHandler } from "h3/node";
 import { lookup } from "mrmime";
 import { extname, join } from "pathe";
 import { distDir } from "./dirs";
-import { createWsServer } from "./ws";
+import { createInspectorRuntime } from "./inspector-runtime";
+import { createStatsHandlers } from "./stats-http";
 
 const LEADING_SLASHES_RE = /^\/+/;
 
 export async function createHostServer(
-    options: CreateWsServerOptions
+    options: CreateWsServerOptions & { stats?: boolean }
 ): Promise<Server> {
     const app = createApp();
 
-    const ws = await createWsServer(options);
+    const runtime = await createInspectorRuntime(options);
+    const { ws, stats } = runtime;
+    const statsHandlers = createStatsHandlers(stats);
 
     const fileMap = new Map<string, Promise<Uint8Array | undefined>>();
     const readCachedFile = (id: string) => {
@@ -58,6 +61,8 @@ export async function createHostServer(
         "/api/payload.json",
         eventHandler(() => ws.getData())
     );
+    app.use("/api/stats.json", statsHandlers.read);
+    app.use("/api/stats/run", statsHandlers.run);
 
     app.use(
         eventHandler(async (event) => {
@@ -115,5 +120,10 @@ export async function createHostServer(
         })
     );
 
-    return createServer(toNodeHandler(app));
+    const server = createServer(toNodeHandler(app));
+    server.once("close", () => {
+        void runtime.close();
+    });
+    if (options.stats) void stats.run();
+    return server;
 }

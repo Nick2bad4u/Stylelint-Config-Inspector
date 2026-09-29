@@ -7,6 +7,7 @@ export const testIds = {
         rulesLink: "nav-link-rules",
         extendsLink: "nav-link-extends",
         filesLink: "nav-link-files",
+        statsLink: "nav-link-stats",
         devLink: "nav-link-dev",
     },
     configs: {
@@ -24,6 +25,13 @@ export const testIds = {
         specifierButton: "extends-specifier-button",
         rulesListContainer: "extends-rules-list-container",
     },
+    stats: {
+        runButton: "stats-run-button",
+        summary: "stats-summary",
+        ruleRow: "stats-rule-row",
+        pluginRow: "stats-plugin-row",
+        status: "stats-status",
+    },
 } as const;
 
 export const orderedNavLinkTestIds = [
@@ -31,5 +39,6 @@ export const orderedNavLinkTestIds = [
     testIds.nav.rulesLink,
     testIds.nav.extendsLink,
     testIds.nav.filesLink,
+    testIds.nav.statsLink,
     testIds.nav.devLink,
 ] as const;

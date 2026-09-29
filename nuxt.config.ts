@@ -92,7 +92,7 @@ export default defineNuxtConfig({
             ],
             viewport: "width=device-width,initial-scale=1",
             meta: [
-                { name: "theme-color", content: "#5B21B6" },
+                { name: "theme-color", content: "#8080F2" },
                 {
                     name: "apple-mobile-web-app-title",
                     content: "Stylelint Inspector",

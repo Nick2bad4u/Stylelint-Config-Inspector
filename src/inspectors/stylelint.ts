@@ -28,6 +28,7 @@ import { findUp } from "find-up";
 import { basename, dirname, normalize, relative, resolve } from "pathe";
 import stylelint from "stylelint";
 import { glob } from "tinyglobby";
+import { parse as parseYaml } from "yaml";
 import {
     DEFAULT_WORKSPACE_SCAN_GLOBS,
     isGeneralConfig,
@@ -1620,10 +1621,70 @@ function toWorkspaceScanGlobs(configs: FlatConfigItem[]): string[] {
     return [...new Set(positiveGlobs)];
 }
 
-async function resolveMatchedFiles(
+/** Include file patterns inherited from extended configurations for profiling. */
+export async function collectWorkspaceScanConfigs(
+    config: StylelintConfig,
+    workspaceBasePath: string,
+    configBasePath: string
+): Promise<FlatConfigItem[]> {
+    const configs: FlatConfigItem[] = [{ index: 0, rules: {} }];
+    const visited = new Set<string>();
+    const visitedConfigs = new WeakSet<object>();
+    async function visit(
+        value: StylelintConfigLike,
+        basePath: string
+    ): Promise<void> {
+        if (visitedConfigs.has(value)) return;
+        visitedConfigs.add(value);
+        const files = toStringArray(value.files);
+        if (files?.length)
+            configs.push({
+                index: configs.length,
+                files: files.map((pattern) => {
+                    if (pattern.startsWith("!")) return pattern;
+                    if (!pattern.includes("/")) return `**/${pattern}`;
+                    return relative(
+                        workspaceBasePath,
+                        resolve(configBasePath, pattern)
+                    );
+                }),
+            });
+        if (Array.isArray(value.overrides)) {
+            for (const override of value.overrides) {
+                if (isRecord(override)) await visit(override, basePath);
+            }
+        }
+        for (const specifier of Array.isArray(value.extends)
+            ? value.extends
+            : [value.extends]) {
+            if (isRecord(specifier)) {
+                await visit(specifier, basePath);
+                continue;
+            }
+            if (typeof specifier !== "string") continue;
+            const resolved = await resolveExtendsSpecifier(
+                specifier,
+                basePath,
+                workspaceBasePath
+            );
+            const entryPath = await resolveExtendsEntryPath(resolved);
+            if (!entryPath || visited.has(entryPath)) continue;
+            visited.add(entryPath);
+            const loaded = await loadConfigFromPath(entryPath, basePath);
+            await visit(
+                loaded.config as StylelintConfigLike,
+                dirname(entryPath)
+            );
+        }
+    }
+    await visit(config as StylelintConfigLike, configBasePath);
+    return configs;
+}
+
+export async function discoverWorkspaceFiles(
     configs: FlatConfigItem[],
     basePath: string
-): Promise<{ files: MatchedFile[]; diagnostics: string[] }> {
+): Promise<{ files: string[]; diagnostics: string[] }> {
     const diagnostics: string[] = [];
     const configuredGlobs = toWorkspaceScanGlobs(configs);
     const hasGeneralConfig = configs.some(
@@ -1655,6 +1716,19 @@ async function resolveMatchedFiles(
         dot: true,
         ignore: DEFAULT_WORKSPACE_SCAN_IGNORES,
     });
+
+    return {
+        files: discoveredFiles.map(normalizeWorkspaceFilepath).sort(),
+        diagnostics,
+    };
+}
+
+async function resolveMatchedFiles(
+    configs: FlatConfigItem[],
+    basePath: string
+): Promise<{ files: MatchedFile[]; diagnostics: string[] }> {
+    const { files: discoveredFiles, diagnostics } =
+        await discoverWorkspaceFiles(configs, basePath);
 
     if (discoveredFiles.length > MAX_WORKSPACE_MATCHED_FILES) {
         diagnostics.push(
@@ -1702,10 +1776,30 @@ async function exists(path: string): Promise<boolean> {
         .catch(() => false);
 }
 
-async function loadConfigFromPath(
+export async function loadConfigFromPath(
     configPath: string,
     basePath: string
 ): Promise<{ config: StylelintConfig; dependencies: string[] }> {
+    const filename = basename(configPath);
+    if (
+        filename === ".stylelintrc" ||
+        filename.endsWith(".yaml") ||
+        filename.endsWith(".yml") ||
+        (filename.endsWith(".json") && filename !== "package.json")
+    ) {
+        const content = await readFile(configPath, "utf8");
+        const configValue: unknown = filename.endsWith(".json")
+            ? JSON.parse(content)
+            : parseYaml(content);
+        if (!isRecord(configValue))
+            throw new Error(
+                `Expected Stylelint config object from ${configPath}`
+            );
+        return {
+            config: configValue as StylelintConfig,
+            dependencies: [configPath],
+        };
+    }
     if (basename(configPath) === "package.json") {
         const pkg = await readFile(configPath, "utf-8");
         const parsed = JSON.parse(pkg) as unknown;
@@ -1727,7 +1821,9 @@ async function loadConfigFromPath(
         tsconfig: false,
     });
 
-    const configValue = (mod.default ?? mod) as unknown;
+    const configValue = (
+        Object.hasOwn(mod, "default") ? mod.default : mod
+    ) as unknown;
     if (!isRecord(configValue)) {
         throw new Error(`Expected Stylelint config object from ${configPath}`);
     }

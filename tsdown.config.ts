@@ -1,7 +1,10 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-    entry: ["src/cli.ts"],
+    entry: {
+        cli: "src/cli.ts",
+        "stats-worker": "src/stats/worker.ts",
+    },
     attw: false,
     failOnWarn: true,
     checks: {
