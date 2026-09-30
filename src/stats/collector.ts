@@ -134,13 +134,12 @@ function runWorker(
             if (failure) reject(failure);
             else if (response && "error" in response)
                 reject(new Error(response.error));
-            else if (code !== 0 || !response)
-                reject(
-                    new Error(
-                        `Stylelint profiling worker failed${stderr ? `: ${stderr.trim()}` : ` (exit ${code}).`}`
-                    )
-                );
-            else resolveResult({ response, output });
+            else if (code !== 0 || !response) {
+                const detail = stderr
+                    ? `: ${stderr.trim()}`
+                    : ` (exit ${code}).`;
+                reject(new Error(`Stylelint profiling worker failed${detail}`));
+            } else resolveResult({ response, output });
         });
         if (options.signal?.aborted) cancel();
         else

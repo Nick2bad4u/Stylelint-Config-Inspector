@@ -148,41 +148,41 @@ function showDeprecated() {
             <span op50>Resolved using target file</span>
             <code font-mono op75>{{ payload.meta.targetFilePath }}</code>
         </div>
-        <div flex="~ gap-1 items-center wrap" text-sm role="status">
+        <output flex="~ gap-1 items-center wrap" text-sm>
             <span op50>Composed with</span>
             <span font-bold>{{ payload.configs.length }}</span>
             <span op50>config items, updated</span>
             <span op75>{{ lastUpdate }}</span>
-            <div
+            <span
                 v-if="isFetching"
                 flex="~ gap-2 items-center"
                 ml2
                 animate-pulse
                 text-green
             >
-                <div i-svg-spinners-90-ring-with-bg flex-none text-sm />
+                <span i-svg-spinners-90-ring-with-bg flex-none text-sm />
                 Fetching updates...
-            </div>
-            <div
+            </span>
+            <span
                 v-else-if="payloadFetchError"
                 flex="~ gap-2 items-center"
                 ml2
                 text-red
                 :title="payloadFetchError"
             >
-                <div i-ph-warning-circle-duotone flex-none text-sm />
+                <span i-ph-warning-circle-duotone flex-none text-sm />
                 Payload refresh failed
-            </div>
-            <div
+            </span>
+            <span
                 v-else-if="connectionNotice"
                 flex="~ gap-2 items-center"
                 ml2
                 :class="connectionNotice.class"
             >
-                <div :class="connectionNotice.icon" flex-none text-sm />
+                <span :class="connectionNotice.icon" flex-none text-sm />
                 {{ connectionNotice.text }}
-            </div>
-        </div>
+            </span>
+        </output>
         <nav
             :data-testid="testIds.nav.tabs"
             aria-label="Inspector sections"

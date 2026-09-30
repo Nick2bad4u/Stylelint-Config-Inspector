@@ -16,6 +16,40 @@ function compareTiming(
     return b.timeMs - a.timeMs || a.name.localeCompare(b.name, "en");
 }
 
+function parseTimingRow(cells: string[]): StatsTiming {
+    const [
+        ,
+        rawName,
+        rawTime,
+        rawPercentage,
+    ] = cells;
+    if (
+        cells.length !== 4 ||
+        !INTEGER_RE.test(cells[0] ?? "") ||
+        !rawName ||
+        !NUMBER_RE.test(rawTime ?? "") ||
+        !PERCENTAGE_RE.test(rawPercentage ?? "")
+    ) {
+        throw new Error("Stylelint returned a malformed rule timing row.");
+    }
+    const timeMs = Number(rawTime);
+    const percentage = Number(rawPercentage?.slice(0, -1));
+    if (
+        !Number.isFinite(timeMs) ||
+        !Number.isFinite(percentage) ||
+        percentage > 100
+    ) {
+        throw new Error("Stylelint returned invalid rule timing values.");
+    }
+    const name = rawName.includes("/") ? rawName : `stylelint/${rawName}`;
+    return {
+        name,
+        plugin: name.slice(0, name.lastIndexOf("/")),
+        timeMs,
+        percentage,
+    };
+}
+
 /** Parse Stylelint's native TIMING=all table, ignoring unrelated console output. */
 export function parseTimingOutput(output: string): StatsTiming[] {
     const rules: StatsTiming[] = [];
@@ -34,42 +68,13 @@ export function parseTimingOutput(output: string): StatsTiming[] {
         }
         if (TABLE_END_RE.test(line)) inTable = false;
         if (!inTable || !TABLE_ROW_RE.test(line)) continue;
-        const [
-            ,
-            rawName,
-            rawTime,
-            rawPercentage,
-        ] = cells;
-        if (
-            cells.length !== 4 ||
-            !INTEGER_RE.test(cells[0] ?? "") ||
-            !rawName ||
-            !NUMBER_RE.test(rawTime ?? "") ||
-            !PERCENTAGE_RE.test(rawPercentage ?? "")
-        ) {
-            throw new Error("Stylelint returned a malformed rule timing row.");
-        }
-        const timeMs = Number(rawTime);
-        const percentage = Number(rawPercentage?.slice(0, -1));
-        if (
-            !Number.isFinite(timeMs) ||
-            !Number.isFinite(percentage) ||
-            percentage > 100
-        ) {
-            throw new Error("Stylelint returned invalid rule timing values.");
-        }
-        const name = rawName.includes("/") ? rawName : `stylelint/${rawName}`;
-        if (names.has(name))
+        const rule = parseTimingRow(cells);
+        if (names.has(rule.name))
             throw new Error(
-                `Stylelint returned duplicate timings for ${name}.`
+                `Stylelint returned duplicate timings for ${rule.name}.`
             );
-        names.add(name);
-        rules.push({
-            name,
-            plugin: name.slice(0, name.lastIndexOf("/")),
-            timeMs,
-            percentage,
-        });
+        names.add(rule.name);
+        rules.push(rule);
     }
     if (!foundHeader)
         throw new Error(
@@ -99,7 +104,7 @@ export function aggregatePluginTimings(
             ...plugin,
             percentage:
                 totalTimeMs > 0 ? (plugin.timeMs / totalTimeMs) * 100 : 0,
-            rules: plugin.rules.sort(compareTiming),
+            rules: plugin.rules.toSorted(compareTiming),
         }))
         .sort(compareTiming);
 }

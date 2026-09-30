@@ -74,14 +74,13 @@ init(config.app.baseURL);
 <template>
     <NuxtLoadingIndicator :height="3" :throttle="0" color="#8080F2" />
 
-    <div
+    <output
         v-if="isRouteNavigating && !isLoading && !errorInfo"
         class="inspector-panel pointer-events-none fixed right-3 top-3 z-60 inline-flex items-center gap-2 px-3 py-1.5 text-xs"
-        role="status"
     >
-        <div i-svg-spinners-90-ring-with-bg text-sm />
+        <span i-svg-spinners-90-ring-with-bg text-sm />
         Loading view...
-    </div>
+    </output>
 
     <div
         v-if="errorInfo"
@@ -142,17 +141,16 @@ init(config.app.baseURL);
     <div
         v-else-if="isLoading"
         class="inspector-viewport-state"
-        role="status"
         flex="~ col"
         w-full
         items-center
         justify-center
         p4
     >
-        <div flex="~ gap-2 items-center" flex-auto animate-pulse text-xl>
-            <div i-svg-spinners-90-ring-with-bg />
+        <output flex="~ gap-2 items-center" flex-auto animate-pulse text-xl>
+            <span i-svg-spinners-90-ring-with-bg />
             Loading config...
-        </div>
+        </output>
         <ConfigInspectorBadge mt6 text-xl font-200 :show-version="false" />
     </div>
     <div v-else class="inspector-shell" px4 py6 lg:px14 lg:py10>

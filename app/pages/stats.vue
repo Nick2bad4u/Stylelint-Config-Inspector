@@ -75,18 +75,17 @@ function togglePlugin(name: string) {
             </button>
         </header>
 
-        <div
+        <output
             v-if="loading || running"
             :data-testid="testIds.stats.status"
-            role="status"
-            class="inspector-panel p4 text-sm"
+            class="inspector-panel block p4 text-sm"
         >
             {{
                 loading
                     ? "Loading analysis status…"
                     : "Analyzing workspace files. This can take a few minutes."
             }}
-        </div>
+        </output>
         <div
             v-if="requestError || state.error"
             role="alert"
@@ -117,14 +116,14 @@ function togglePlugin(name: string) {
                 The previous successful report is shown below.
             </p>
         </div>
-        <div v-if="stale" role="status" class="inspector-panel p4 text-sm">
+        <output v-if="stale" class="inspector-panel block p4 text-sm">
             Configuration changed since this analysis.
             {{
                 state.mode === "static"
                     ? "Rebuild the snapshot to update the report."
                     : "Re-run analysis to refresh the report."
             }}
-        </div>
+        </output>
 
         <div
             v-if="!loading && !report && state.status === 'idle'"
@@ -145,13 +144,12 @@ function togglePlugin(name: string) {
         </div>
 
         <template v-if="report">
-            <p
+            <output
                 v-if="state.status === 'complete'"
-                role="status"
-                class="m0 text-sm op70"
+                class="m0 block text-sm op70"
             >
                 Analysis complete.
-            </p>
+            </output>
             <dl
                 :data-testid="testIds.stats.summary"
                 class="grid grid-cols-2 m0 gap-3 lg:grid-cols-5"
@@ -177,22 +175,20 @@ function togglePlugin(name: string) {
                 >
                 <span class="break-words">Scope: {{ report.scope }}</span>
             </div>
-            <div
+            <output
                 v-if="report.diagnostics.length"
-                role="status"
-                class="inspector-panel p4 text-sm"
+                class="inspector-panel block p4 text-sm"
             >
-                <p
+                <span
                     v-for="diagnostic in report.diagnostics"
                     :key="diagnostic"
-                    class="my1 break-words"
+                    class="my1 block break-words"
                 >
                     {{ diagnostic }}
-                </p>
-            </div>
-            <div
-                class="flex flex-wrap gap-2"
-                role="group"
+                </span>
+            </output>
+            <fieldset
+                class="min-w-0 flex flex-wrap m0 gap-2 border-0 p0"
                 aria-label="Performance breakdown"
             >
                 <button
@@ -213,7 +209,7 @@ function togglePlugin(name: string) {
                 >
                     Slow Plugins
                 </button>
-            </div>
+            </fieldset>
             <div
                 v-if="!report.rules.length"
                 class="inspector-empty-state text-sm"

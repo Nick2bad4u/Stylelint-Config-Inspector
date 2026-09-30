@@ -1649,10 +1649,11 @@ export async function collectWorkspaceScanConfigs(
                     );
                 }),
             });
-        if (Array.isArray(value.overrides)) {
-            for (const override of value.overrides) {
-                if (isRecord(override)) await visit(override, basePath);
-            }
+        const overrides = Array.isArray(value.overrides)
+            ? value.overrides.filter(isRecord)
+            : [];
+        for (const override of overrides) {
+            await visit(override, basePath);
         }
         for (const specifier of Array.isArray(value.extends)
             ? value.extends

@@ -60,13 +60,14 @@ export const MOCK_STATS_REPORT: StatsReport = {
 export async function mockStats(
     page: Page,
     initial: StatsState,
-    result: StatsState = {
+    result?: StatsState
+) {
+    const completed: StatsState = result ?? {
         status: "complete",
         mode: "live",
         stale: false,
         report: MOCK_STATS_REPORT,
-    }
-) {
+    };
     await mockPayload(page, {
         ...MOCK_PAYLOAD,
         meta: { ...MOCK_PAYLOAD.meta, basePath: "/workspace", lastUpdate: 1 },
@@ -75,7 +76,7 @@ export async function mockStats(
     let runCount = 0;
     await page.route("**/api/stats.json**", async (route) => {
         await route.fulfill({ json: state });
-        if (state.status === "running") state = result;
+        if (state.status === "running") state = completed;
     });
     await page.route("**/api/stats/run", async (route) => {
         runCount += 1;
