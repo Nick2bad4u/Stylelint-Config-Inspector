@@ -17,6 +17,7 @@ function collapseAll() {
 
 <template>
     <div flex="~ col gap-4" my4>
+        <h1 class="inspector-page-title">Files</h1>
         <div class="inspector-experimental-pill">
             <div i-ph-flask-duotone flex-none />
             <span>
@@ -25,7 +26,7 @@ function collapseAll() {
             </span>
         </div>
         <template v-if="payload.filesResolved">
-            <div flex="~ gap-2 items-center">
+            <div flex="~ gap-2 items-center wrap">
                 <div border="~ base rounded" flex="~ inline">
                     <button
                         type="button"

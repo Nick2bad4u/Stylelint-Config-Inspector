@@ -23,6 +23,7 @@ test.describe("navigation and page regressions", () => {
             { testId: testIds.nav.rulesLink, path: "/rules" },
             { testId: testIds.nav.extendsLink, path: "/extends" },
             { testId: testIds.nav.filesLink, path: "/files" },
+            { testId: testIds.nav.statsLink, path: "/stats" },
             { testId: testIds.nav.devLink, path: "/dev" },
         ] as const;
 
@@ -115,7 +116,7 @@ test.describe("navigation and page regressions", () => {
 
         await expect(filepathInput).toHaveValue("");
         await expect(clearFiltersButton).toHaveCount(0);
-        await expect(allPluginsButton).toHaveClass(/bg-violet-100/);
+        await expect(allPluginsButton).toHaveClass(/bg-active/);
     });
 
     test("files page supports collapsible matched-file sections", async ({
@@ -496,7 +497,7 @@ test.describe("navigation and page regressions", () => {
         }
     });
 
-    test("root background spans long pages without viewport tiling", async ({
+    test("neutral root background spans long pages without viewport tiling", async ({
         page,
     }) => {
         await mockPayload(page);
@@ -510,31 +511,16 @@ test.describe("navigation and page regressions", () => {
             const viewportHeight = document.documentElement.clientHeight;
 
             return {
-                backgroundRepeat: bodyStyles.backgroundRepeat,
-                backgroundSize: bodyStyles.backgroundSize,
+                backgroundImage: bodyStyles.backgroundImage,
+                backgroundColor: bodyStyles.backgroundColor,
                 bodyHeight,
                 scrollHeight: document.documentElement.scrollHeight,
                 viewportHeight,
             };
         });
 
-        const backgroundRepeats = backgroundMetrics.backgroundRepeat
-            .split(",")
-            .map((value) => value.trim());
-
-        expect(backgroundRepeats.length).toBeGreaterThan(0);
-        expect(backgroundRepeats.every((value) => value === "no-repeat")).toBe(
-            true
-        );
-
-        const backgroundSizes = backgroundMetrics.backgroundSize
-            .split(",")
-            .map((value) => value.trim());
-
-        expect(backgroundSizes.length).toBeGreaterThan(0);
-        expect(backgroundSizes.every((value) => value === "100% 100%")).toBe(
-            true
-        );
+        expect(backgroundMetrics.backgroundImage).toBe("none");
+        expect(backgroundMetrics.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
         expect(backgroundMetrics.scrollHeight).toBeGreaterThan(
             backgroundMetrics.viewportHeight
         );

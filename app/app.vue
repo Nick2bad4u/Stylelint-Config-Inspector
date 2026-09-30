@@ -72,15 +72,12 @@ init(config.app.baseURL);
 </script>
 
 <template>
-    <NuxtLoadingIndicator
-        :height="3"
-        :throttle="0"
-        color="repeating-linear-gradient(90deg, #8b5cf6 0px, #a78bfa 32px, #8b5cf6 64px)"
-    />
+    <NuxtLoadingIndicator :height="3" :throttle="0" color="#8080F2" />
 
     <div
         v-if="isRouteNavigating && !isLoading && !errorInfo"
-        class="pointer-events-none fixed right-3 top-3 z-60 inline-flex items-center gap-2 border border-violet-300/45 rounded-full bg-white/85 px-3 py-1.5 text-xs text-violet-700 shadow-lg backdrop-blur-sm dark:border-violet-300/25 dark:bg-zinc-950/70 dark:text-violet-200"
+        class="inspector-panel pointer-events-none fixed right-3 top-3 z-60 inline-flex items-center gap-2 px-3 py-1.5 text-xs"
+        role="status"
     >
         <div i-svg-spinners-90-ring-with-bg text-sm />
         Loading view...
@@ -89,6 +86,7 @@ init(config.app.baseURL);
     <div
         v-if="errorInfo"
         class="inspector-viewport-state"
+        role="alert"
         grid
         w-full
         place-content-center
@@ -97,9 +95,9 @@ init(config.app.baseURL);
     >
         <ConfigInspectorBadge mb6 text-xl font-200 />
 
-        <div text-2xl text-red5 font-bold>
+        <h1 text-2xl text-rose-700 font-bold dark:text-rose-300>
             Failed to resolve Stylelint config<br />
-        </div>
+        </h1>
 
         <div text-lg text-red font-mono>
             {{ errorInfo.error }}
@@ -144,6 +142,7 @@ init(config.app.baseURL);
     <div
         v-else-if="isLoading"
         class="inspector-viewport-state"
+        role="status"
         flex="~ col"
         w-full
         items-center
@@ -156,8 +155,10 @@ init(config.app.baseURL);
         </div>
         <ConfigInspectorBadge mt6 text-xl font-200 :show-version="false" />
     </div>
-    <div v-else px4 py6 lg:px14 lg:py10>
+    <div v-else class="inspector-shell" px4 py6 lg:px14 lg:py10>
         <NavBar />
-        <NuxtPage />
+        <main id="main-content" tabindex="-1">
+            <NuxtPage />
+        </main>
     </div>
 </template>

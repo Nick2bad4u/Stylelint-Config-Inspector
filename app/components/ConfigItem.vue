@@ -66,7 +66,9 @@ const knownRulePlugins = computed(
                 .filter(Boolean)
         )
 );
-const configRulePlugins = computed(() => getConfigRulePlugins(props.config));
+const configRulePlugins = computed(() =>
+    getConfigRulePlugins(props.config, payload.value.rules)
+);
 const selectedPluginPackages = computed(() => props.filters?.plugins ?? []);
 const selectedRulePlugins = computed(() => {
     const filters = new Set<string>();
@@ -106,7 +108,11 @@ const totalRuleCount = computed(
 const filteredRuleCount = computed(
     () =>
         Object.keys(props.config.rules ?? {}).filter((ruleName) =>
-            ruleMatchesPluginFilters(ruleName, selectedRulePlugins.value)
+            ruleMatchesPluginFilters(
+                ruleName,
+                selectedRulePlugins.value,
+                payload.value.rules
+            )
         ).length
 );
 const hasGlobalPluginFilter = computed(
@@ -143,7 +149,11 @@ function resolvePluginFilter(name: string): string {
 }
 
 function matchesSelectedRulePlugins(ruleName: string): boolean {
-    return ruleMatchesPluginFilters(ruleName, selectedRulePlugins.value);
+    return ruleMatchesPluginFilters(
+        ruleName,
+        selectedRulePlugins.value,
+        payload.value.rules
+    );
 }
 
 function getRuleItemClass(ruleName: string): string {
@@ -287,7 +297,7 @@ const summaryItems = computed<SummaryItemDescriptor[]>(() => {
             key: "extends",
             icon: "i-ph-stack-plus-duotone",
             number: extendsCount,
-            color: "text-violet5",
+            color: "text-primary5",
             title: "Extends",
             clickable: extendsCount > 0,
             section: "extends",
@@ -353,6 +363,7 @@ function setOpenFromToggle(event: Event): void {
         <summary block>
             <div
                 class="absolute right-[calc(100%+10px)] top-1.5"
+                whitespace-nowrap
                 text-right
                 font-mono
                 op35
@@ -378,6 +389,7 @@ function setOpenFromToggle(event: Event): void {
                     transition
                 />
                 <div
+                    min-w-0
                     flex
                     flex-auto
                     flex-col
@@ -388,7 +400,8 @@ function setOpenFromToggle(event: Event): void {
                 >
                     <span
                         :class="config.name ? '' : 'op50 italic'"
-                        flex="~ gap-2 items-center"
+                        flex="~ gap-2 items-center wrap"
+                        min-w-0
                         flex-1
                     >
                         <ColorizedConfigName
@@ -415,7 +428,7 @@ function setOpenFromToggle(event: Event): void {
 
                     <div
                         :data-testid="testIds.configs.summaryGrid"
-                        class="grid grid-cols-7 items-center justify-items-end gap-2"
+                        class="grid grid-cols-3 items-center justify-items-end gap-2 sm:grid-cols-7"
                     >
                         <SummarizeItem
                             v-for="item of summaryItems"
@@ -434,19 +447,6 @@ function setOpenFromToggle(event: Event): void {
                 </div>
             </div>
         </summary>
-
-        <div
-            pointer-events-none
-            absolute
-            right-2
-            top-2
-            text-right
-            text-5em
-            font-mono
-            op5
-        >
-            #{{ index + 1 }}
-        </div>
 
         <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py3>
             <div
@@ -501,7 +501,7 @@ function setOpenFromToggle(event: Event): void {
                                     ? 'ring-1 ring-teal/25 shadow-sm'
                                     : 'opacity-80',
                                 entry.isSelected
-                                    ? 'ring-2 ring-violet/45 shadow-sm'
+                                    ? 'ring-2 ring-primary/45 shadow-sm'
                                     : '',
                             ]"
                             :style="entry.style"
@@ -530,12 +530,12 @@ function setOpenFromToggle(event: Event): void {
                             v-for="(entry, idx) of config.extends"
                             :key="idx"
                             border="~ base rounded-full"
-                            bg-violet:8
+                            text-primary7
+                            dark:text-primary3
+                            bg-primary:8
                             px3
                             py0.5
-                            text-violet7
                             font-mono
-                            dark:text-violet3
                         >
                             {{ entry }}
                         </code>

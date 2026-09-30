@@ -17,11 +17,9 @@ withDefaults(
             href="https://github.com/Nick2bad4u/Stylelint-Config-Inspector"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center gap-3 border border-violet/25 rounded-2xl bg-violet/8 px-3 py-2 shadow-sm hover:border-violet/35 hover:bg-violet/12"
+            class="inline-flex items-center gap-3 rounded py-1"
         >
-            <span
-                class="flex items-center justify-center border border-violet/30 rounded-full bg-violet/16 p-2"
-            >
+            <span class="flex flex-none items-center justify-center">
                 <img
                     src="/stylelint/stylelint-icon-black.svg"
                     class="inline-block h-1.15em w-1.15em dark:brightness-185 dark:invert"
@@ -31,7 +29,7 @@ withDefaults(
             </span>
 
             <span class="flex flex-col gap-0.5">
-                <span class="flex items-center gap-2">
+                <span class="flex flex-wrap items-center gap-2">
                     <img
                         src="/stylelint/stylelint-text-black.svg"
                         class="h-0.95em dark:brightness-185 dark:invert"

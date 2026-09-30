@@ -62,6 +62,7 @@ const activeRules = computed(() => {
 
 <template>
     <div flex="~ col gap-4" my4>
+        <h1 class="inspector-page-title">Extends</h1>
         <div
             class="inspector-experimental-pill"
             flex="~ inline gap-2 items-center"
@@ -158,7 +159,7 @@ const activeRules = computed(() => {
                     <div flex="~ col gap-2">
                         <div flex="~ items-center gap-2 wrap">
                             <code
-                                class="rounded-full bg-violet:10 px3 py1 text-violet7 font-mono dark:text-violet3"
+                                class="text-primary7 dark:text-primary3 rounded-full bg-primary:10 px3 py1 font-mono"
                             >
                                 {{ activeEntry.specifier }}
                             </code>
@@ -248,7 +249,7 @@ const activeRules = computed(() => {
                             <code
                                 v-for="entry in activeEntry.directExtends"
                                 :key="entry"
-                                class="rounded-full bg-violet:10 px2.5 py0.5 text-xs text-violet7 font-mono dark:text-violet3"
+                                class="text-primary7 dark:text-primary3 rounded-full bg-primary:10 px2.5 py0.5 text-xs font-mono"
                             >
                                 {{ entry }}
                             </code>

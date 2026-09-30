@@ -288,6 +288,7 @@ function selectRule(ruleName: string): void {
 
 <template>
     <div>
+        <h1 class="inspector-page-title" mt4>Rules</h1>
         <div py4 flex="~ col gap-2">
             <div relative flex>
                 <input
@@ -331,8 +332,8 @@ function selectRule(ruleName: string): void {
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 !hasSelectedPlugin
-                                    ? 'bg-violet-100 text-violet-800 dark:bg-zinc-700/45 dark:text-zinc-100'
-                                    : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+                                    ? 'bg-active color-active'
+                                    : 'bg-base color-muted hover:bg-hover',
                             ]"
                             @click="clearPluginSelection"
                         >
@@ -347,10 +348,10 @@ function selectRule(ruleName: string): void {
                             class="plugin-filter-button badge border border-base px-2 py-0.5 text-xs transition"
                             :class="[
                                 isPluginSelected(pluginOption.value)
-                                    ? 'bg-violet-100 text-violet-800 opacity-100 dark:bg-zinc-700/45 dark:text-zinc-100'
+                                    ? 'bg-active color-active opacity-100'
                                     : hasSelectedPlugin
-                                      ? 'bg-white/65 text-zinc-700 opacity-55 hover:opacity-85 dark:bg-zinc-900/30 dark:text-zinc-300 dark:opacity-45 dark:hover:opacity-80'
-                                      : 'bg-white/65 text-zinc-700 hover:bg-black/6 dark:bg-zinc-900/30 dark:text-zinc-300 dark:hover:bg-zinc-800/50',
+                                      ? 'bg-base color-muted opacity-60 hover:opacity-100'
+                                      : 'bg-base color-muted hover:bg-hover',
                             ]"
                             :style="pluginOption.style"
                             @click="togglePluginSelection(pluginOption.value)"
@@ -385,10 +386,10 @@ function selectRule(ruleName: string): void {
                     ]"
                     :tooltips="[
                         'Show every rule',
-                        'Rules currently active in at least one config block',
-                        'Rules currently disabled in all config blocks',
-                        'Rules with effective error severity',
-                        'Rules with effective warning severity',
+                        'Rules configured in at least one config block',
+                        'Rules not configured in any config block',
+                        'Rules with error severity in at least one config block',
+                        'Rules with warning severity in at least one config block',
                         'Rules set to off',
                         'Rules with mixed state across overrides',
                         'Rules explicitly off and never active',
@@ -477,8 +478,8 @@ function selectRule(ruleName: string): void {
             </div>
         </div>
 
-        <div items-center justify-between gap-2 md:flex>
-            <div flex="~ gap-2" lt-sm:flex-col>
+        <div flex="~ items-center justify-between gap-2 wrap">
+            <div flex="~ gap-2 wrap" lt-sm:flex-col>
                 <div
                     class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center"
@@ -512,7 +513,7 @@ function selectRule(ruleName: string): void {
                         v-if="hasGeneratedDescriptions"
                         v-tooltip="descriptionsNoticeText"
                         i-ph-info-duotone
-                        text-violet5
+                        text-primary5
                         op70
                     />
                 </div>
@@ -521,6 +522,7 @@ function selectRule(ruleName: string): void {
                     type="button"
                     class="inspector-summary-pill inspector-summary-pill--accent"
                     flex="~ inline gap-2 items-center self-start"
+                    whitespace-nowrap
                     px3
                     py1
                     @click="resetFilters()"
@@ -531,7 +533,7 @@ function selectRule(ruleName: string): void {
                 </button>
             </div>
 
-            <div flex="~ gap-1">
+            <div flex="~ gap-1" flex-none whitespace-nowrap>
                 <button
                     type="button"
                     btn-action
@@ -561,15 +563,15 @@ function selectRule(ruleName: string): void {
         <div
             v-if="selectedRule"
             class="inspector-panel"
-            border="~ violet/20 rounded-lg"
+            border="~ primary/20 rounded-lg"
             my4
-            bg-violet:5
+            bg-primary:5
             p4
         >
-            <div flex="~ gap-3 items-start justify-between">
-                <div min-w-0>
+            <div flex="~ gap-3 items-start justify-between wrap">
+                <div min-w-0 flex-1 basis-48>
                     <div flex="~ gap-2 items-center wrap">
-                        <div i-ph-path-duotone text-violet5 />
+                        <div i-ph-path-duotone text-primary5 />
                         <span font-medium>Effective rule trace</span>
                         <ColorizedRuleName
                             :name="selectedRule.name"
@@ -589,6 +591,8 @@ function selectRule(ruleName: string): void {
                 </div>
                 <button
                     btn-action
+                    flex-none
+                    whitespace-nowrap
                     type="button"
                     aria-label="Close effective rule trace"
                     @click="selectedRuleName = ''"

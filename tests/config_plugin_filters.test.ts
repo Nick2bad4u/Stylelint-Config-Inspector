@@ -3,6 +3,7 @@ import {
     configMatchesPluginFilters,
     configMatchesRulePluginFilters,
     getConfigPluginFilters,
+    getConfigRulePlugins,
     getRulePluginName,
     resolveConfigPluginFilter,
     ruleMatchesPluginFilters,
@@ -10,6 +11,83 @@ import {
 } from "../shared/config-plugin-filters";
 
 describe("config plugin filters", () => {
+    it("matches generic rule namespaces to their actual metadata owners without leaking other plugins", () => {
+        const catalog = {
+            "plugin/no-browser-hacks": { plugin: "no-browser-hacks" },
+            "plugin/no-unsupported-browser-features": {
+                plugin: "no-unsupported-browser-features",
+            },
+        };
+        const config = {
+            index: 0,
+            plugins: {
+                "stylelint-no-browser-hacks": {},
+                "stylelint-no-unsupported-browser-features": {},
+            },
+            rules: {
+                "plugin/no-browser-hacks": true,
+                "plugin/no-unsupported-browser-features": true,
+            },
+        };
+        const known = Object.values(catalog).map((rule) => rule.plugin);
+        const filter = resolveConfigPluginFilter(
+            "stylelint-no-browser-hacks",
+            known,
+            getConfigRulePlugins(config, catalog)
+        );
+        expect(filter).toBe("no-browser-hacks");
+        expect(
+            ruleMatchesPluginFilters(
+                "plugin/no-browser-hacks",
+                [filter],
+                catalog
+            )
+        ).toBe(true);
+        expect(
+            ruleMatchesPluginFilters(
+                "plugin/no-unsupported-browser-features",
+                [filter],
+                catalog
+            )
+        ).toBe(false);
+        expect(
+            ruleMatchesPluginFilters(
+                "plugin/no-browser-hacks",
+                ["plugin"],
+                catalog
+            )
+        ).toBe(false);
+        expect(getConfigRulePlugins(config, catalog)).toEqual(new Set(known));
+        expect(getConfigPluginFilters(config, known, catalog)).toEqual(known);
+        expect(configMatchesRulePluginFilters(config, [filter], catalog)).toBe(
+            true
+        );
+        expect(
+            configMatchesPluginFilters(config, [filter], known, catalog)
+        ).toBe(true);
+    });
+    it("falls back to native rule prefixes when metadata is missing while preserving empty selections", () => {
+        const catalog = { "plugin/owned": { plugin: "owner" } };
+        expect(
+            ruleMatchesPluginFilters("plugin/unknown", ["plugin"], catalog)
+        ).toBe(true);
+        expect(
+            ruleMatchesPluginFilters("plugin/unknown", ["owner"], catalog)
+        ).toBe(false);
+        expect(
+            ruleMatchesPluginFilters(
+                "@acme/layout/example",
+                ["@acme/layout"],
+                catalog
+            )
+        ).toBe(true);
+        expect(ruleMatchesPluginFilters("plugin/owned", [], catalog)).toBe(
+            true
+        );
+        expect(
+            getConfigRulePlugins({ rules: { "plugin/unknown": true } }, catalog)
+        ).toEqual(new Set(["plugin"]));
+    });
     it("maps plugin package names to the corresponding rule plugin filter", () => {
         const knownRulePlugins = new Set(["defensive-css", "@acme/layout"]);
 

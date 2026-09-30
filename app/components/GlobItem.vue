@@ -89,7 +89,7 @@ const Noop = defineComponent({
             <div
                 v-if="shown && popup === 'files'"
                 max-h="30vh"
-                min-w-80
+                class="inspector-popover-content"
                 of-auto
                 p3
             >
@@ -111,7 +111,7 @@ const Noop = defineComponent({
             <div
                 v-if="shown && popup === 'configs'"
                 max-h="30vh"
-                min-w-80
+                class="inspector-popover-content"
                 of-auto
                 p3
             >

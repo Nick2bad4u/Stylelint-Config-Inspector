@@ -23,7 +23,8 @@ export default defineConfig({
     },
     fullyParallel: false,
     retries: isCI ? 2 : 0,
-    workers: isCI ? 1 : undefined,
+    // Keep the browser matrix from exhausting local sockets and memory.
+    workers: isCI ? 1 : 2,
     reporter: [["list"], ["html", { open: "never" }]],
     use: {
         baseURL: "http://127.0.0.1:4173",
@@ -38,7 +39,7 @@ export default defineConfig({
             name: "chromium",
             use: { ...devices["Desktop Chrome"] },
         },
-        ...(isCI
+        ...(isCI || process.env.PLAYWRIGHT_ALL_BROWSERS === "1"
             ? [
                   {
                       name: "firefox",
@@ -48,7 +49,8 @@ export default defineConfig({
             : []),
     ],
     webServer: {
-        command: "npx nuxt build && npx serve dist/public --listen 4173",
+        command:
+            "npm run build && npx serve dist/public --single --listen 4173",
         url: "http://127.0.0.1:4173",
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

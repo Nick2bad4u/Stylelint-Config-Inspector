@@ -84,7 +84,7 @@ const groupIdentity = computed(() => {
     return {
         label: "Glob",
         icon: "i-ph-file-magnifying-glass-duotone",
-        colorClass: "text-violet6 dark:text-violet3",
+        colorClass: "text-primary6 dark:text-primary3",
     } as const;
 });
 </script>
@@ -101,6 +101,7 @@ const groupIdentity = computed(() => {
         <summary block>
             <div
                 class="absolute right-[calc(100%+10px)] top-1.5"
+                whitespace-nowrap
                 text-right
                 font-mono
                 op35
@@ -192,19 +193,6 @@ const groupIdentity = computed(() => {
             </div>
         </summary>
 
-        <div
-            pointer-events-none
-            absolute
-            right-2
-            top-2
-            text-right
-            text-5em
-            font-mono
-            op5
-        >
-            #{{ index + 1 }}
-        </div>
-
         <div v-if="hasShown" flex="~ col gap-4" of-auto px4 py4>
             <div flex="~ gap-2 items-center">
                 <div i-ph-stack-duotone flex-none />
@@ -228,12 +216,17 @@ const groupIdentity = computed(() => {
                             />
                         </button>
                         <template #popper="{ shown }">
-                            <div v-if="shown" max-h="50vh" min-w-100>
+                            <div
+                                v-if="shown"
+                                class="inspector-popover-content"
+                                max-h="50vh"
+                                of-auto
+                            >
                                 <div flex="~ items-center gap-2" p3>
                                     <button
                                         type="button"
                                         btn-action-sm
-                                        title="Copy"
+                                        title="Go to this config"
                                         @click="goToConfig(config.index)"
                                     >
                                         <div i-ph-stack-duotone />

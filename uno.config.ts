@@ -12,7 +12,8 @@ import {
 
 export default defineConfig({
     shortcuts: {
-        "color-base": "color-neutral-800 dark:color-neutral-300",
+        "color-base": "color-neutral-800 dark:color-neutral-200",
+        "color-muted": "color-neutral-600 dark:color-neutral-400",
         "bg-base": "bg-white dark:bg-neutral-900",
         "border-base": "border-#aaa3",
 
@@ -26,7 +27,7 @@ export default defineConfig({
         "bg-active": "bg-primary-400:10",
 
         "btn-action":
-            "border border-base rounded flex gap-2 items-center px2 py1 op75 hover:op100 hover:bg-hover",
+            "border border-base rounded flex gap-2 items-center px2 py1 color-base hover:bg-hover disabled:cursor-not-allowed disabled:op50",
         "btn-action-sm": "btn-action text-sm",
         "btn-action-active": "color-active border-active! bg-active op100!",
 
@@ -35,7 +36,7 @@ export default defineConfig({
         "btn-badge": "badge hover:bg-active",
     },
     theme: {
-        // Purple-first palette to better align with Stylelint branding.
+        // Match the restrained lavender accents of ESLint Inspector v3.5.0.
         colors: {
             neutral: {
                 25: "#FCFCFD",
@@ -52,18 +53,18 @@ export default defineConfig({
             },
 
             primary: {
-                DEFAULT: "#7C3AED",
-                25: "#FBF8FF",
-                50: "#F5EEFF",
-                100: "#EDE0FF",
-                200: "#DCC2FF",
-                300: "#C6A1FF",
-                400: "#AE7AFF",
-                500: "#9553FA",
-                600: "#7C3AED",
-                700: "#6D28D9",
-                800: "#5B21B6",
-                900: "#4C1D95",
+                DEFAULT: "#8080F2",
+                25: "#FBFBFF",
+                50: "#F6F6FE",
+                100: "#ECECFD",
+                200: "#DEDEFF",
+                300: "#CCCCFA",
+                400: "#B7B7FF",
+                500: "#A0A0F5",
+                600: "#8080F2",
+                700: "#6358D4",
+                800: "#4B32C3",
+                900: "#341BAB",
             },
 
             warning: {

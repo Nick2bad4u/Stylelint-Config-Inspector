@@ -46,6 +46,23 @@ stylelint-config-inspector build [options]
 - `--file <filePath>`: alias of `--target`
 - `--target <filePath>`: file used for effective config resolution
 - `--files`: include matched file metadata in payload (enabled by default)
+- `--stats`: start native Stylelint timing analysis immediately, or include its result in a static build
+
+### Performance statistics
+
+Open **Stats** and select **Run Analysis** to profile the workspace, or start an analysis as the inspector opens:
+
+```bash
+npx stylelint-config-inspector --stats
+```
+
+The **Slow Rules** and **Slow Plugins** views rank native rule timings, with expandable plugin breakdowns. The summary shows elapsed run duration, reported rule time, linted files, errors, warnings, and the analysis timestamp. Analysis runs in a separate process with fixes and caching disabled; it does not apply changes to your source files or use the project's lint cache.
+
+Profiling requires the project's Stylelint 16.13 or newer within the supported 16 and 17 major versions. It scans the same configured and common style-related file patterns as the inspector, without the Files page's display limit. Stylelint applies the project's ignores, overrides, and custom syntaxes. The displayed scope is the workspace rooted at the resolved base path: `--target` controls the configuration preview, not the profiling file selection, and `--no-files` does not disable profiling.
+
+Timings come from [Stylelint's native `TIMING` support](https://stylelint.io/user-guide/cli/#profile-rule-performance). Percentages use the sum of reported rule timings, not elapsed run duration. Native rule timing does not include time spent waiting in asynchronous plugin rules; elapsed duration also includes startup, configuration loading, parsing, and other work. These results are useful for identifying expensive synchronous rules, not a complete accounting of all elapsed time. Per-file timings and separate parsing/fixing breakdowns are not available.
+
+Reports are snapshots. Configuration updates mark a report stale; use **Re-run** after changing configuration or source files. A failed rerun preserves the last successful report. Only one analysis runs at a time, with a five-minute timeout.
 
 ### Static build
 
@@ -56,6 +73,20 @@ npx stylelint-config-inspector build
 ```
 
 This emits a single-page app in `.stylelint-config-inspector`.
+
+Include a read-only performance report with:
+
+```bash
+npx stylelint-config-inspector build --stats
+```
+
+The report is saved as `api/stats.json` alongside the configuration payload. Static inspectors cannot start or rerun analysis; rebuild the snapshot to refresh it. A build without `--stats` shows instructions in the Stats tab. An explicitly requested analysis that fails also fails the build.
+
+Both reports and navigation support a deployment prefix:
+
+```bash
+npx stylelint-config-inspector build --stats --base /tools/stylelint/
+```
 
 ### Monorepo / package subdirectory inspection
 
@@ -71,6 +102,10 @@ Environment aliases are also supported:
 - `STYLELINT_TARGET` (or legacy `ESLINT_TARGET`)
 
 Run `npx stylelint-config-inspector --help` for all options.
+
+## Browser testing
+
+See the [Playwright testing guide](docs/playwright-testing.md) for local and CI commands, the interaction coverage map, responsive checks, and screenshot reports.
 
 ## License
 

@@ -42,6 +42,7 @@ const INITIAL_PAYLOAD: Payload = {
 
 const data = ref<Payload>(INITIAL_PAYLOAD);
 let currentBaseURL = "/";
+let currentSocket: WebSocket | undefined;
 
 /**
  * State of initial loading
@@ -92,6 +93,7 @@ async function get(baseURL: string) {
         }
         errorInfo.value = undefined;
         data.value = payload;
+        connectLiveUpdates(payload, baseURL);
         return payload;
     } catch (error) {
         const message = stringifyError(error);
@@ -114,32 +116,41 @@ let _promise: Promise<Payload | undefined> | undefined;
 export function init(baseURL: string) {
     currentBaseURL = baseURL;
     if (_promise) return;
-    _promise = get(baseURL).then((payload) => {
-        if (!payload) return;
+    _promise = get(baseURL);
+}
 
-        if (typeof payload.meta.wsPort === "number") {
-            // Connect to WebSocket, listen for config changes
-            payloadConnectionStatus.value = "connecting";
-            const ws = new WebSocket(
-                `ws://${location.hostname}:${payload.meta.wsPort}`
-            );
-            ws.addEventListener("message", async (event) => {
-                const payload = JSON.parse(event.data) as { type?: unknown };
-                if (payload.type === "config-change") await get(baseURL);
-            });
-            ws.addEventListener("open", () => {
-                payloadConnectionStatus.value = "connected";
-            });
-            ws.addEventListener("close", () => {
-                payloadConnectionStatus.value = "disconnected";
-            });
-            ws.addEventListener("error", (error) => {
-                payloadConnectionStatus.value = "error";
-                console.error(LOG_NAME, "WebSocket error", error);
-            });
+/** Successful retries establish live updates without duplicating active sockets. */
+function connectLiveUpdates(payload: Payload, baseURL: string) {
+    if (typeof payload.meta.wsPort !== "number") return;
+    const url = `ws://${location.hostname}:${payload.meta.wsPort}/`;
+    if (
+        currentSocket?.url === url &&
+        (currentSocket.readyState === WebSocket.CONNECTING ||
+            currentSocket.readyState === WebSocket.OPEN)
+    )
+        return;
+
+    currentSocket?.close();
+    payloadConnectionStatus.value = "connecting";
+    const ws = new WebSocket(url);
+    currentSocket = ws;
+    ws.addEventListener("message", async (event) => {
+        const message = JSON.parse(event.data) as { type?: unknown };
+        if (currentSocket === ws && message.type === "config-change")
+            await get(baseURL);
+    });
+    ws.addEventListener("open", () => {
+        if (currentSocket === ws) payloadConnectionStatus.value = "connected";
+    });
+    ws.addEventListener("close", () => {
+        if (currentSocket === ws)
+            payloadConnectionStatus.value = "disconnected";
+    });
+    ws.addEventListener("error", (error) => {
+        if (currentSocket === ws) {
+            payloadConnectionStatus.value = "error";
+            console.error(LOG_NAME, "WebSocket error", error);
         }
-
-        return payload;
     });
 }
 
