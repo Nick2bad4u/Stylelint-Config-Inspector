@@ -19,7 +19,7 @@ $env:PLAYWRIGHT_ALL_BROWSERS = '1'
 npm run test:e2e
 ```
 
-CI always includes both browsers. The configured web server builds the frontend and profiling worker before serving the production app on port 4173. Stop an existing server on that port before release validation so tests cannot reuse stale assets. Do not run the Nuxt development server during browser validation because it shares the build output directory.
+CI always includes both browsers. Local runs use two workers to bound browser memory and socket use; CI uses one. The configured web server builds the frontend and profiling worker before serving the production app on port 4173. Stop an existing server on that port before release validation so tests cannot reuse stale assets. Do not run the Nuxt development server during browser validation because it shares the build output directory.
 
 For a focused run against a current build:
 

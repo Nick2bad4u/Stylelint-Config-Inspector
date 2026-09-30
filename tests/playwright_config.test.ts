@@ -56,7 +56,7 @@ describe.sequential("playwright config", () => {
             "chromium",
         ]);
         expect(config.retries).toBe(0);
-        expect(config.workers).toBeUndefined();
+        expect(config.workers).toBe(2);
         expect(config.forbidOnly).toBe(false);
         expect(config.testIgnore).toContain("**/fixtures/**");
         expect(getSingleWebServerConfig(config)?.reuseExistingServer).toBe(

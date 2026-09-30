@@ -23,7 +23,8 @@ export default defineConfig({
     },
     fullyParallel: false,
     retries: isCI ? 2 : 0,
-    workers: isCI ? 1 : undefined,
+    // Keep the browser matrix from exhausting local sockets and memory.
+    workers: isCI ? 1 : 2,
     reporter: [["list"], ["html", { open: "never" }]],
     use: {
         baseURL: "http://127.0.0.1:4173",
